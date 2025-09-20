@@ -1,0 +1,32 @@
+<Project>
+  <!-- Enable Central Package Management -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <!-- Package versions - preserving existing versions from project files -->
+  <ItemGroup>
+    <!-- Core libraries -->
+    <PackageVersion Include="DocumentFormat.OpenXml" Version="3.2.0" />
+
+    <!-- Microsoft Extensions -->
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.2" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.2" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="9.0.2" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="9.0.2" />
+
+    <!-- Avalonia UI -->
+    <PackageVersion Include="Avalonia" Version="11.0.10" />
+    <PackageVersion Include="Avalonia.Desktop" Version="11.0.10" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="11.0.10" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="11.0.10" />
+    <PackageVersion Include="Avalonia.Diagnostics" Version="11.0.10" />
+
+    <!-- Testing libraries -->
+    <PackageVersion Include="xUnit" Version="2.6.1" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.3" />
+    <PackageVersion Include="Moq" Version="4.20.69" />
+    <PackageVersion Include="FluentAssertions" Version="6.12.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+  </ItemGroup>
+</Project>

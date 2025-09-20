@@ -1,0 +1,38 @@
+<Project>
+  <!-- Common properties shared across all projects -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- Project metadata -->
+    <Company>ExcelViewer</Company>
+    <Product>ExcelViewer</Product>
+    <Copyright>Copyright © 2025</Copyright>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+  </PropertyGroup>
+
+  <!-- Common compiler settings -->
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <WarningLevel>4</WarningLevel>
+    <NoWarn>$(NoWarn);CS1591</NoWarn> <!-- Missing XML documentation -->
+  </PropertyGroup>
+
+  <!-- Code analysis -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <Optimize>true</Optimize>
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <Optimize>false</Optimize>
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+</Project>

@@ -8,8 +8,8 @@
 # Compiled files
 src/*/[Bb]in
 src/*/[Oo]bj
-tests/*.Test/[Bb]in
-tests/*.Test/[Oo]bj
+tests/*/[Bb]in
+tests/*/[Oo]bj
 
 # Editor leftovers
 *.bak
