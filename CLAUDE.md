@@ -181,11 +181,30 @@ ExcelViewer/
 ## Git Workflow
 
 ### Branch Strategy
-- **main**: Production-ready code only
-- **develop**: Integration branch for features
+- **main**: Production-ready code only (releases commerciali)
+- **develop**: Integration branch (branch principale per lo sviluppo)
 - **feature/***: Individual feature development
-- **release/***: Release preparation and bug fixes
-- **hotfix/***: Critical production fixes
+- **experiment/***: Testing e prove
+- **fix/***: Bug fixes specifici
+
+### Workflow Commands
+```bash
+# Sviluppo quotidiano
+git checkout develop
+git pull origin develop
+git checkout -b feature/nome-funzionalità
+
+# Integrazione
+git checkout develop
+git merge feature/nome-funzionalità
+git push origin develop
+
+# Release
+git checkout main
+git merge develop
+git tag v1.0.0
+git push origin main --tags
+```
 
 ### Commit Standards
 - **Conventional Commits**: feat, fix, docs, style, refactor, test
