@@ -1,0 +1,98 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ExcelViewer.UI.Avalonia.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="600"
+             x:Class="ExcelViewer.UI.Avalonia.Views.TreeSearchResultsView"
+             x:DataType="vm:TreeSearchResultsViewModel">
+
+    <Design.DataContext>
+        <vm:TreeSearchResultsViewModel/>
+    </Design.DataContext>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+            <TextBlock Text="Search Results" FontWeight="SemiBold" FontSize="14"/>
+            <Button Content="Clear History"
+                    Command="{Binding ClearHistoryCommand}"
+                    Margin="12,0,0,0" Padding="8,2"
+                    FontSize="10"/>
+        </StackPanel>
+
+        <!-- Tree Results -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <TreeView ItemsSource="{Binding SearchHistory}">
+
+                <!-- Search History Level -->
+                <TreeView.DataTemplates>
+                    <TreeDataTemplate DataType="vm:SearchHistoryItem" ItemsSource="{Binding FileGroups}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🔍" Margin="0,0,4,0"/>
+                            <TextBlock Text="{Binding DisplayText}" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </TreeDataTemplate>
+
+                    <!-- File Group Level -->
+                    <TreeDataTemplate DataType="vm:FileResultGroup" ItemsSource="{Binding SheetGroups}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📄" Margin="0,0,4,0"/>
+                            <TextBlock Text="{Binding DisplayText}" FontWeight="Medium"/>
+                        </StackPanel>
+                    </TreeDataTemplate>
+
+                    <!-- Sheet Group Level -->
+                    <TreeDataTemplate DataType="vm:SheetResultGroup" ItemsSource="{Binding Results}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📋" Margin="0,0,4,0"/>
+                            <TextBlock Text="{Binding DisplayText}"/>
+                        </StackPanel>
+                    </TreeDataTemplate>
+
+                    <!-- Individual Result Level -->
+                    <DataTemplate DataType="vm:SearchResultItem">
+                        <StackPanel Orientation="Horizontal" Margin="16,0,0,0">
+                            <TextBlock Text="•" Margin="0,0,4,0" Foreground="Gray"/>
+                            <TextBlock Text="{Binding DisplayText}"
+                                      FontSize="11"
+                                      TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </TreeView.DataTemplates>
+
+                <!-- TreeView Styling -->
+                <TreeView.Styles>
+                    <Style Selector="TreeViewItem">
+                        <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
+                        <Setter Property="Padding" Value="2"/>
+                    </Style>
+                </TreeView.Styles>
+
+            </TreeView>
+        </ScrollViewer>
+
+        <!-- Empty State -->
+        <StackPanel Grid.Row="1"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   IsVisible="{Binding !SearchHistory.Count}">
+            <TextBlock Text="🔍" FontSize="32" HorizontalAlignment="Center" Opacity="0.3"/>
+            <TextBlock Text="No search results yet"
+                      FontStyle="Italic"
+                      Foreground="Gray"
+                      HorizontalAlignment="Center"
+                      Margin="0,8,0,0"/>
+            <TextBlock Text="Start typing in the search box above"
+                      FontSize="11"
+                      Foreground="Gray"
+                      HorizontalAlignment="Center"
+                      Margin="0,4,0,0"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

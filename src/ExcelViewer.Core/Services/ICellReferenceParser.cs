@@ -1,0 +1,11 @@
+namespace ExcelViewer.Core.Services
+{
+    public interface ICellReferenceParser
+    {
+        string GetColumnName(string cellReference);
+        int GetColumnIndex(string cellReference);
+        int GetRowIndex(string cellReference);
+        string CreateCellReference(int columnIndex, int rowIndex);
+        string GetColumnNameFromIndex(int columnIndex);
+    }
+}

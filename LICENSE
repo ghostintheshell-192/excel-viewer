@@ -1,0 +1,103 @@
+# ExcelViewer - Dual License
+
+ExcelViewer is available under a dual licensing model:
+
+## Option 1: MIT License (Open Source)
+
+For open source projects, personal use, education, and non-commercial purposes, ExcelViewer is available under the MIT License:
+
+---
+
+MIT License
+
+Copyright (c) 2025 ExcelViewer Project
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+## Option 2: Commercial License
+
+For commercial use, enterprise deployment, or when you want to:
+- Use ExcelViewer in proprietary applications
+- Redistribute without open source obligations
+- Receive professional support and warranties
+- Access enterprise features and customizations
+
+A separate commercial license is required.
+
+### Commercial License Benefits:
+- **Professional Support**: Priority technical support
+- **Enterprise Features**: Advanced comparison algorithms, batch processing, API access
+- **Custom Development**: Tailored features for your specific needs
+- **White-labeling**: Remove branding, use your own
+- **Service Level Agreement**: Guaranteed uptime and response times
+- **Legal Protection**: Commercial warranties and indemnification
+
+### Commercial Pricing:
+- **Professional**: $149/license (1-5 users)
+- **Business**: $299/license (6-25 users)
+- **Enterprise**: $499/license (25+ users) + premium support
+
+### Contact for Commercial License:
+- **Email**: [commercial@excelviewer.com]
+- **Website**: [https://excelviewer.com/commercial]
+- **Sales**: [sales@excelviewer.com]
+
+---
+
+## License Selection Guide
+
+**Choose MIT License if:**
+- ✅ Personal or educational use
+- ✅ Open source project
+- ✅ Non-commercial application
+- ✅ Contributing back to community
+
+**Choose Commercial License if:**
+- ✅ Commercial/enterprise use
+- ✅ Proprietary application
+- ✅ Need professional support
+- ✅ Want enterprise features
+- ✅ Require legal warranties
+
+---
+
+## Frequently Asked Questions
+
+**Q: Can I try before buying a commercial license?**
+A: Yes, the MIT version is fully functional for evaluation. Commercial licenses add enterprise features and support.
+
+**Q: What's the difference between versions?**
+A: Core functionality is identical. Commercial licenses include enterprise features, professional support, and additional legal protections.
+
+**Q: Can I contribute to the open source version?**
+A: Absolutely! Contributions under MIT license are welcome and benefit both open source and commercial users.
+
+**Q: Do I need a commercial license for internal business use?**
+A: No, the MIT license allows commercial use. Commercial licenses are for enterprise features, support, and additional legal protections.
+
+**Q: Can I modify the source code?**
+A: Yes, under both licenses. MIT allows any modifications. Commercial license may include additional customization services.
+
+---
+
+This dual licensing approach ensures ExcelViewer remains accessible to the open source community while providing a sustainable business model for continued development and enterprise-grade support.
+
+For questions about which license is right for your use case, please contact us at [license@excelviewer.com].

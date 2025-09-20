@@ -1,0 +1,155 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:ExcelViewer.UI.Avalonia.ViewModels"
+        xmlns:views="using:ExcelViewer.UI.Avalonia.Views"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+        x:Class="ExcelViewer.UI.Avalonia.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="Excel Cross Reference Viewer"
+        MinWidth="800" MinHeight="600">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Toolbar -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+            <Button Content="Load File" Command="{Binding LoadFileCommand}" Padding="12,6"/>
+        </StackPanel>
+
+        <!-- Main Content -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Files Panel -->
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header with clear button -->
+                <Grid Grid.Row="0" Margin="0,0,0,8" Background="Transparent" Tapped="OnHeaderTapped">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="Loaded Files" FontWeight="SemiBold"
+                              FontSize="14" Background="Transparent"/>
+
+                    <Button Grid.Column="1" Content="✕"
+                            Width="20" Height="20" Padding="0"
+                            ToolTip.Tip="Clear selection"
+                            Click="OnClearSelectionClick"
+                            IsVisible="{Binding SelectedFile, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                </Grid>
+
+                <ListBox Grid.Row="1"
+                         ItemsSource="{Binding LoadedFiles}"
+                         SelectedItem="{Binding SelectedFile}"
+                         Margin="4">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Vertical" Margin="4">
+                                <TextBlock Text="{Binding FileName}" FontWeight="Medium"/>
+                                <TextBlock Text="{Binding FilePath}" FontSize="10"
+                                          Foreground="Gray" TextTrimming="CharacterEllipsis"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                    <TextBlock Text="Status: " FontSize="10"/>
+                                    <TextBlock Text="{Binding Status}" FontSize="10" FontWeight="Medium"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+
+            <!-- Splitter -->
+            <GridSplitter Grid.Column="1" Background="LightGray" ResizeDirection="Columns"/>
+
+            <!-- Search Panel -->
+            <Grid Grid.Column="2" Margin="12,0,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Search Box -->
+                <Grid Grid.Row="0" Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBox Grid.Column="0"
+                             Text="{Binding SearchViewModel.SearchQuery}"
+                             Watermark="Enter search term..."
+                             Margin="0,0,8,0"
+                             KeyDown="OnSearchTextBoxKeyDown"/>
+
+                    <Button Grid.Column="1" Content="🔍"
+                            Command="{Binding SearchViewModel.SearchCommand}"
+                            Margin="0,0,4,0" Padding="8,4"/>
+
+                    <Button Grid.Column="2" Content="✕"
+                            Command="{Binding SearchViewModel.ClearSearchCommand}"
+                            Padding="8,4"/>
+                </Grid>
+
+                <!-- Search Options -->
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
+                    <CheckBox Content="Case Sensitive"
+                              IsChecked="{Binding SearchViewModel.CaseSensitive}"
+                              Margin="0,0,12,0"/>
+                    <CheckBox Content="Exact Match"
+                              IsChecked="{Binding SearchViewModel.ExactMatch}"
+                              Margin="0,0,12,0"/>
+                    <CheckBox Content="Use Regex"
+                              IsChecked="{Binding SearchViewModel.UseRegexSearch}"/>
+                </StackPanel>
+
+                <!-- Content Area: Tab Control -->
+                <TabControl Grid.Row="2" SelectedIndex="{Binding SelectedTabIndex}">
+                    <!-- File Details Tab -->
+                    <TabItem Header="File Details" IsEnabled="{Binding SelectedFile, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <ContentControl Content="{Binding FileDetailsViewModel}">
+                            <ContentControl.ContentTemplate>
+                                <DataTemplate>
+                                    <views:FileDetailsView/>
+                                </DataTemplate>
+                            </ContentControl.ContentTemplate>
+                        </ContentControl>
+                    </TabItem>
+
+                    <!-- Search Results Tab -->
+                    <TabItem Header="Search Results">
+                        <!-- Tree View Only -->
+                        <ContentControl Content="{Binding TreeSearchResultsViewModel}">
+                            <ContentControl.ContentTemplate>
+                                <DataTemplate>
+                                    <views:TreeSearchResultsView/>
+                                </DataTemplate>
+                            </ContentControl.ContentTemplate>
+                        </ContentControl>
+                    </TabItem>
+
+                </TabControl>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

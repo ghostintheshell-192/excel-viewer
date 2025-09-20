@@ -1,0 +1,59 @@
+# Ignore Visual Studio left-over files
+*.suo        # 'user' settings like 'which file is open in Visual Studio'
+*.ncb        # Used for debugging
+*.user
+*.ccscc      # Used for versioning
+*.cache
+
+# Compiled files
+src/*/[Bb]in
+src/*/[Oo]bj
+tests/*.Test/[Bb]in
+tests/*.Test/[Oo]bj
+
+# Editor leftovers
+*.bak
+
+# Ignore Visual Studio temp folder
+.vs
+
+# Ignore NuGet Packages folder
+*.nupkg
+
+# Ignore packages folder because of Package Restore
+**/[Pp]ackages/*
+
+# Ignore build releases folder
+**/[Aa]rtifacts/*
+
+# Ignore log files and build outputs
+*.log
+build_log.txt
+app_output.log
+logs/
+
+# Ignore backup folders and files
+backups/
+*.bak
+*_backup.vssx
+*_backup.vstx
+
+# Ignore temporary documentation
+docs/issues/
+docs/migration/
+docs/agent-test.md
+docs/debugging_log*.md
+docs/vista.pdf
+
+# Legacy ignore rules
+/src/VisioHandler/Resources/Results
+/src/ExcelHandler/Resources/LogsExcel
+/src/ExcelHandler/Resources/LogsVisio
+/src/ExcelHandler/Resources/Logs
+/src/ExcelHandler/Resources/Output
+
+src/*/*.bak
+
+/src/VisioHandler/Resources/backup code.txt
+/src/VisioHandler/Resources/stencil_good.vssx
+/src/VisioHandler/Resources/prova.xlsx
