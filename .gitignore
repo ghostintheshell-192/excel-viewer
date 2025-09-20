@@ -41,6 +41,7 @@ backups/
 # Ignore temporary documentation
 docs/issues/
 docs/migration/
+docs/reports/
 docs/agent-test.md
 docs/debugging_log*.md
 docs/vista.pdf

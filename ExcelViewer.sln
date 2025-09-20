@@ -7,9 +7,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelViewer.Core", "src\Exc
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{B81F802E-605B-42D6-8BA5-3535F6117ACC}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{C1234567-8901-2345-6789-ABCDEFABCDEF}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelViewer.UI.Avalonia", "src\ExcelViewer.UI.Avalonia\ExcelViewer.UI.Avalonia.csproj", "{3C597667-3FF1-48E8-978D-57A81DA55212}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelViewer.Tests", "src\ExcelViewer.Tests\ExcelViewer.Tests.csproj", "{A9AC2A6B-DD8B-4F6C-B16A-C4AC9606F9C8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelViewer.Tests", "tests\ExcelViewer.Tests\ExcelViewer.Tests.csproj", "{A9AC2A6B-DD8B-4F6C-B16A-C4AC9606F9C8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{1DBB37D1-007C-D181-D527-6E48C9AC7D31} = {B81F802E-605B-42D6-8BA5-3535F6117ACC}
 		{3C597667-3FF1-48E8-978D-57A81DA55212} = {B81F802E-605B-42D6-8BA5-3535F6117ACC}
-		{A9AC2A6B-DD8B-4F6C-B16A-C4AC9606F9C8} = {B81F802E-605B-42D6-8BA5-3535F6117ACC}
+		{A9AC2A6B-DD8B-4F6C-B16A-C4AC9606F9C8} = {C1234567-8901-2345-6789-ABCDEFABCDEF}
 	EndGlobalSection
 EndGlobal

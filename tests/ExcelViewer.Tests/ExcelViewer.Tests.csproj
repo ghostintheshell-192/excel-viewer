@@ -15,6 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../ExcelViewer.Core/ExcelViewer.Core.csproj" />
+    <ProjectReference Include="../../src/ExcelViewer.Core/ExcelViewer.Core.csproj" />
   </ItemGroup>
 </Project>
