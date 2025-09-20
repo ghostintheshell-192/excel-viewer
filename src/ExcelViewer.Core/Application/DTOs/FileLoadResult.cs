@@ -1,4 +1,7 @@
-namespace ExcelViewer.Core.Models
+using ExcelViewer.Core.Domain.Entities;
+using ExcelViewer.Core.Domain.ValueObjects;
+
+namespace ExcelViewer.Core.Application.DTOs
 {
     public class FileLoadResult
     {

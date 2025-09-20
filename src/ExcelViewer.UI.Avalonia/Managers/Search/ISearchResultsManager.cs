@@ -1,4 +1,4 @@
-using ExcelViewer.Core.Models;
+using ExcelViewer.Core.Domain.Entities;
 using ExcelViewer.UI.Avalonia.Models.Search;
 using ExcelViewer.UI.Avalonia.ViewModels;
 

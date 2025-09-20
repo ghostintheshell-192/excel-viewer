@@ -1,4 +1,5 @@
-using ExcelViewer.Core.Services;
+using ExcelViewer.Core.Application.Services;
+using ExcelViewer.Core.Application.Interfaces;
 using FluentAssertions;
 
 namespace ExcelViewer.Tests.Services

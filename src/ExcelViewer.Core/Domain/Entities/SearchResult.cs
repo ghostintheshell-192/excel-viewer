@@ -1,5 +1,5 @@
 ﻿
-namespace ExcelViewer.Core.Models
+namespace ExcelViewer.Core.Domain.Entities
 {
     /// <summary>
     /// Represents a search result within an Excel file

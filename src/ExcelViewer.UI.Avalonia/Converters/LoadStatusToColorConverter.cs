@@ -2,7 +2,7 @@ using System;
 using System.Globalization;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
-using ExcelViewer.Core.Models;
+using ExcelViewer.Core.Domain.ValueObjects;
 
 namespace ExcelViewer.UI.Avalonia.Converters;
 

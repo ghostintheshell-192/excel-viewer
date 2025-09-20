@@ -1,4 +1,5 @@
-using ExcelViewer.Core.Models;
+using ExcelViewer.Core.Domain.Entities;
+using ExcelViewer.Core.Domain.ValueObjects;
 
 namespace ExcelViewer.UI.Avalonia.ViewModels;
 

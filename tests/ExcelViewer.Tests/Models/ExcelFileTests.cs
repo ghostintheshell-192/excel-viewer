@@ -1,4 +1,5 @@
-using ExcelViewer.Core.Models;
+using ExcelViewer.Core.Domain.Entities;
+using ExcelViewer.Core.Domain.ValueObjects;
 using FluentAssertions;
 using System.Data;
 

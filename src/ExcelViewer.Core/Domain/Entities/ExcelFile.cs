@@ -1,6 +1,7 @@
 using System.Data;
+using ExcelViewer.Core.Domain.ValueObjects;
 
-namespace ExcelViewer.Core.Models
+namespace ExcelViewer.Core.Domain.Entities
 {
     public class ExcelFile
     {

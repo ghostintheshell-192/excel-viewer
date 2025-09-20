@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
+using ExcelViewer.Core.Application.Interfaces;
 
-namespace ExcelViewer.Core.Services
+namespace ExcelViewer.Core.Application.Services
 {
     public class CellReferenceParser : ICellReferenceParser
     {

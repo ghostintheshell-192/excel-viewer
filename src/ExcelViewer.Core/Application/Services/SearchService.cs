@@ -1,8 +1,8 @@
 ﻿using System.Text.RegularExpressions;
-using ExcelViewer.Core.Models;
+using ExcelViewer.Core.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
-namespace ExcelViewer.Core.Services
+namespace ExcelViewer.Core.Application.Services
 {
     public interface ISearchService
     {

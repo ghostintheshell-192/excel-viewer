@@ -1,4 +1,4 @@
-namespace ExcelViewer.Core.Services
+namespace ExcelViewer.Core.Application.Interfaces
 {
     public interface ICellReferenceParser
     {

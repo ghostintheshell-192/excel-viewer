@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
-using ExcelViewer.Core.Models;
-using ExcelViewer.Core.Services;
+using ExcelViewer.Core.Domain.Entities;
+using ExcelViewer.Core.Application.Services;
 using ExcelViewer.UI.Avalonia.Managers.Search;
 using ExcelViewer.UI.Avalonia.Managers.Selection;
 using ExcelViewer.UI.Avalonia.Models.Search;

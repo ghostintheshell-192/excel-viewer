@@ -1,7 +1,8 @@
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using ExcelViewer.Core.Application.Interfaces;
 
-namespace ExcelViewer.Core.Services
+namespace ExcelViewer.Core.Application.Services
 {
     public class MergedCellProcessor : IMergedCellProcessor
     {

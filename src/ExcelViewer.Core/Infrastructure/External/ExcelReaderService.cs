@@ -1,11 +1,13 @@
-using ExcelViewer.Core.Models;
+using ExcelViewer.Core.Domain.Entities;
+using ExcelViewer.Core.Domain.ValueObjects;
+using ExcelViewer.Core.Application.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Data;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 
-namespace ExcelViewer.Core.Services
+namespace ExcelViewer.Core.Infrastructure.External
 {
     public interface IExcelReaderService
     {

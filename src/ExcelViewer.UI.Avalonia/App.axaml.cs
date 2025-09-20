@@ -10,7 +10,9 @@ using ExcelViewer.UI.Avalonia.Models.Search;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using ExcelViewer.Core.Services;
+using ExcelViewer.Core.Application.Services;
+using ExcelViewer.Core.Application.Interfaces;
+using ExcelViewer.Core.Infrastructure.External;
 
 namespace ExcelViewer.UI.Avalonia;
 

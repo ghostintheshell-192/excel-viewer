@@ -1,4 +1,4 @@
-namespace ExcelViewer.Core.Models
+namespace ExcelViewer.Core.Domain.ValueObjects
 {
     public enum LoadStatus
     {
