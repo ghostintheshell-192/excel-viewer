@@ -1,0 +1,158 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ExcelViewer.UI.Avalonia.ViewModels"
+             xmlns:entities="using:ExcelViewer.Core.Domain.Entities"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="ExcelViewer.UI.Avalonia.Views.RowComparisonView"
+             x:DataType="vm:RowComparisonViewModel">
+
+    <Design.DataContext>
+        <vm:RowComparisonViewModel/>
+    </Design.DataContext>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="{DynamicResource SystemAccentColor}" Padding="12">
+            <StackPanel Orientation="Horizontal">
+                <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="16" Foreground="White"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                        <TextBlock Text="{Binding RowCount}" FontWeight="SemiBold" Foreground="White"/>
+                        <TextBlock Text=" rows compared" Margin="4,0,12,0" Foreground="White"/>
+                        <TextBlock Text="Created:" Margin="0,0,4,0" Foreground="White"/>
+                        <TextBlock Text="{Binding CreatedAt, StringFormat='HH:mm:ss'}" Foreground="White"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <Button Content="✕"
+                        Command="{Binding CloseCommand}"
+                        Background="Transparent"
+                        Foreground="White"
+                        BorderThickness="0"
+                        FontSize="16"
+                        FontWeight="Bold"
+                        Padding="8"
+                        Margin="12,0,0,0"
+                        HorizontalAlignment="Right"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Comparison Content -->
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <!-- Row Info Column -->
+                    <ColumnDefinition Width="250" MinWidth="200"/>
+                    <!-- Dynamic columns for data -->
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <!-- Headers -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- Data -->
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Row Info Header -->
+                <Border Grid.Column="0" Grid.Row="0" Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                        BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                        BorderThickness="0,0,1,1" Padding="8">
+                    <TextBlock Text="Source" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                </Border>
+
+                <!-- Column Headers -->
+                <ItemsControl Grid.Column="1" Grid.Row="0" ItemsSource="{Binding Columns}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="vm:RowComparisonColumnViewModel">
+                            <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                                    BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                                    BorderThickness="0,0,1,1"
+                                    MinWidth="120" MaxWidth="200" Padding="8">
+                                <TextBlock Text="{Binding Header}"
+                                          FontWeight="SemiBold"
+                                          TextTrimming="CharacterEllipsis"
+                                          VerticalAlignment="Center"/>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- Row Data -->
+                <ItemsControl Grid.Column="0" Grid.Row="1" ItemsSource="{Binding Comparison.Rows}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="entities:ExcelRow">
+                            <Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                                    BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                                    BorderThickness="0,0,1,1"
+                                    MinHeight="32" Padding="8">
+                                <TextBlock Text="{Binding DisplayName}"
+                                          VerticalAlignment="Center"
+                                          TextTrimming="CharacterEllipsis"
+                                          FontSize="11"/>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- Cell Data Grid -->
+                <ScrollViewer Grid.Column="1" Grid.Row="1"
+                              HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{Binding Columns}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="vm:RowComparisonColumnViewModel">
+                                <StackPanel>
+                                    <ItemsControl ItemsSource="{Binding Cells}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="vm:RowComparisonCellViewModel">
+                                                <Border BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                                                        BorderThickness="0,0,1,1"
+                                                        MinWidth="120" MaxWidth="200" MinHeight="32" Padding="8">
+                                                    <TextBlock Text="{Binding Value}"
+                                                              VerticalAlignment="Center"
+                                                              TextTrimming="CharacterEllipsis"
+                                                              FontSize="11"
+                                                              ToolTip.Tip="{Binding Value}"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </ScrollViewer>
+
+        <!-- Empty State -->
+        <StackPanel Grid.Row="1"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   IsVisible="{Binding !RowCount}">
+            <TextBlock Text="📊" FontSize="32" HorizontalAlignment="Center" Opacity="0.3"/>
+            <TextBlock Text="No rows to compare"
+                      FontStyle="Italic"
+                      Foreground="Gray"
+                      HorizontalAlignment="Center"
+                      Margin="0,8,0,0"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

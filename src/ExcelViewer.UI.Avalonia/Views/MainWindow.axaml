@@ -148,6 +148,17 @@
                         </ContentControl>
                     </TabItem>
 
+                    <!-- Row Comparison Tab -->
+                    <TabItem Header="Row Comparison" IsEnabled="{Binding SelectedComparison, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <ContentControl Content="{Binding SelectedComparison}">
+                            <ContentControl.ContentTemplate>
+                                <DataTemplate>
+                                    <views:RowComparisonView/>
+                                </DataTemplate>
+                            </ContentControl.ContentTemplate>
+                        </ContentControl>
+                    </TabItem>
+
                 </TabControl>
             </Grid>
         </Grid>

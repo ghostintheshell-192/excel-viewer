@@ -64,6 +64,7 @@ public partial class App : Application
                 services.AddScoped<IMergedCellProcessor, MergedCellProcessor>();
                 services.AddScoped<IExcelReaderService, ExcelReaderService>();
                 services.AddScoped<ISearchService, SearchService>();
+                services.AddScoped<IRowComparisonService, RowComparisonService>();
 
                 // Register Avalonia-specific services
                 services.AddScoped<IDialogService, AvaloniaDialogService>();

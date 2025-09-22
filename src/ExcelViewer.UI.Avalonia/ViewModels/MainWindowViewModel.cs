@@ -7,6 +7,7 @@ using ExcelViewer.Infrastructure.External;
 using ExcelViewer.UI.Avalonia.Models.Search;
 using ExcelViewer.UI.Avalonia.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ExcelViewer.UI.Avalonia.ViewModels;
 
@@ -16,6 +17,7 @@ public class MainWindowViewModel : ViewModelBase
     private readonly IFilePickerService _filePickerService;
     private readonly IDialogService _dialogService;
     private readonly ILogger<MainWindowViewModel> _logger;
+    private readonly IServiceProvider _serviceProvider;
 
     private IFileLoadResultViewModel? _selectedFile;
     private object? _currentView;
@@ -27,6 +29,27 @@ public class MainWindowViewModel : ViewModelBase
     public SearchViewModel? SearchViewModel { get; private set; }
     public FileDetailsViewModel? FileDetailsViewModel { get; private set; }
     public TreeSearchResultsViewModel? TreeSearchResultsViewModel { get; private set; }
+
+    // Row comparison management
+    private readonly ObservableCollection<RowComparisonViewModel> _rowComparisons = new();
+    public ReadOnlyObservableCollection<RowComparisonViewModel> RowComparisons { get; }
+
+    private RowComparisonViewModel? _selectedComparison;
+    public RowComparisonViewModel? SelectedComparison
+    {
+        get => _selectedComparison;
+        set
+        {
+            if (SetField(ref _selectedComparison, value))
+            {
+                // Switch to comparison tab when a comparison is selected
+                if (value != null)
+                {
+                    SelectedTabIndex = 2; // Comparison tab will be index 2
+                }
+            }
+        }
+    }
 
 
     public IFileLoadResultViewModel? SelectedFile
@@ -78,14 +101,17 @@ public class MainWindowViewModel : ViewModelBase
         IExcelReaderService excelReaderService,
         IFilePickerService filePickerService,
         IDialogService dialogService,
-        ILogger<MainWindowViewModel> logger)
+        ILogger<MainWindowViewModel> logger,
+        IServiceProvider serviceProvider)
     {
         _excelReaderService = excelReaderService ?? throw new ArgumentNullException(nameof(excelReaderService));
         _filePickerService = filePickerService ?? throw new ArgumentNullException(nameof(filePickerService));
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
 
         LoadedFiles = new ReadOnlyObservableCollection<IFileLoadResultViewModel>(_loadedFiles);
+        RowComparisons = new ReadOnlyObservableCollection<RowComparisonViewModel>(_rowComparisons);
 
         // Initialize with Search Results tab selected
         _selectedTabIndex = 1;
@@ -137,6 +163,45 @@ public class MainWindowViewModel : ViewModelBase
     public void SetTreeSearchResultsViewModel(TreeSearchResultsViewModel treeSearchResultsViewModel)
     {
         TreeSearchResultsViewModel = treeSearchResultsViewModel ?? throw new ArgumentNullException(nameof(treeSearchResultsViewModel));
+
+        // Wire up row comparison creation
+        TreeSearchResultsViewModel.RowComparisonCreated += OnRowComparisonCreated;
+    }
+
+    private void OnRowComparisonCreated(object? sender, RowComparison comparison)
+    {
+        try
+        {
+            var comparisonLogger = _serviceProvider.GetRequiredService<ILogger<RowComparisonViewModel>>();
+            var comparisonViewModel = new RowComparisonViewModel(comparison, comparisonLogger);
+
+            // Handle close request
+            comparisonViewModel.CloseRequested += (s, e) =>
+            {
+                var vm = s as RowComparisonViewModel;
+                if (vm != null && _rowComparisons.Contains(vm))
+                {
+                    _rowComparisons.Remove(vm);
+                    _logger.LogInformation("Removed row comparison: {ComparisonName}", vm.Title);
+
+                    // If this was the selected comparison, clear selection
+                    if (SelectedComparison == vm)
+                    {
+                        SelectedComparison = null;
+                    }
+                }
+            };
+
+            _rowComparisons.Add(comparisonViewModel);
+            SelectedComparison = comparisonViewModel; // Auto-select the new comparison
+
+            _logger.LogInformation("Added new row comparison: {ComparisonName} with {RowCount} rows",
+                comparison.Name, comparison.Rows.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create row comparison view model");
+        }
     }
 
 

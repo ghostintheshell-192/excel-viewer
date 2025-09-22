@@ -18,12 +18,32 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
-            <TextBlock Text="Search Results" FontWeight="SemiBold" FontSize="14"/>
-            <Button Content="Clear History"
-                    Command="{Binding ClearHistoryCommand}"
-                    Margin="12,0,0,0" Padding="8,2"
-                    FontSize="10"/>
+        <StackPanel Grid.Row="0" Orientation="Vertical" Margin="0,0,0,8">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                <TextBlock Text="Search Results" FontWeight="SemiBold" FontSize="14"/>
+                <Button Content="Clear History"
+                        Command="{Binding ClearHistoryCommand}"
+                        Margin="12,0,0,0" Padding="8,2"
+                        FontSize="10"/>
+            </StackPanel>
+
+            <!-- Row Comparison Controls -->
+            <StackPanel Orientation="Horizontal" Margin="0,4,0,0"
+                       IsVisible="{Binding CanCompareRows}">
+                <TextBlock Text="{Binding SelectedCount}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <TextBlock Text=" rows selected for comparison" VerticalAlignment="Center" Margin="4,0,8,0"/>
+
+                <Button Content="Compare Rows"
+                        Command="{Binding CompareSelectedRowsCommand}"
+                        IsEnabled="{Binding CanCompareRows}"
+                        Margin="0,0,8,0" Padding="8,2"
+                        FontSize="10"/>
+
+                <Button Content="Clear Selection"
+                        Command="{Binding ClearSelectionCommand}"
+                        Margin="0,0,0,0" Padding="8,2"
+                        FontSize="10"/>
+            </StackPanel>
         </StackPanel>
 
         <!-- Tree Results -->
@@ -58,10 +78,16 @@
                     <!-- Individual Result Level -->
                     <DataTemplate DataType="vm:SearchResultItem">
                         <StackPanel Orientation="Horizontal" Margin="16,0,0,0">
-                            <TextBlock Text="•" Margin="0,0,4,0" Foreground="Gray"/>
+                            <CheckBox IsChecked="{Binding IsSelected}"
+                                     IsVisible="{Binding CanBeCompared}"
+                                     Margin="0,0,4,0"
+                                     VerticalAlignment="Center"/>
+                            <TextBlock Text="•" Margin="0,0,4,0" Foreground="Gray"
+                                      IsVisible="{Binding !CanBeCompared}"/>
                             <TextBlock Text="{Binding DisplayText}"
                                       FontSize="11"
-                                      TextTrimming="CharacterEllipsis"/>
+                                      TextTrimming="CharacterEllipsis"
+                                      VerticalAlignment="Center"/>
                         </StackPanel>
                     </DataTemplate>
                 </TreeView.DataTemplates>

@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using ExcelViewer.Core.Domain.Entities;
+using ExcelViewer.Core.Application.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace ExcelViewer.UI.Avalonia.ViewModels;
@@ -8,6 +9,7 @@ namespace ExcelViewer.UI.Avalonia.ViewModels;
 public class TreeSearchResultsViewModel : ViewModelBase
 {
     private readonly ILogger<TreeSearchResultsViewModel> _logger;
+    private readonly IRowComparisonService _rowComparisonService;
     private ObservableCollection<SearchHistoryItem> _searchHistory = new();
 
     public ObservableCollection<SearchHistoryItem> SearchHistory
@@ -17,12 +19,31 @@ public class TreeSearchResultsViewModel : ViewModelBase
     }
 
     public ICommand ClearHistoryCommand { get; }
+    public ICommand CompareSelectedRowsCommand { get; }
+    public ICommand ClearSelectionCommand { get; }
 
-    public TreeSearchResultsViewModel(ILogger<TreeSearchResultsViewModel> logger)
+    // Properties for UI binding
+    public IEnumerable<SearchResultItem> SelectedItems =>
+        SearchHistory
+            .SelectMany(sh => sh.FileGroups)
+            .SelectMany(fg => fg.SheetGroups)
+            .SelectMany(sg => sg.Results)
+            .Where(item => item.IsSelected && item.CanBeCompared);
+
+    public int SelectedCount => SelectedItems.Count();
+    public bool CanCompareRows => SelectedCount >= 2;
+
+    // Event for notifying about row comparison creation
+    public event EventHandler<RowComparison>? RowComparisonCreated;
+
+    public TreeSearchResultsViewModel(ILogger<TreeSearchResultsViewModel> logger, IRowComparisonService rowComparisonService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _rowComparisonService = rowComparisonService ?? throw new ArgumentNullException(nameof(rowComparisonService));
 
         ClearHistoryCommand = new RelayCommand(() => { ClearHistory(); return Task.CompletedTask; });
+        CompareSelectedRowsCommand = new RelayCommand(async () => await CompareSelectedRowsAsync(), () => CanCompareRows);
+        ClearSelectionCommand = new RelayCommand(() => { ClearSelection(); return Task.CompletedTask; });
     }
 
     public void AddSearchResults(string query, IReadOnlyList<SearchResult> results)
@@ -40,6 +61,15 @@ public class TreeSearchResultsViewModel : ViewModelBase
         // Create new search history item
         var searchItem = new SearchHistoryItem(query, results);
 
+        // Setup selection change events
+        foreach (var fileGroup in searchItem.FileGroups)
+        {
+            foreach (var sheetGroup in fileGroup.SheetGroups)
+            {
+                sheetGroup.SetupSelectionEvents(NotifySelectionChanged);
+            }
+        }
+
         // Add to top of list
         SearchHistory.Insert(0, searchItem);
 
@@ -56,6 +86,52 @@ public class TreeSearchResultsViewModel : ViewModelBase
     {
         SearchHistory.Clear();
         _logger.LogInformation("Cleared search history");
+    }
+
+    public void ClearSelection()
+    {
+        foreach (var item in SelectedItems.ToList())
+        {
+            item.IsSelected = false;
+        }
+        NotifySelectionChanged();
+        _logger.LogInformation("Cleared row selection");
+    }
+
+    private async Task CompareSelectedRowsAsync()
+    {
+        try
+        {
+            var selectedResults = SelectedItems.Select(item => item.Result).ToList();
+
+            if (selectedResults.Count < 2)
+            {
+                _logger.LogWarning("Attempted to compare rows with less than 2 selected items");
+                return;
+            }
+
+            var request = new RowComparisonRequest(selectedResults.AsReadOnly(),
+                $"Row Comparison {DateTime.Now:HH:mm:ss}");
+
+            var comparison = await _rowComparisonService.CreateRowComparisonAsync(request);
+
+            RowComparisonCreated?.Invoke(this, comparison);
+
+            _logger.LogInformation("Created row comparison with {RowCount} rows", comparison.Rows.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create row comparison");
+            // In a real app, you'd show an error message to the user
+        }
+    }
+
+    private void NotifySelectionChanged()
+    {
+        OnPropertyChanged(nameof(SelectedCount));
+        OnPropertyChanged(nameof(CanCompareRows));
+        OnPropertyChanged(nameof(SelectedItems));
+        ((RelayCommand)CompareSelectedRowsCommand).RaiseCanExecuteChanged();
     }
 }
 
@@ -167,16 +243,42 @@ public class SheetResultGroup : ViewModelBase
 
         Results = new ObservableCollection<SearchResultItem>(resultItems);
     }
+
+    public void SetupSelectionEvents(Action selectionChangedCallback)
+    {
+        foreach (var item in Results)
+        {
+            item.SelectionChanged += (s, e) => selectionChangedCallback();
+        }
+    }
 }
 
 public class SearchResultItem : ViewModelBase
 {
+    private bool _isSelected;
+
     public SearchResult Result { get; }
     public string DisplayText { get; }
+    public bool CanBeCompared { get; }
+
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set
+        {
+            if (SetField(ref _isSelected, value))
+            {
+                SelectionChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+    }
+
+    public event EventHandler? SelectionChanged;
 
     public SearchResultItem(SearchResult result)
     {
         Result = result;
+        CanBeCompared = result.Row >= 0 && result.Column >= 0; // Only cell results can be compared
 
         if (result.Row >= 0 && result.Column >= 0)
         {
