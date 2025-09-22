@@ -7,7 +7,7 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 
-namespace ExcelViewer.Core.Infrastructure.External
+namespace ExcelViewer.Infrastructure.External
 {
     public interface IExcelReaderService
     {

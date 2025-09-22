@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <SupportedOSPlatformVersion></SupportedOSPlatformVersion>
+    <TargetPlatformVersion></TargetPlatformVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DocumentFormat.OpenXml" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../ExcelViewer.Core/ExcelViewer.Core.csproj" />
+  </ItemGroup>
+
+</Project>

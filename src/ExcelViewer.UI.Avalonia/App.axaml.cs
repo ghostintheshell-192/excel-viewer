@@ -12,7 +12,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ExcelViewer.Core.Application.Services;
 using ExcelViewer.Core.Application.Interfaces;
-using ExcelViewer.Core.Infrastructure.External;
+using ExcelViewer.Infrastructure.External;
 
 namespace ExcelViewer.UI.Avalonia;
 

@@ -56,8 +56,9 @@ ExcelViewer/
 │   ├── ExcelViewer.Core/                    # Core business logic (Clean Architecture)
 │   │   ├── Application/                     # Application services & DTOs
 │   │   ├── Domain/                          # Domain entities & value objects
-│   │   ├── Infrastructure/                  # External concerns & persistence
 │   │   └── Shared/                          # Shared utilities & extensions
+│   ├── ExcelViewer.Infrastructure/          # Infrastructure layer (separated)
+│   │   └── External/                        # External services (Excel file processing)
 │   ├── ExcelViewer.UI.Avalonia/             # Avalonia UI layer (MVVM)
 │   │   ├── ViewModels/                      # MVVM ViewModels
 │   │   ├── Views/                           # XAML Views

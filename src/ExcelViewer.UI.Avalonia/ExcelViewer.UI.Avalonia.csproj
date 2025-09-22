@@ -22,5 +22,6 @@
 
   <ItemGroup>
     <ProjectReference Include="../ExcelViewer.Core/ExcelViewer.Core.csproj" />
+    <ProjectReference Include="../ExcelViewer.Infrastructure/ExcelViewer.Infrastructure.csproj" />
   </ItemGroup>
 </Project>
