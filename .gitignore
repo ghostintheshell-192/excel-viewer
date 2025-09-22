@@ -38,12 +38,9 @@ backups/
 *_backup.vssx
 *_backup.vstx
 
-# Ignore temporary documentation
+# Ignore temporary documentation and internal reports
 docs/issues/
-docs/migration/
 docs/reports/
-docs/agent-test.md
-docs/debugging_log*.md
 docs/vista.pdf
 
 # Legacy ignore rules

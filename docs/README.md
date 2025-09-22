@@ -1,8 +1,35 @@
-# ExcelViewer - Documentation Index
+# ExcelViewer - Documentation Hub
 
 ## 📁 **Documentation Overview**
 
-This folder contains comprehensive documentation for the ExcelViewer project migration from WPF to Avalonia UI.
+Complete documentation for ExcelViewer, a cross-platform desktop application for Excel file comparison built with Avalonia UI.
+
+## 🚀 **Quick Start**
+
+### **For Users**
+1. **Download** the latest release
+2. **Install** .NET 8 Runtime if not present
+3. **Run** `ExcelViewer` executable
+4. **Load** Excel files (.xlsx, .xls) to compare
+
+### **For Developers**
+```bash
+# Clone and setup
+git clone <repository-url>
+cd excel-viewer
+dotnet restore && dotnet build
+
+# Run the application
+dotnet run --project src/ExcelViewer.UI.Avalonia/ExcelViewer.UI.Avalonia.csproj
+
+# Run tests
+dotnet test
+```
+
+**Requirements:**
+- .NET 8 SDK
+- VSCode (recommended) with C# Dev Kit + Avalonia extensions
+- Linux: `sudo apt install libx11-dev libice-dev libsm-dev libfontconfig1-dev`
 
 ## 📖 **Document Index**
 
@@ -11,21 +38,6 @@ This folder contains comprehensive documentation for the ExcelViewer project mig
 - **[technical-specs.md](./technical-specs.md)** - Architecture, technology stack, performance requirements
 - **[roadmap.md](./roadmap.md)** - Product roadmap, release timeline, success metrics
 
-### **Development Documentation**
-- **[development-setup.md](./development-setup.md)** - VSCode + Avalonia environment setup (Windows/Linux/macOS)
-- **[migration-plan.md](./migration-plan.md)** - Complete technical migration strategy WPF → Avalonia
-- **[core-refactoring-specs.md](./core-refactoring-specs.md)** - Detailed Core layer cleanup specifications
-
-### **Execution Guide**
-- **[sonnet-execution-guide.md](./sonnet-execution-guide.md)** - Step-by-step execution checklist for Sonnet
-
-## 🚀 **Quick Start**
-
-### **For Developers**
-1. Read [development-setup.md](./development-setup.md) to configure your environment
-2. Follow [sonnet-execution-guide.md](./sonnet-execution-guide.md) for implementation steps
-3. Reference [core-refactoring-specs.md](./core-refactoring-specs.md) for Core layer changes
-
 ### **For Project Management**
 1. Review [overview.md](./overview.md) for business context
 2. Check [roadmap.md](./roadmap.md) for timeline and milestones
@@ -33,25 +45,31 @@ This folder contains comprehensive documentation for the ExcelViewer project mig
 
 ### **For Technical Review**
 1. Start with [technical-specs.md](./technical-specs.md) for architecture overview
-2. Deep dive into [migration-plan.md](./migration-plan.md) for implementation details
-3. Validate against [core-refactoring-specs.md](./core-refactoring-specs.md) for code quality
+2. Deep dive into implementation details and patterns
+3. Reference project conventions in [CLAUDE.md](../CLAUDE.md)
 
-## 📋 **Document Relationships**
+## 📋 **Project Structure**
 
 ```
-overview.md                    ← Business context and goals
-    ↓
-technical-specs.md            ← Architecture and requirements
-    ↓
-roadmap.md                    ← Timeline and milestones
-    ↓
-development-setup.md          ← Environment preparation
-    ↓
-migration-plan.md             ← Technical migration strategy
-    ↓
-core-refactoring-specs.md     ← Detailed implementation specs
-    ↓
-sonnet-execution-guide.md     ← Step-by-step execution
+ExcelViewer/
+├── src/
+│   ├── ExcelViewer.Core/                    # Core business logic (Clean Architecture)
+│   │   ├── Application/                     # Application services & DTOs
+│   │   ├── Domain/                          # Domain entities & value objects
+│   │   ├── Infrastructure/                  # External concerns & persistence
+│   │   └── Shared/                          # Shared utilities & extensions
+│   ├── ExcelViewer.UI.Avalonia/             # Avalonia UI layer (MVVM)
+│   │   ├── ViewModels/                      # MVVM ViewModels
+│   │   ├── Views/                           # XAML Views
+│   │   ├── Services/                        # UI-specific services
+│   │   └── Converters/                      # XAML converters
+├── tests/
+│   └── ExcelViewer.Tests/                   # Unit tests
+├── docs/                                    # Documentation
+├── assets/                                  # Images, icons, resources
+├── build/                                   # Build scripts
+├── CLAUDE.md                                # Development conventions
+└── README.md                                # Main project overview
 ```
 
 ## 🎯 **Key Project Decisions**
@@ -63,48 +81,41 @@ sonnet-execution-guide.md     ← Step-by-step execution
 - **Testing**: xUnit + Moq + FluentAssertions
 
 ### **Business Model**
-- **Licensing**: Dual License (MIT + Commercial)
+- **Licensing**: MIT License (simple and permissive)
 - **Target Market**: Data-sensitive industries (finance, defense, healthcare)
-- **Distribution**: Desktop applications (Windows/Linux/macOS)
+- **Distribution**: Cross-platform desktop (Windows/Linux/macOS)
 
-### **Migration Strategy**
-- **Phase 0**: Core layer cleanup (CRITICAL FIRST)
-- **Phase 1**: Avalonia project setup
-- **Phase 2**: ViewModels migration
-- **Phase 3**: XAML/UI migration
-- **Phase 4**: Testing and polish
+### **Current Status**
+- ✅ **Avalonia migration completed** - Core infrastructure working
+- 🔧 **Active development** - Feature enhancement and optimization phase
+- 📝 **Documentation** - Clean, focused, and maintainable
 
-## ⚠️ **Critical Notes**
+## 📊 **Development Milestones**
 
-### **For Implementation**
-- **Core cleanup is mandatory first step** - Do not skip Phase 0
-- **Test each phase independently** - Validate before proceeding
-- **Maintain 100% feature parity** - No functionality loss
-- **Follow coding standards** - Reference CLAUDE.md in project root
+### **Phase 0**: Core Migration ✅ **COMPLETED**
+- ✅ Avalonia UI project setup
+- ✅ Core library migration
+- ✅ Basic file loading and comparison
+- ✅ Cross-platform compatibility
 
-### **For Quality Assurance**
-- **Cross-platform testing required** - Windows, Linux, macOS
-- **Performance benchmarks** - Must match or exceed WPF
-- **Security validation** - Local processing only, no cloud dependencies
-- **Commercial readiness** - Enterprise-grade quality standards
+### **Phase 1**: Feature Development (Current)
+- Enhanced comparison algorithms
+- Professional UI/UX polish
+- Export capabilities
+- Performance optimization
 
-## 📊 **Progress Tracking**
+## 🐛 **Troubleshooting**
 
-### **Phase Completion Checklist**
-- [ ] **Phase 0**: Core refactoring completed
-- [ ] **Phase 1**: Avalonia infrastructure working
-- [ ] **Phase 2**: ViewModels migrated and functional
-- [ ] **Phase 3**: UI fully converted and styled
-- [ ] **Phase 4**: Cross-platform tested and optimized
+**Build Issues:**
+- Verify .NET 8: `dotnet --version`
+- Clean build: `dotnet clean && dotnet restore && dotnet build`
 
-### **Quality Gates**
-- [ ] All unit tests passing (>90% coverage)
-- [ ] No methods >25 lines in Core layer
-- [ ] Cross-platform builds successful
-- [ ] Performance benchmarks met
-- [ ] Commercial features functional
+**Runtime Issues:**
+- Ensure .NET 8 Runtime is installed
+- File permissions for Excel files
+- On Linux: Install required system libraries
 
-## 🔗 **External References**
+## 🔗 **External Resources**
 
 ### **Technology Documentation**
 - [Avalonia UI Documentation](https://docs.avaloniaui.net/)
@@ -116,19 +127,8 @@ sonnet-execution-guide.md     ← Step-by-step execution
 - [Avalonia VSCode Extension](https://marketplace.visualstudio.com/items?itemName=AvaloniaTeam.vscode-avalonia)
 - [C# Dev Kit](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csdevkit)
 
-## 📞 **Support and Communication**
-
-### **For Questions or Issues**
-1. Check relevant documentation first
-2. Review CLAUDE.md for project standards
-3. Reference technical specifications for architecture decisions
-4. Follow troubleshooting guides in development setup
-
-### **Document Maintenance**
-- **Last Updated**: September 2025
-- **Version**: 1.0
-- **Next Review**: After Phase 0 completion
-
 ---
 
-*This documentation package provides complete guidance for the ExcelViewer WPF to Avalonia migration project. Follow the documents in order for optimal results.*
+*This documentation hub provides complete guidance for ExcelViewer development and usage. For development standards and conventions, see [CLAUDE.md](../CLAUDE.md).*
+
+**Last Updated**: September 2025 | **Version**: 2.0
