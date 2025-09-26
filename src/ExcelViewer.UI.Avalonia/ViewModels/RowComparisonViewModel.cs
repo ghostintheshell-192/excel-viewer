@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using ExcelViewer.Core.Domain.Entities;
+using ExcelViewer.UI.Avalonia.Models;
 using Microsoft.Extensions.Logging;
 
 namespace ExcelViewer.UI.Avalonia.ViewModels
@@ -91,12 +92,47 @@ namespace ExcelViewer.UI.Avalonia.ViewModels
             ColumnIndex = columnIndex;
             Cells = new ObservableCollection<RowComparisonCellViewModel>();
 
+            // Get all values for this column to determine comparison types
+            var allValues = rows.Select(row => row.GetCellAsString(columnIndex) ?? string.Empty).ToList();
+
             foreach (var row in rows)
             {
-                var cellValue = row.GetCellAsString(columnIndex);
-                var cellViewModel = new RowComparisonCellViewModel(row, columnIndex, cellValue);
+                var cellValue = row.GetCellAsString(columnIndex) ?? string.Empty;
+                var comparisonType = DetermineComparisonType(cellValue, allValues);
+                var cellViewModel = new RowComparisonCellViewModel(row, columnIndex, cellValue, comparisonType);
                 Cells.Add(cellViewModel);
             }
+        }
+
+        private static ComparisonType DetermineComparisonType(string currentValue, IList<string> allValues)
+        {
+            var hasValue = !string.IsNullOrWhiteSpace(currentValue);
+            var otherValues = allValues.Where(v => v != currentValue).ToList();
+            var hasOtherNonEmptyValues = otherValues.Any(v => !string.IsNullOrWhiteSpace(v));
+
+            // If this cell is empty
+            if (!hasValue)
+            {
+                return hasOtherNonEmptyValues ? ComparisonType.Missing : ComparisonType.Match;
+            }
+
+            // If this cell has a value
+            var allNonEmptyValues = allValues.Where(v => !string.IsNullOrWhiteSpace(v)).Distinct().ToList();
+
+            // All non-empty values are the same
+            if (allNonEmptyValues.Count <= 1)
+            {
+                return ComparisonType.Match;
+            }
+
+            // Values differ
+            if (otherValues.Any(v => !string.IsNullOrWhiteSpace(v) && v != currentValue))
+            {
+                return ComparisonType.Different;
+            }
+
+            // This is the only non-empty value
+            return ComparisonType.New;
         }
     }
 
@@ -107,12 +143,14 @@ namespace ExcelViewer.UI.Avalonia.ViewModels
         public string Value { get; }
         public string RowInfo { get; }
         public bool HasValue => !string.IsNullOrWhiteSpace(Value);
+        public ComparisonType ComparisonType { get; }
 
-        public RowComparisonCellViewModel(ExcelRow sourceRow, int columnIndex, string value)
+        public RowComparisonCellViewModel(ExcelRow sourceRow, int columnIndex, string value, ComparisonType comparisonType = ComparisonType.Match)
         {
             SourceRow = sourceRow ?? throw new ArgumentNullException(nameof(sourceRow));
             ColumnIndex = columnIndex;
             Value = value ?? string.Empty;
+            ComparisonType = comparisonType;
             RowInfo = $"{sourceRow.FileName} - {sourceRow.SheetName} - R{sourceRow.RowIndex + 1}";
         }
     }

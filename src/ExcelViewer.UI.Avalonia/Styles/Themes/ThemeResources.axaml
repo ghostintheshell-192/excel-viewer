@@ -59,6 +59,14 @@
     <SolidColorBrush x:Key="SheetGroupBackground" Color="#F8F9FA"/>
     <SolidColorBrush x:Key="HighlightYellow" Color="#FFF3CD"/>
 
+    <!-- Comparison Colors -->
+    <SolidColorBrush x:Key="ComparisonMatchBackground" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ComparisonDifferentBackground" Color="#FFE5D3"/>
+    <SolidColorBrush x:Key="ComparisonNewBackground" Color="#D4EDDA"/>
+    <SolidColorBrush x:Key="ComparisonMissingBackground" Color="#F8D7DA"/>
+    <SolidColorBrush x:Key="ComparisonHeaderBackground" Color="#1E3A5F"/>
+    <SolidColorBrush x:Key="ComparisonAlternateRow" Color="#F8F9FA"/>
+
   </ResourceDictionary>
 
   <!-- Dark Theme Colors -->
@@ -118,6 +126,14 @@
     <SolidColorBrush x:Key="FileGroupBackground" Color="#1A2332"/>
     <SolidColorBrush x:Key="SheetGroupBackground" Color="#1C2128"/>
     <SolidColorBrush x:Key="HighlightYellow" Color="#2E2111"/>
+
+    <!-- Comparison Colors -->
+    <SolidColorBrush x:Key="ComparisonMatchBackground" Color="#0D1117"/>
+    <SolidColorBrush x:Key="ComparisonDifferentBackground" Color="#2E2111"/>
+    <SolidColorBrush x:Key="ComparisonNewBackground" Color="#0F2E1C"/>
+    <SolidColorBrush x:Key="ComparisonMissingBackground" Color="#3D1A1A"/>
+    <SolidColorBrush x:Key="ComparisonHeaderBackground" Color="#2A4A75"/>
+    <SolidColorBrush x:Key="ComparisonAlternateRow" Color="#161B22"/>
 
   </ResourceDictionary>
 
