@@ -14,17 +14,31 @@ namespace ExcelViewer.UI.Avalonia.Converters
     {
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            if (value is not ComparisonType comparisonType)
-                return GetResource("ComparisonMatchBackground");
+            // Debug: Let's see what the converter is actually receiving
+            System.Diagnostics.Debug.WriteLine($"Converter received: {value} (type: {value?.GetType()})");
 
-            return comparisonType switch
+            if (value is not ComparisonType comparisonType)
             {
-                ComparisonType.Match => GetResource("ComparisonMatchBackground"),
-                ComparisonType.Different => GetResource("ComparisonDifferentBackground"),
-                ComparisonType.New => GetResource("ComparisonNewBackground"),
-                ComparisonType.Missing => GetResource("ComparisonMissingBackground"),
-                _ => GetResource("ComparisonMatchBackground")
+                System.Diagnostics.Debug.WriteLine("Value is NOT ComparisonType - using default");
+                return GetResource("ComparisonMatchBackground");
+            }
+
+            System.Diagnostics.Debug.WriteLine($"Converter processing: {comparisonType}");
+
+            var resourceKey = comparisonType switch
+            {
+                ComparisonType.Match => "ComparisonMatchBackground",
+                ComparisonType.Different => "ComparisonDifferentBackground",
+                ComparisonType.New => "ComparisonNewBackground",
+                ComparisonType.Missing => "ComparisonMissingBackground",
+                _ => "ComparisonMatchBackground"
             };
+
+            System.Diagnostics.Debug.WriteLine($"Using resource key: {resourceKey}");
+            var result = GetResource(resourceKey);
+            System.Diagnostics.Debug.WriteLine($"GetResource returned: {result}");
+
+            return result;
         }
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

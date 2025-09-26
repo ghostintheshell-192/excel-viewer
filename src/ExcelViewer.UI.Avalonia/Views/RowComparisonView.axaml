@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:ExcelViewer.UI.Avalonia.ViewModels"
              xmlns:entities="using:ExcelViewer.Core.Domain.Entities"
+             xmlns:converters="using:ExcelViewer.UI.Avalonia.Converters"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
@@ -11,6 +12,10 @@
     <Design.DataContext>
         <vm:RowComparisonViewModel/>
     </Design.DataContext>
+
+    <UserControl.Resources>
+        <converters:ComparisonTypeToBackgroundConverter x:Key="ComparisonTypeToBackgroundConverter"/>
+    </UserControl.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -132,7 +137,7 @@
                                     <ItemsControl ItemsSource="{Binding Cells}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate DataType="vm:RowComparisonCellViewModel">
-                                                <Border Background="{DynamicResource ComparisonMatchBackground}"
+                                                <Border Background="{Binding ComparisonType, Converter={StaticResource ComparisonTypeToBackgroundConverter}}"
                                                         BorderBrush="{DynamicResource BorderColor}"
                                                         BorderThickness="0,0,1,1"
                                                         MinWidth="140" MaxWidth="220" MinHeight="36" Padding="12">

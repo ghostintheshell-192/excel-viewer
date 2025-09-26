@@ -100,39 +100,38 @@ namespace ExcelViewer.UI.Avalonia.ViewModels
                 var cellValue = row.GetCellAsString(columnIndex) ?? string.Empty;
                 var comparisonType = DetermineComparisonType(cellValue, allValues);
                 var cellViewModel = new RowComparisonCellViewModel(row, columnIndex, cellValue, comparisonType);
+
+                // Debug: Let's see what we're actually getting
+                System.Diagnostics.Debug.WriteLine($"Column {columnIndex}: '{cellValue}' -> {comparisonType}");
+
                 Cells.Add(cellViewModel);
             }
         }
 
         private static ComparisonType DetermineComparisonType(string currentValue, IList<string> allValues)
         {
-            var hasValue = !string.IsNullOrWhiteSpace(currentValue);
-            var otherValues = allValues.Where(v => v != currentValue).ToList();
-            var hasOtherNonEmptyValues = otherValues.Any(v => !string.IsNullOrWhiteSpace(v));
+            // Normalize values first
+            var normalizedCurrentValue = (currentValue ?? "").Trim();
+            var normalizedAllValues = allValues.Select(v => (v ?? "").Trim()).ToList();
 
-            // If this cell is empty
+            var hasValue = !string.IsNullOrWhiteSpace(normalizedCurrentValue);
+            var allNonEmptyValues = normalizedAllValues.Where(v => !string.IsNullOrWhiteSpace(v)).ToList();
+            var distinctNonEmptyValues = allNonEmptyValues.Distinct().ToList();
+
             if (!hasValue)
             {
-                return hasOtherNonEmptyValues ? ComparisonType.Missing : ComparisonType.Match;
+                return allNonEmptyValues.Any() ? ComparisonType.Missing : ComparisonType.Match;
             }
 
-            // If this cell has a value
-            var allNonEmptyValues = allValues.Where(v => !string.IsNullOrWhiteSpace(v)).Distinct().ToList();
-
-            // All non-empty values are the same
-            if (allNonEmptyValues.Count <= 1)
+            if (distinctNonEmptyValues.Count <= 1)
             {
                 return ComparisonType.Match;
             }
-
-            // Values differ
-            if (otherValues.Any(v => !string.IsNullOrWhiteSpace(v) && v != currentValue))
+            else
             {
+                var occurrencesOfThisValue = allNonEmptyValues.Count(v => v == normalizedCurrentValue);
                 return ComparisonType.Different;
             }
-
-            // This is the only non-empty value
-            return ComparisonType.New;
         }
     }
 

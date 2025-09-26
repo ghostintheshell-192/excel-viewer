@@ -151,7 +151,8 @@ namespace ExcelViewer.UI.Avalonia.Services
                    keyString.Contains("Search") ||
                    keyString.Contains("File") ||
                    keyString.Contains("Sheet") ||
-                   keyString.Contains("Highlight");
+                   keyString.Contains("Highlight") ||
+                   keyString.Contains("Comparison");
         }
 
         private Theme LoadThemePreference()

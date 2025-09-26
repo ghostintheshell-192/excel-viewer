@@ -20,28 +20,131 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Toolbar -->
-        <Grid Grid.Row="0" Margin="0,0,0,10">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
+        <!-- Professional Menu Bar -->
+        <Menu Grid.Row="0"
+              Background="{DynamicResource SecondaryBackground}"
+              BorderBrush="{DynamicResource BorderColor}"
+              BorderThickness="0,0,0,1"
+              Padding="8,0"
+              Margin="0,0,0,8"
+              Foreground="{DynamicResource PrimaryText}">
+            <Menu.Styles>
+                <!-- Base MenuItem styling -->
+                <Style Selector="MenuItem">
+                    <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
+                    <Setter Property="Background" Value="Transparent"/>
+                </Style>
 
-            <!-- Left side buttons -->
-            <StackPanel Grid.Column="0" Orientation="Horizontal">
-                <Button Content="Load File" Command="{Binding LoadFileCommand}" Padding="12,6"/>
-            </StackPanel>
+                <!-- Top level menu items hover - force template override -->
+                <Style Selector="MenuItem:pointerover /template/ Border#PART_LayoutRoot">
+                    <Setter Property="Background" Value="#E0E0E0"/>
+                </Style>
+                <Style Selector="MenuItem:pointerover /template/ ContentPresenter#PART_HeaderPresenter">
+                    <Setter Property="TextBlock.Foreground" Value="#333333"/>
+                </Style>
 
-            <!-- Right side theme toggle -->
-            <Button Grid.Column="1"
-                    Content="{Binding ThemeButtonText}"
-                    Command="{Binding ToggleThemeCommand}"
-                    ToolTip.Tip="{Binding ThemeButtonTooltip}"
-                    Width="40" Height="40"
-                    FontSize="16"
-                    HorizontalContentAlignment="Center"
-                    VerticalContentAlignment="Center"/>
-        </Grid>
+                <!-- Menu items when submenu is open (selected state) -->
+                <Style Selector="MenuItem:selected /template/ Border#PART_LayoutRoot">
+                    <Setter Property="Background" Value="#E0E0E0"/>
+                </Style>
+                <Style Selector="MenuItem:selected /template/ ContentPresenter#PART_HeaderPresenter">
+                    <Setter Property="TextBlock.Foreground" Value="#333333"/>
+                </Style>
+
+                <!-- Menu items when submenu popup is open -->
+                <Style Selector="MenuItem:open /template/ Border#PART_LayoutRoot">
+                    <Setter Property="Background" Value="#E0E0E0"/>
+                </Style>
+                <Style Selector="MenuItem:open /template/ ContentPresenter#PART_HeaderPresenter">
+                    <Setter Property="TextBlock.Foreground" Value="#333333"/>
+                </Style>
+
+                <!-- Top level menu items pressed -->
+                <Style Selector="MenuItem:pressed">
+                    <Setter Property="Background" Value="{DynamicResource AccentOrange}"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Style>
+
+                <!-- Submenu container - ensure proper background -->
+                <Style Selector="MenuItem Popup Border">
+                    <Setter Property="Background" Value="{DynamicResource MainBackground}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                    <Setter Property="CornerRadius" Value="4"/>
+                    <Setter Property="Padding" Value="4"/>
+                </Style>
+
+                <!-- Submenu items base styling -->
+                <Style Selector="MenuItem MenuItem">
+                    <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="Padding" Value="8,6"/>
+                    <Setter Property="Margin" Value="2"/>
+                </Style>
+
+                <!-- Submenu items hover -->
+                <Style Selector="MenuItem MenuItem:pointerover">
+                    <Setter Property="Background" Value="#E0E0E0"/>
+                    <Setter Property="Foreground" Value="#333333"/>
+                </Style>
+
+                <!-- Submenu items pressed -->
+                <Style Selector="MenuItem MenuItem:pressed">
+                    <Setter Property="Background" Value="#D0D0D0"/>
+                    <Setter Property="Foreground" Value="#333333"/>
+                </Style>
+
+                <!-- Separator styling -->
+                <Style Selector="MenuItem Separator">
+                    <Setter Property="Background" Value="{DynamicResource BorderColor}"/>
+                    <Setter Property="Height" Value="1"/>
+                    <Setter Property="Margin" Value="8,4"/>
+                </Style>
+            </Menu.Styles>
+
+            <!-- File Menu -->
+            <MenuItem Header="_File">
+                <MenuItem Header="📁 _Load Files"
+                         Command="{Binding LoadFileCommand}"
+                         InputGesture="Ctrl+O"/>
+                <Separator/>
+                <MenuItem Header="Recent Files" IsEnabled="False"/>
+                <Separator/>
+                <MenuItem Header="E_xit"
+                         InputGesture="Alt+F4"/>
+            </MenuItem>
+
+            <!-- View Menu -->
+            <MenuItem Header="_View">
+                <MenuItem Header="{Binding ThemeButtonText, StringFormat='Switch to {0} Theme'}"
+                         Command="{Binding ToggleThemeCommand}"
+                         InputGesture="Ctrl+T"/>
+                <Separator/>
+                <MenuItem Header="Show _Status Bar"/>
+                <MenuItem Header="Show _Search Panel"/>
+            </MenuItem>
+
+            <!-- Tools Menu -->
+            <MenuItem Header="_Tools">
+                <MenuItem Header="_Compare Selected Rows" IsEnabled="False"/>
+                <MenuItem Header="_Export Results" IsEnabled="False"/>
+                <Separator/>
+                <MenuItem Header="_Settings"/>
+            </MenuItem>
+
+            <!-- Help Menu -->
+            <MenuItem Header="_Help">
+                <MenuItem Header="_About ExcelViewer"/>
+                <MenuItem Header="_Documentation"/>
+            </MenuItem>
+
+            <!-- Status area on the right -->
+            <MenuItem Header="{Binding LoadedFiles.Count, StringFormat='{}{0} files loaded'}"
+                     HorizontalAlignment="Right"
+                     Foreground="{DynamicResource SecondaryText}"
+                     FontSize="12"
+                     IsEnabled="False"/>
+        </Menu>
 
         <!-- Main Content -->
         <Grid Grid.Row="1">
