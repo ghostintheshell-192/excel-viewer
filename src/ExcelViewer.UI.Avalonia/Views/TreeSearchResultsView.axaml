@@ -5,11 +5,52 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="600"
              x:Class="ExcelViewer.UI.Avalonia.Views.TreeSearchResultsView"
-             x:DataType="vm:TreeSearchResultsViewModel">
+             x:DataType="vm:TreeSearchResultsViewModel"
+             Background="{DynamicResource MainBackground}">
 
     <Design.DataContext>
         <vm:TreeSearchResultsViewModel/>
     </Design.DataContext>
+
+    <UserControl.Styles>
+        <!-- Modern Button Style -->
+        <Style Selector="Button.ModernButton">
+            <Setter Property="Background" Value="{DynamicResource PrimaryNavyBlue}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <Style Selector="Button.ModernButton:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource SecondaryBlue}"/>
+        </Style>
+
+        <!-- Orange CTA Button Style -->
+        <Style Selector="Button.CTAButton">
+            <Setter Property="Background" Value="{DynamicResource AccentOrange}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <Style Selector="Button.CTAButton:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#E55A2B"/>
+        </Style>
+    </UserControl.Styles>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -17,108 +58,235 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Header -->
-        <StackPanel Grid.Row="0" Orientation="Vertical" Margin="0,0,0,8">
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                <TextBlock Text="Search Results" FontWeight="SemiBold" FontSize="14"/>
-                <Button Content="Clear History"
-                        Command="{Binding ClearHistoryCommand}"
-                        Margin="12,0,0,0" Padding="8,2"
-                        FontSize="10"/>
+        <!-- Enhanced Header -->
+        <Border Grid.Row="0"
+                Background="{DynamicResource SecondaryBackground}"
+                Padding="16,12"
+                BorderBrush="{DynamicResource BorderColor}"
+                BorderThickness="0,0,0,1">
+            <StackPanel Orientation="Vertical" Spacing="8">
+
+                <!-- Title Row -->
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <PathIcon Data="{StaticResource SearchIconData}"
+                             Width="16" Height="16"
+                             Foreground="{DynamicResource PrimaryNavyBlue}"/>
+                    <TextBlock Text="Search Results"
+                              FontWeight="SemiBold"
+                              FontSize="16"
+                              Foreground="{DynamicResource PrimaryText}"/>
+                    <Button Content="Clear History"
+                            Classes="ModernButton"
+                            Command="{Binding ClearHistoryCommand}"
+                            FontSize="12"/>
+                </StackPanel>
+
+                <!-- Row Comparison Controls -->
+                <StackPanel Orientation="Horizontal"
+                           Spacing="12"
+                           IsVisible="{Binding CanCompareRows}">
+                    <Border Background="{DynamicResource InfoBackground}"
+                           CornerRadius="4"
+                           Padding="8,4">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <TextBlock Text="{Binding SelectedCount}"
+                                      FontWeight="SemiBold"
+                                      Foreground="{DynamicResource InfoColor}"/>
+                            <TextBlock Text="rows selected"
+                                      Foreground="{DynamicResource SecondaryText}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Button Content="Compare Rows"
+                            Classes="CTAButton"
+                            Command="{Binding CompareSelectedRowsCommand}"
+                            IsEnabled="{Binding CanCompareRows}">
+                        <Button.Content>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <PathIcon Data="{StaticResource CompareIconData}"
+                                         Width="14" Height="14"/>
+                                <TextBlock Text="Compare Rows"/>
+                            </StackPanel>
+                        </Button.Content>
+                    </Button>
+
+                    <Button Content="Clear Selection"
+                            Classes="ModernButton"
+                            Command="{Binding ClearSelectionCommand}"
+                            FontSize="12"/>
+                </StackPanel>
             </StackPanel>
+        </Border>
 
-            <!-- Row Comparison Controls -->
-            <StackPanel Orientation="Horizontal" Margin="0,4,0,0"
-                       IsVisible="{Binding CanCompareRows}">
-                <TextBlock Text="{Binding SelectedCount}" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                <TextBlock Text=" rows selected for comparison" VerticalAlignment="Center" Margin="4,0,8,0"/>
-
-                <Button Content="Compare Rows"
-                        Command="{Binding CompareSelectedRowsCommand}"
-                        IsEnabled="{Binding CanCompareRows}"
-                        Margin="0,0,8,0" Padding="8,2"
-                        FontSize="10"/>
-
-                <Button Content="Clear Selection"
-                        Command="{Binding ClearSelectionCommand}"
-                        Margin="0,0,0,0" Padding="8,2"
-                        FontSize="10"/>
-            </StackPanel>
-        </StackPanel>
-
-        <!-- Tree Results -->
+        <!-- Enhanced Tree Results (Notepad++ Style) -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <TreeView ItemsSource="{Binding SearchHistory}">
+            <TreeView ItemsSource="{Binding SearchHistory}"
+                     Background="Transparent">
 
-                <!-- Search History Level -->
+                <!-- Search History Level (Query Header) -->
                 <TreeView.DataTemplates>
                     <TreeDataTemplate DataType="vm:SearchHistoryItem" ItemsSource="{Binding FileGroups}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="🔍" Margin="0,0,4,0"/>
-                            <TextBlock Text="{Binding DisplayText}" FontWeight="SemiBold"/>
-                        </StackPanel>
+                        <Border Background="{DynamicResource SearchQueryBackground}"
+                               CornerRadius="0"
+                               Padding="12,8"
+                               Margin="0,4,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <PathIcon Data="{StaticResource SearchIconData}"
+                                         Width="16" Height="16"
+                                         Foreground="{DynamicResource SearchQueryText}"/>
+                                <TextBlock Foreground="{DynamicResource SearchQueryText}"
+                                          FontWeight="SemiBold">
+                                    <Run Text="Search: &quot;"/>
+                                    <Run Text="{Binding Query}" FontWeight="Bold"/>
+                                    <Run Text="&quot; ("/>
+                                    <Run Text="{Binding TotalResults}"/>
+                                    <Run Text=" hits)"/>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
                     </TreeDataTemplate>
 
                     <!-- File Group Level -->
                     <TreeDataTemplate DataType="vm:FileResultGroup" ItemsSource="{Binding SheetGroups}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="📄" Margin="0,0,4,0"/>
-                            <TextBlock Text="{Binding DisplayText}" FontWeight="Medium"/>
-                        </StackPanel>
+                        <Border Background="{DynamicResource FileGroupBackground}"
+                               Padding="16,6"
+                               BorderThickness="0,0,0,1"
+                               BorderBrush="{DynamicResource SubtleBorder}">
+                            <TextBlock FontWeight="Medium"
+                                      Foreground="{DynamicResource PrimaryText}">
+                                <Run Text="File - " Foreground="{DynamicResource SecondaryText}"/>
+                                <Run Text="{Binding FileName}"/>
+                                <Run Text=" (" Foreground="{DynamicResource SecondaryText}"/>
+                                <Run Text="{Binding TotalResults}" Foreground="{DynamicResource SecondaryText}"/>
+                                <Run Text=" hits)" Foreground="{DynamicResource SecondaryText}"/>
+                            </TextBlock>
+                        </Border>
                     </TreeDataTemplate>
 
                     <!-- Sheet Group Level -->
                     <TreeDataTemplate DataType="vm:SheetResultGroup" ItemsSource="{Binding Results}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="📋" Margin="0,0,4,0"/>
-                            <TextBlock Text="{Binding DisplayText}"/>
-                        </StackPanel>
+                        <Border Background="{DynamicResource SheetGroupBackground}"
+                               Padding="32,4"
+                               BorderThickness="0,0,0,1"
+                               BorderBrush="{DynamicResource SubtleBorder}">
+                            <TextBlock Foreground="{DynamicResource SecondaryText}" FontSize="13">
+                                <Run Text="Foglio - "/>
+                                <Run Text="{Binding SheetName}"/>
+                                <Run Text=" ("/>
+                                <Run Text="{Binding TotalResults}"/>
+                                <Run Text=" hits)"/>
+                            </TextBlock>
+                        </Border>
                     </TreeDataTemplate>
 
-                    <!-- Individual Result Level -->
+                    <!-- Individual Result Level (Notepad++ style with line numbers) -->
                     <DataTemplate DataType="vm:SearchResultItem">
-                        <StackPanel Orientation="Horizontal" Margin="16,0,0,0">
-                            <CheckBox IsChecked="{Binding IsSelected}"
-                                     IsVisible="{Binding CanBeCompared}"
-                                     Margin="0,0,4,0"
-                                     VerticalAlignment="Center"/>
-                            <TextBlock Text="•" Margin="0,0,4,0" Foreground="Gray"
-                                      IsVisible="{Binding !CanBeCompared}"/>
-                            <TextBlock Text="{Binding DisplayText}"
-                                      FontSize="11"
-                                      TextTrimming="CharacterEllipsis"
-                                      VerticalAlignment="Center"/>
-                        </StackPanel>
+                        <Border Padding="48,3,16,3"
+                               BorderThickness="0,0,0,1"
+                               BorderBrush="{DynamicResource SubtleBorder}"
+                               Background="Transparent">
+
+                            <Grid ColumnDefinitions="Auto,*">
+                                <!-- Selection Checkbox (no hover effect) -->
+                                <CheckBox Grid.Column="0"
+                                         IsChecked="{Binding IsSelected}"
+                                         IsVisible="{Binding CanBeCompared}"
+                                         Margin="0,0,8,0"
+                                         VerticalAlignment="Center"/>
+
+                                <!-- Content area with hover effect -->
+                                <Border Grid.Column="1"
+                                       Background="Transparent"
+                                       Padding="0">
+                                    <Border.Styles>
+                                        <Style Selector="Border:pointerover">
+                                            <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
+                                        </Style>
+                                    </Border.Styles>
+
+                                    <Grid ColumnDefinitions="Auto,Auto,*,Auto">
+                                        <!-- Line Label -->
+                                        <TextBlock Grid.Column="0"
+                                                  Text="Line "
+                                                  Foreground="{DynamicResource SecondaryText}"
+                                                  FontSize="11"
+                                                  VerticalAlignment="Center"/>
+
+                                        <!-- Row Number -->
+                                        <TextBlock Grid.Column="1"
+                                                  Text="{Binding Result.Row, StringFormat='{}{0}:'}"
+                                                  Foreground="{DynamicResource AccentOrange}"
+                                                  FontWeight="SemiBold"
+                                                  FontSize="11"
+                                                  Margin="0,0,8,0"
+                                                  VerticalAlignment="Center"/>
+
+                                        <!-- Match Content with Highlighting -->
+                                        <TextBlock Grid.Column="2"
+                                                  FontSize="12"
+                                                  TextTrimming="CharacterEllipsis"
+                                                  VerticalAlignment="Center"
+                                                  FontFamily="Consolas, 'Courier New', monospace">
+                                            <Run Text="{Binding DisplayText}"
+                                                 Foreground="{DynamicResource PrimaryText}"/>
+                                        </TextBlock>
+
+                                        <!-- Cell Type Icon -->
+                                        <PathIcon Grid.Column="3"
+                                                 Data="{StaticResource CellIconData}"
+                                                 Width="12" Height="12"
+                                                 Foreground="{DynamicResource Gray500}"
+                                                 Margin="8,0,0,0"
+                                                 IsVisible="{Binding CanBeCompared}"/>
+                                    </Grid>
+                                </Border>
+                            </Grid>
+                        </Border>
                     </DataTemplate>
                 </TreeView.DataTemplates>
 
-                <!-- TreeView Styling -->
+                <!-- Enhanced TreeView Styling -->
                 <TreeView.Styles>
                     <Style Selector="TreeViewItem">
                         <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
-                        <Setter Property="Padding" Value="2"/>
+                        <Setter Property="Padding" Value="0"/>
+                        <Setter Property="Margin" Value="0"/>
+                    </Style>
+
+                    <!-- Remove default TreeView indentation and bullets -->
+                    <Style Selector="TreeViewItem /template/ Border#PART_Header">
+                        <Setter Property="Padding" Value="0"/>
+                    </Style>
+
+                    <Style Selector="TreeViewItem /template/ ToggleButton">
+                        <Setter Property="IsVisible" Value="False"/>
                     </Style>
                 </TreeView.Styles>
 
             </TreeView>
         </ScrollViewer>
 
-        <!-- Empty State -->
+        <!-- Enhanced Empty State -->
         <StackPanel Grid.Row="1"
                    HorizontalAlignment="Center"
                    VerticalAlignment="Center"
+                   Spacing="16"
                    IsVisible="{Binding !SearchHistory.Count}">
-            <TextBlock Text="🔍" FontSize="32" HorizontalAlignment="Center" Opacity="0.3"/>
+            <PathIcon Data="{StaticResource SearchIconData}"
+                     Width="48" Height="48"
+                     Foreground="{DynamicResource Gray400}"/>
             <TextBlock Text="No search results yet"
-                      FontStyle="Italic"
-                      Foreground="Gray"
+                      FontSize="16"
+                      FontWeight="Medium"
+                      Foreground="{DynamicResource SecondaryText}"
+                      HorizontalAlignment="Center"/>
+            <TextBlock Text="Start typing in the search box to find data across your Excel files"
+                      FontSize="12"
+                      Foreground="{DynamicResource SecondaryText}"
                       HorizontalAlignment="Center"
-                      Margin="0,8,0,0"/>
-            <TextBlock Text="Start typing in the search box above"
-                      FontSize="11"
-                      Foreground="Gray"
-                      HorizontalAlignment="Center"
-                      Margin="0,4,0,0"/>
+                      TextAlignment="Center"
+                      MaxWidth="300"
+                      TextWrapping="Wrap"/>
         </StackPanel>
     </Grid>
 </UserControl>

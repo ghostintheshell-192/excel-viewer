@@ -30,6 +30,9 @@ public partial class App : Application
         // Create and configure the host
         _host = CreateHostBuilder().Build();
 
+        // Initialize theme manager
+        var themeManager = _host.Services.GetRequiredService<IThemeManager>();
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             // Get the main window and view model from DI container
@@ -69,6 +72,7 @@ public partial class App : Application
                 // Register Avalonia-specific services
                 services.AddScoped<IDialogService, AvaloniaDialogService>();
                 services.AddScoped<IFilePickerService, AvaloniaFilePickerService>();
+                services.AddSingleton<IThemeManager, ThemeManager>();
 
                 // Register Managers and Factories
                 services.AddScoped<ISearchResultFactory, ExcelViewer.UI.Avalonia.Models.Search.SearchResultFactory>();

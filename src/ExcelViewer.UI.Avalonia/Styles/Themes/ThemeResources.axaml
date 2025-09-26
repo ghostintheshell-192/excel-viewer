@@ -1,0 +1,124 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- Light Theme Colors -->
+  <ResourceDictionary x:Key="LightTheme">
+
+    <!-- Brand Colors -->
+    <SolidColorBrush x:Key="PrimaryNavyBlue" Color="#1E3A5F"/>
+    <SolidColorBrush x:Key="AccentOrange" Color="#FF6B35"/>
+    <SolidColorBrush x:Key="SecondaryBlue" Color="#4A90E2"/>
+
+    <!-- Backgrounds -->
+    <SolidColorBrush x:Key="MainBackground" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="SecondaryBackground" Color="#F8F9FA"/>
+    <SolidColorBrush x:Key="TertiaryBackground" Color="#F1F3F5"/>
+    <SolidColorBrush x:Key="CardBackground" Color="#FFFFFF"/>
+
+    <!-- Text Colors -->
+    <SolidColorBrush x:Key="PrimaryText" Color="#212529"/>
+    <SolidColorBrush x:Key="SecondaryText" Color="#6C757D"/>
+    <SolidColorBrush x:Key="DisabledText" Color="#ADB5BD"/>
+    <SolidColorBrush x:Key="LinkText" Color="#4A90E2"/>
+
+    <!-- Neutral Grays -->
+    <SolidColorBrush x:Key="Gray100" Color="#F8F9FA"/>
+    <SolidColorBrush x:Key="Gray200" Color="#E9ECEF"/>
+    <SolidColorBrush x:Key="Gray300" Color="#DEE2E6"/>
+    <SolidColorBrush x:Key="Gray400" Color="#CED4DA"/>
+    <SolidColorBrush x:Key="Gray500" Color="#ADB5BD"/>
+    <SolidColorBrush x:Key="Gray600" Color="#6C757D"/>
+    <SolidColorBrush x:Key="Gray700" Color="#495057"/>
+    <SolidColorBrush x:Key="Gray800" Color="#343A40"/>
+    <SolidColorBrush x:Key="Gray900" Color="#212529"/>
+
+    <!-- State Colors -->
+    <SolidColorBrush x:Key="SuccessColor" Color="#28A745"/>
+    <SolidColorBrush x:Key="SuccessBackground" Color="#D4EDDA"/>
+    <SolidColorBrush x:Key="WarningColor" Color="#FFC107"/>
+    <SolidColorBrush x:Key="WarningBackground" Color="#FFF3CD"/>
+    <SolidColorBrush x:Key="ErrorColor" Color="#DC3545"/>
+    <SolidColorBrush x:Key="ErrorBackground" Color="#F8D7DA"/>
+    <SolidColorBrush x:Key="InfoColor" Color="#17A2B8"/>
+    <SolidColorBrush x:Key="InfoBackground" Color="#D1ECF1"/>
+
+    <!-- Interactive States -->
+    <SolidColorBrush x:Key="HoverBackground" Color="#F1F3F5"/>
+    <SolidColorBrush x:Key="SelectedBackground" Color="#E3F2FD"/>
+    <SolidColorBrush x:Key="ActiveBackground" Color="#1E3A5F" Opacity="0.1"/>
+    <SolidColorBrush x:Key="FocusBorder" Color="#FF6B35"/>
+
+    <!-- Borders and Dividers -->
+    <SolidColorBrush x:Key="BorderColor" Color="#DEE2E6"/>
+    <SolidColorBrush x:Key="SubtleBorder" Color="#E9ECEF"/>
+
+    <!-- Search Specific -->
+    <SolidColorBrush x:Key="SearchQueryBackground" Color="#1E3A5F"/>
+    <SolidColorBrush x:Key="SearchQueryText" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="FileGroupBackground" Color="#E3F2FD"/>
+    <SolidColorBrush x:Key="SheetGroupBackground" Color="#F8F9FA"/>
+    <SolidColorBrush x:Key="HighlightYellow" Color="#FFF3CD"/>
+
+  </ResourceDictionary>
+
+  <!-- Dark Theme Colors -->
+  <ResourceDictionary x:Key="DarkTheme">
+
+    <!-- Brand Colors -->
+    <SolidColorBrush x:Key="PrimaryNavyBlue" Color="#2A4A75"/>
+    <SolidColorBrush x:Key="AccentOrange" Color="#FF6B35"/>
+    <SolidColorBrush x:Key="SecondaryBlue" Color="#58A6FF"/>
+
+    <!-- Backgrounds -->
+    <SolidColorBrush x:Key="MainBackground" Color="#0D1117"/>
+    <SolidColorBrush x:Key="SecondaryBackground" Color="#161B22"/>
+    <SolidColorBrush x:Key="TertiaryBackground" Color="#21262D"/>
+    <SolidColorBrush x:Key="CardBackground" Color="#1C2128"/>
+
+    <!-- Text Colors -->
+    <SolidColorBrush x:Key="PrimaryText" Color="#F0F6FC"/>
+    <SolidColorBrush x:Key="SecondaryText" Color="#8B949E"/>
+    <SolidColorBrush x:Key="DisabledText" Color="#484F58"/>
+    <SolidColorBrush x:Key="LinkText" Color="#58A6FF"/>
+
+    <!-- Neutral Grays -->
+    <SolidColorBrush x:Key="Gray100" Color="#F0F6FC"/>
+    <SolidColorBrush x:Key="Gray200" Color="#C9D1D9"/>
+    <SolidColorBrush x:Key="Gray300" Color="#8B949E"/>
+    <SolidColorBrush x:Key="Gray400" Color="#6E7681"/>
+    <SolidColorBrush x:Key="Gray500" Color="#484F58"/>
+    <SolidColorBrush x:Key="Gray600" Color="#30363D"/>
+    <SolidColorBrush x:Key="Gray700" Color="#21262D"/>
+    <SolidColorBrush x:Key="Gray800" Color="#161B22"/>
+    <SolidColorBrush x:Key="Gray900" Color="#0D1117"/>
+
+    <!-- State Colors -->
+    <SolidColorBrush x:Key="SuccessColor" Color="#3FB950"/>
+    <SolidColorBrush x:Key="SuccessBackground" Color="#0F2E1C"/>
+    <SolidColorBrush x:Key="WarningColor" Color="#D29922"/>
+    <SolidColorBrush x:Key="WarningBackground" Color="#2E2111"/>
+    <SolidColorBrush x:Key="ErrorColor" Color="#F85149"/>
+    <SolidColorBrush x:Key="ErrorBackground" Color="#3D1A1A"/>
+    <SolidColorBrush x:Key="InfoColor" Color="#58A6FF"/>
+    <SolidColorBrush x:Key="InfoBackground" Color="#0D2640"/>
+
+    <!-- Interactive States -->
+    <SolidColorBrush x:Key="HoverBackground" Color="#21262D"/>
+    <SolidColorBrush x:Key="SelectedBackground" Color="#1E3A5F" Opacity="0.2"/>
+    <SolidColorBrush x:Key="ActiveBackground" Color="#FF6B35" Opacity="0.15"/>
+    <SolidColorBrush x:Key="FocusBorder" Color="#FF6B35"/>
+
+    <!-- Borders and Dividers -->
+    <SolidColorBrush x:Key="BorderColor" Color="#30363D"/>
+    <SolidColorBrush x:Key="SubtleBorder" Color="#21262D"/>
+
+    <!-- Search Specific -->
+    <SolidColorBrush x:Key="SearchQueryBackground" Color="#2A4A75"/>
+    <SolidColorBrush x:Key="SearchQueryText" Color="#F0F6FC"/>
+    <SolidColorBrush x:Key="FileGroupBackground" Color="#1A2332"/>
+    <SolidColorBrush x:Key="SheetGroupBackground" Color="#1C2128"/>
+    <SolidColorBrush x:Key="HighlightYellow" Color="#2E2111"/>
+
+  </ResourceDictionary>
+
+</ResourceDictionary>

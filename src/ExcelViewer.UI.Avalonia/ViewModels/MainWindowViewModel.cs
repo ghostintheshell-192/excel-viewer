@@ -18,6 +18,7 @@ public class MainWindowViewModel : ViewModelBase
     private readonly IDialogService _dialogService;
     private readonly ILogger<MainWindowViewModel> _logger;
     private readonly IServiceProvider _serviceProvider;
+    private readonly IThemeManager _themeManager;
 
     private IFileLoadResultViewModel? _selectedFile;
     private object? _currentView;
@@ -93,6 +94,12 @@ public class MainWindowViewModel : ViewModelBase
     }
 
     public ICommand LoadFileCommand { get; }
+    public ICommand ToggleThemeCommand { get; }
+
+    // Theme properties
+    public Theme CurrentTheme => _themeManager.CurrentTheme;
+    public string ThemeButtonText => CurrentTheme == Theme.Light ? "🌙" : "☀️";
+    public string ThemeButtonTooltip => CurrentTheme == Theme.Light ? "Switch to Dark Theme" : "Switch to Light Theme";
 
     // Delegated commands from SearchViewModel
     public ICommand ShowAllFilesCommand => SearchViewModel?.ShowAllFilesCommand ?? new RelayCommand(() => Task.CompletedTask);
@@ -102,13 +109,15 @@ public class MainWindowViewModel : ViewModelBase
         IFilePickerService filePickerService,
         IDialogService dialogService,
         ILogger<MainWindowViewModel> logger,
-        IServiceProvider serviceProvider)
+        IServiceProvider serviceProvider,
+        IThemeManager themeManager)
     {
         _excelReaderService = excelReaderService ?? throw new ArgumentNullException(nameof(excelReaderService));
         _filePickerService = filePickerService ?? throw new ArgumentNullException(nameof(filePickerService));
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        _themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
 
         LoadedFiles = new ReadOnlyObservableCollection<IFileLoadResultViewModel>(_loadedFiles);
         RowComparisons = new ReadOnlyObservableCollection<RowComparisonViewModel>(_rowComparisons);
@@ -117,7 +126,10 @@ public class MainWindowViewModel : ViewModelBase
         _selectedTabIndex = 1;
 
         LoadFileCommand = new RelayCommand(async () => await LoadFileAsync());
+        ToggleThemeCommand = new RelayCommand(() => { ToggleTheme(); return Task.CompletedTask; });
 
+        // Subscribe to theme changes to update UI
+        _themeManager.ThemeChanged += OnThemeChanged;
     }
 
     public void SetSearchViewModel(SearchViewModel searchViewModel)
@@ -330,8 +342,26 @@ public class MainWindowViewModel : ViewModelBase
         }
     }
 
+    private void ToggleTheme()
+    {
+        try
+        {
+            _themeManager.ToggleTheme();
+            _logger.LogInformation("Theme toggled to {Theme}", _themeManager.CurrentTheme);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to toggle theme");
+        }
+    }
 
-
+    private void OnThemeChanged(object? sender, Theme newTheme)
+    {
+        // Update UI properties when theme changes
+        OnPropertyChanged(nameof(CurrentTheme));
+        OnPropertyChanged(nameof(ThemeButtonText));
+        OnPropertyChanged(nameof(ThemeButtonTooltip));
+    }
 }
 
 // Simple RelayCommand implementation

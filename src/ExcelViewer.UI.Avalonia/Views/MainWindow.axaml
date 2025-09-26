@@ -21,9 +21,27 @@
         </Grid.RowDefinitions>
 
         <!-- Toolbar -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
-            <Button Content="Load File" Command="{Binding LoadFileCommand}" Padding="12,6"/>
-        </StackPanel>
+        <Grid Grid.Row="0" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left side buttons -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                <Button Content="Load File" Command="{Binding LoadFileCommand}" Padding="12,6"/>
+            </StackPanel>
+
+            <!-- Right side theme toggle -->
+            <Button Grid.Column="1"
+                    Content="{Binding ThemeButtonText}"
+                    Command="{Binding ToggleThemeCommand}"
+                    ToolTip.Tip="{Binding ThemeButtonTooltip}"
+                    Width="40" Height="40"
+                    FontSize="16"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"/>
+        </Grid>
 
         <!-- Main Content -->
         <Grid Grid.Row="1">
