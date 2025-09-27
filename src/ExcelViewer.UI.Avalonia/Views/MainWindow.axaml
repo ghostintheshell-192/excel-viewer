@@ -111,17 +111,12 @@
 
             <!-- View Menu -->
             <MenuItem Header="_View">
-                <MenuItem Header="{Binding ThemeButtonText, StringFormat='Switch to {0} Theme'}"
-                         Command="{Binding ToggleThemeCommand}"
-                         InputGesture="Ctrl+T"/>
-                <Separator/>
                 <MenuItem Header="Show _Status Bar"/>
                 <MenuItem Header="Show _Search Panel"/>
             </MenuItem>
 
             <!-- Tools Menu -->
             <MenuItem Header="_Tools">
-                <MenuItem Header="_Compare Selected Rows" IsEnabled="False"/>
                 <MenuItem Header="_Export Results" IsEnabled="False"/>
                 <Separator/>
                 <MenuItem Header="_Settings"/>
@@ -131,6 +126,15 @@
             <MenuItem Header="_Help">
                 <MenuItem Header="_About ExcelViewer"/>
                 <MenuItem Header="_Documentation"/>
+            </MenuItem>
+
+            <!-- Temporary theme toggle (will move to Settings) -->
+            <MenuItem Header="🎨 Theme"
+                     HorizontalAlignment="Right"
+                     Margin="0,0,20,0">
+                <MenuItem Header="{Binding ThemeButtonText, StringFormat='Switch to {0} Theme'}"
+                         Command="{Binding ToggleThemeCommand}"
+                         InputGesture="Ctrl+T"/>
             </MenuItem>
 
             <!-- Status area on the right -->
