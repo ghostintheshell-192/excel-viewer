@@ -87,6 +87,10 @@ namespace ExcelViewer.UI.Avalonia.Services
 
             try
             {
+                // Set the global theme variant for Avalonia
+                var themeVariant = theme == Theme.Light ? ThemeVariant.Light : ThemeVariant.Dark;
+                application.RequestedThemeVariant = themeVariant;
+
                 var themeKey = theme == Theme.Light ? "LightTheme" : "DarkTheme";
 
                 // Find the theme resources file
@@ -113,7 +117,7 @@ namespace ExcelViewer.UI.Avalonia.Services
                         application.Resources[kvp.Key] = kvp.Value;
                     }
 
-                    _logger.LogInformation("Applied {Theme} theme with {ResourceCount} resources", theme, themeDictionary.Count);
+                    _logger.LogInformation("Applied {Theme} theme variant and {ResourceCount} resources", theme, themeDictionary.Count);
                 }
                 else
                 {
@@ -152,7 +156,22 @@ namespace ExcelViewer.UI.Avalonia.Services
                    keyString.Contains("File") ||
                    keyString.Contains("Sheet") ||
                    keyString.Contains("Highlight") ||
-                   keyString.Contains("Comparison");
+                   keyString.Contains("Comparison") ||
+                   keyString.Contains("MenuFlyout") ||
+                   keyString.Contains("Overlay") ||
+                   keyString.Contains("System") ||
+                   keyString.Contains("Button") ||
+                   keyString.Contains("TextControl") ||
+                   keyString.Contains("ListBox") ||
+                   keyString.Contains("ScrollBar") ||
+                   keyString.Contains("TreeView") ||
+                   keyString.Contains("ComboBox") ||
+                   keyString.Contains("ToolTip") ||
+                   keyString.Contains("Chrome") ||
+                   keyString.Contains("Region") ||
+                   keyString.Contains("List") ||
+                   keyString.Contains("Highlight") ||
+                   keyString.Contains("Alt");
         }
 
         private Theme LoadThemePreference()

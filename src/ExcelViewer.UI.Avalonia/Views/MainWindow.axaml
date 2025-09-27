@@ -8,7 +8,8 @@
         x:Class="ExcelViewer.UI.Avalonia.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="Excel Cross Reference Viewer"
-        MinWidth="800" MinHeight="600">
+        MinWidth="800" MinHeight="600"
+        Background="{DynamicResource MainBackground}">
 
     <Design.DataContext>
         <vm:MainWindowViewModel/>
@@ -65,14 +66,8 @@
                     <Setter Property="Foreground" Value="White"/>
                 </Style>
 
-                <!-- Submenu container - ensure proper background -->
-                <Style Selector="MenuItem Popup Border">
-                    <Setter Property="Background" Value="{DynamicResource MainBackground}"/>
-                    <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}"/>
-                    <Setter Property="BorderThickness" Value="1"/>
-                    <Setter Property="CornerRadius" Value="4"/>
-                    <Setter Property="Padding" Value="4"/>
-                </Style>
+                <!-- Submenu container - Remove hardcoded values, let MenuFlyout resources handle it -->
+                <!-- The MenuFlyoutPresenterBackground and related resources are now defined in ThemeResources.axaml -->
 
                 <!-- Submenu items base styling -->
                 <Style Selector="MenuItem MenuItem">
@@ -169,7 +164,8 @@
                     </Grid.ColumnDefinitions>
 
                     <TextBlock Grid.Column="0" Text="Loaded Files" FontWeight="SemiBold"
-                              FontSize="14" Background="Transparent"/>
+                              FontSize="14" Background="Transparent"
+                              Foreground="{DynamicResource PrimaryText}"/>
 
                     <Button Grid.Column="1" Content="✕"
                             Width="20" Height="20" Padding="0"
@@ -181,16 +177,23 @@
                 <ListBox Grid.Row="1"
                          ItemsSource="{Binding LoadedFiles}"
                          SelectedItem="{Binding SelectedFile}"
-                         Margin="4">
+                         Margin="4"
+                         Background="{DynamicResource CardBackground}"
+                         BorderBrush="{DynamicResource BorderColor}"
+                         BorderThickness="1"
+                         CornerRadius="4">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Vertical" Margin="4">
-                                <TextBlock Text="{Binding FileName}" FontWeight="Medium"/>
+                                <TextBlock Text="{Binding FileName}" FontWeight="Medium"
+                                          Foreground="{DynamicResource PrimaryText}"/>
                                 <TextBlock Text="{Binding FilePath}" FontSize="10"
-                                          Foreground="Gray" TextTrimming="CharacterEllipsis"/>
+                                          Foreground="{DynamicResource SecondaryText}" TextTrimming="CharacterEllipsis"/>
                                 <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                                    <TextBlock Text="Status: " FontSize="10"/>
-                                    <TextBlock Text="{Binding Status}" FontSize="10" FontWeight="Medium"/>
+                                    <TextBlock Text="Status: " FontSize="10"
+                                              Foreground="{DynamicResource SecondaryText}"/>
+                                    <TextBlock Text="{Binding Status}" FontSize="10" FontWeight="Medium"
+                                              Foreground="{DynamicResource PrimaryText}"/>
                                 </StackPanel>
                             </StackPanel>
                         </DataTemplate>
@@ -199,7 +202,7 @@
             </Grid>
 
             <!-- Splitter -->
-            <GridSplitter Grid.Column="1" Background="LightGray" ResizeDirection="Columns"/>
+            <GridSplitter Grid.Column="1" Background="{DynamicResource BorderColor}" ResizeDirection="Columns"/>
 
             <!-- Search Panel -->
             <Grid Grid.Column="2" Margin="12,0,0,0">

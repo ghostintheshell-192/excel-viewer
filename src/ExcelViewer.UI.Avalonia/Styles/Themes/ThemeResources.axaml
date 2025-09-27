@@ -67,6 +67,105 @@
     <SolidColorBrush x:Key="ComparisonHeaderBackground" Color="#1E3A5F"/>
     <SolidColorBrush x:Key="ComparisonAlternateRow" Color="#F8F9FA"/>
 
+    <!-- MenuFlyout/Submenu Specific Resources for Light Theme -->
+    <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#DEE2E6"/>
+    <Thickness x:Key="MenuFlyoutPresenterBorderThemeThickness">1</Thickness>
+    <Thickness x:Key="MenuFlyoutPresenterThemePadding">4</Thickness>
+    <CornerRadius x:Key="OverlayCornerRadius">4</CornerRadius>
+
+    <!-- System Control Colors for Light Theme (FluentTheme compatibility) -->
+    <Color x:Key="SystemAltHighColor">#FFFFFF</Color>
+    <Color x:Key="SystemAltLowColor">#FFFFFF</Color>
+    <Color x:Key="SystemAltMediumColor">#FFFFFF</Color>
+    <Color x:Key="SystemAltMediumHighColor">#FFFFFF</Color>
+    <Color x:Key="SystemAltMediumLowColor">#FFFFFF</Color>
+    <Color x:Key="SystemBaseHighColor">#000000</Color>
+    <Color x:Key="SystemBaseLowColor">#CCCCCC</Color>
+    <Color x:Key="SystemBaseMediumColor">#898989</Color>
+    <Color x:Key="SystemBaseMediumHighColor">#5D5D5D</Color>
+    <Color x:Key="SystemBaseMediumLowColor">#737373</Color>
+    <Color x:Key="SystemChromeAltLowColor">#5D5D5D</Color>
+    <Color x:Key="SystemChromeBlackHighColor">#000000</Color>
+    <Color x:Key="SystemChromeBlackLowColor">#CCCCCC</Color>
+    <Color x:Key="SystemChromeBlackMediumColor">#5D5D5D</Color>
+    <Color x:Key="SystemChromeBlackMediumLowColor">#898989</Color>
+    <Color x:Key="SystemChromeDisabledHighColor">#CCCCCC</Color>
+    <Color x:Key="SystemChromeDisabledLowColor">#898989</Color>
+    <Color x:Key="SystemChromeGrayColor">#737373</Color>
+    <Color x:Key="SystemChromeHighColor">#CCCCCC</Color>
+    <Color x:Key="SystemChromeLowColor">#ECECEC</Color>
+    <Color x:Key="SystemChromeMediumColor">#E6E6E6</Color>
+    <Color x:Key="SystemChromeMediumLowColor">#ECECEC</Color>
+    <Color x:Key="SystemChromeWhiteColor">#FFFFFF</Color>
+    <Color x:Key="SystemListLowColor">#E6E6E6</Color>
+    <Color x:Key="SystemListMediumColor">#CCCCCC</Color>
+    <Color x:Key="SystemRegionColor">#FFFFFF</Color>
+    <Color x:Key="SystemErrorTextColor">#DC3545</Color>
+
+    <!-- System Control Brushes for Light Theme -->
+    <SolidColorBrush x:Key="SystemControlBackgroundAltHighBrush" Color="{DynamicResource SystemAltHighColor}"/>
+    <SolidColorBrush x:Key="SystemControlBackgroundAltMediumHighBrush" Color="{DynamicResource SystemAltMediumHighColor}"/>
+    <SolidColorBrush x:Key="SystemControlBackgroundChromeMediumLowBrush" Color="{DynamicResource SystemChromeMediumLowColor}"/>
+    <SolidColorBrush x:Key="SystemControlForegroundBaseHighBrush" Color="{DynamicResource SystemBaseHighColor}"/>
+    <SolidColorBrush x:Key="SystemControlForegroundBaseMediumBrush" Color="{DynamicResource SystemBaseMediumColor}"/>
+    <SolidColorBrush x:Key="SystemControlBackgroundBaseLowBrush" Color="{DynamicResource SystemBaseLowColor}"/>
+    <SolidColorBrush x:Key="SystemControlDisabledBaseMediumLowBrush" Color="{DynamicResource SystemBaseMediumLowColor}"/>
+    <SolidColorBrush x:Key="SystemControlHighlightBaseHighBrush" Color="#FF6B35"/>
+    <SolidColorBrush x:Key="SystemControlHighlightListAccentLowBrush" Color="#E3F2FD"/>
+    <SolidColorBrush x:Key="SystemControlHighlightListLowBrush" Color="#F1F3F5"/>
+    <SolidColorBrush x:Key="SystemControlHighlightListAccentMediumBrush" Color="#D1ECFE"/>
+    <SolidColorBrush x:Key="SystemControlHighlightAltBaseHighBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="SystemControlTransparentBrush" Color="Transparent"/>
+
+    <!-- ToolTip Resources for Light Theme -->
+    <SolidColorBrush x:Key="ToolTipBackground" Color="#F8F9FA"/>
+    <SolidColorBrush x:Key="ToolTipForeground" Color="#212529"/>
+    <SolidColorBrush x:Key="ToolTipBorderBrush" Color="#DEE2E6"/>
+    <Thickness x:Key="ToolTipBorderThemeThickness">1</Thickness>
+    <CornerRadius x:Key="ToolTipCornerRadius">3</CornerRadius>
+
+    <!-- ComboBox Resources for Light Theme -->
+    <SolidColorBrush x:Key="ComboBoxBackground" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ComboBoxForeground" Color="#212529"/>
+    <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="#DEE2E6"/>
+    <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ComboBoxPopupBorderBrush" Color="#DEE2E6"/>
+
+    <!-- Button Resources for Light Theme -->
+    <SolidColorBrush x:Key="ButtonBackground" Color="#F8F9FA"/>
+    <SolidColorBrush x:Key="ButtonForeground" Color="#212529"/>
+    <SolidColorBrush x:Key="ButtonBorderBrush" Color="#DEE2E6"/>
+    <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#E9ECEF"/>
+    <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#DEE2E6"/>
+
+    <!-- TextBox Resources for Light Theme -->
+    <SolidColorBrush x:Key="TextControlBackground" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="TextControlForeground" Color="#212529"/>
+    <SolidColorBrush x:Key="TextControlBorderBrush" Color="#DEE2E6"/>
+    <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="#6C757D"/>
+
+    <!-- ListBox Resources for Light Theme -->
+    <SolidColorBrush x:Key="ListBoxBackground" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ListBoxBorderBrush" Color="#DEE2E6"/>
+    <SolidColorBrush x:Key="ListBoxItemBackground" Color="Transparent"/>
+    <SolidColorBrush x:Key="ListBoxItemBackgroundPointerOver" Color="#F1F3F5"/>
+    <SolidColorBrush x:Key="ListBoxItemBackgroundSelected" Color="#E3F2FD"/>
+    <Thickness x:Key="ListBoxBorderThemeThickness">1</Thickness>
+
+    <!-- ScrollViewer/ScrollBar Resources for Light Theme -->
+    <SolidColorBrush x:Key="ScrollBarBackground" Color="#F8F9FA"/>
+    <SolidColorBrush x:Key="ScrollBarThumbBackground" Color="#ADB5BD"/>
+    <SolidColorBrush x:Key="ScrollBarThumbBackgroundPointerOver" Color="#6C757D"/>
+    <SolidColorBrush x:Key="ScrollBarThumbBackgroundPressed" Color="#495057"/>
+
+    <!-- TreeView Resources for Light Theme -->
+    <SolidColorBrush x:Key="TreeViewBackground" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="TreeViewBorderBrush" Color="#DEE2E6"/>
+    <SolidColorBrush x:Key="TreeViewItemBackground" Color="Transparent"/>
+    <SolidColorBrush x:Key="TreeViewItemBackgroundPointerOver" Color="#F1F3F5"/>
+    <SolidColorBrush x:Key="TreeViewItemBackgroundSelected" Color="#E3F2FD"/>
+
   </ResourceDictionary>
 
   <!-- Dark Theme Colors -->
@@ -134,6 +233,105 @@
     <SolidColorBrush x:Key="ComparisonMissingBackground" Color="#1A1214"/>
     <SolidColorBrush x:Key="ComparisonHeaderBackground" Color="#2A4A75"/>
     <SolidColorBrush x:Key="ComparisonAlternateRow" Color="#161B22"/>
+
+    <!-- MenuFlyout/Submenu Specific Resources for Dark Theme -->
+    <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#1C2128"/>
+    <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#30363D"/>
+    <Thickness x:Key="MenuFlyoutPresenterBorderThemeThickness">1</Thickness>
+    <Thickness x:Key="MenuFlyoutPresenterThemePadding">4</Thickness>
+    <CornerRadius x:Key="OverlayCornerRadius">4</CornerRadius>
+
+    <!-- System Control Colors for Dark Theme (FluentTheme compatibility) -->
+    <Color x:Key="SystemAltHighColor">#0D1117</Color>
+    <Color x:Key="SystemAltLowColor">#0D1117</Color>
+    <Color x:Key="SystemAltMediumColor">#161B22</Color>
+    <Color x:Key="SystemAltMediumHighColor">#161B22</Color>
+    <Color x:Key="SystemAltMediumLowColor">#161B22</Color>
+    <Color x:Key="SystemBaseHighColor">#F0F6FC</Color>
+    <Color x:Key="SystemBaseLowColor">#30363D</Color>
+    <Color x:Key="SystemBaseMediumColor">#8B949E</Color>
+    <Color x:Key="SystemBaseMediumHighColor">#C9D1D9</Color>
+    <Color x:Key="SystemBaseMediumLowColor">#6E7681</Color>
+    <Color x:Key="SystemChromeAltLowColor">#C9D1D9</Color>
+    <Color x:Key="SystemChromeBlackHighColor">#000000</Color>
+    <Color x:Key="SystemChromeBlackLowColor">#C9D1D9</Color>
+    <Color x:Key="SystemChromeBlackMediumColor">#000000</Color>
+    <Color x:Key="SystemChromeBlackMediumLowColor">#000000</Color>
+    <Color x:Key="SystemChromeDisabledHighColor">#30363D</Color>
+    <Color x:Key="SystemChromeDisabledLowColor">#8B949E</Color>
+    <Color x:Key="SystemChromeGrayColor">#6E7681</Color>
+    <Color x:Key="SystemChromeHighColor">#6E7681</Color>
+    <Color x:Key="SystemChromeLowColor">#21262D</Color>
+    <Color x:Key="SystemChromeMediumColor">#30363D</Color>
+    <Color x:Key="SystemChromeMediumLowColor">#484F58</Color>
+    <Color x:Key="SystemChromeWhiteColor">#F0F6FC</Color>
+    <Color x:Key="SystemListLowColor">#30363D</Color>
+    <Color x:Key="SystemListMediumColor">#484F58</Color>
+    <Color x:Key="SystemRegionColor">#0D1117</Color>
+    <Color x:Key="SystemErrorTextColor">#F85149</Color>
+
+    <!-- System Control Brushes for Dark Theme -->
+    <SolidColorBrush x:Key="SystemControlBackgroundAltHighBrush" Color="{DynamicResource SystemAltHighColor}"/>
+    <SolidColorBrush x:Key="SystemControlBackgroundAltMediumHighBrush" Color="{DynamicResource SystemAltMediumHighColor}"/>
+    <SolidColorBrush x:Key="SystemControlBackgroundChromeMediumLowBrush" Color="{DynamicResource SystemChromeMediumLowColor}"/>
+    <SolidColorBrush x:Key="SystemControlForegroundBaseHighBrush" Color="{DynamicResource SystemBaseHighColor}"/>
+    <SolidColorBrush x:Key="SystemControlForegroundBaseMediumBrush" Color="{DynamicResource SystemBaseMediumColor}"/>
+    <SolidColorBrush x:Key="SystemControlBackgroundBaseLowBrush" Color="{DynamicResource SystemBaseLowColor}"/>
+    <SolidColorBrush x:Key="SystemControlDisabledBaseMediumLowBrush" Color="{DynamicResource SystemBaseMediumLowColor}"/>
+    <SolidColorBrush x:Key="SystemControlHighlightBaseHighBrush" Color="#FF6B35"/>
+    <SolidColorBrush x:Key="SystemControlHighlightListAccentLowBrush" Color="#2A4A75" Opacity="0.4"/>
+    <SolidColorBrush x:Key="SystemControlHighlightListLowBrush" Color="#21262D"/>
+    <SolidColorBrush x:Key="SystemControlHighlightListAccentMediumBrush" Color="#2A4A75" Opacity="0.6"/>
+    <SolidColorBrush x:Key="SystemControlHighlightAltBaseHighBrush" Color="#F0F6FC"/>
+    <SolidColorBrush x:Key="SystemControlTransparentBrush" Color="Transparent"/>
+
+    <!-- ToolTip Resources for Dark Theme -->
+    <SolidColorBrush x:Key="ToolTipBackground" Color="#21262D"/>
+    <SolidColorBrush x:Key="ToolTipForeground" Color="#F0F6FC"/>
+    <SolidColorBrush x:Key="ToolTipBorderBrush" Color="#30363D"/>
+    <Thickness x:Key="ToolTipBorderThemeThickness">1</Thickness>
+    <CornerRadius x:Key="ToolTipCornerRadius">3</CornerRadius>
+
+    <!-- ComboBox Resources for Dark Theme -->
+    <SolidColorBrush x:Key="ComboBoxBackground" Color="#1C2128"/>
+    <SolidColorBrush x:Key="ComboBoxForeground" Color="#F0F6FC"/>
+    <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="#30363D"/>
+    <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#1C2128"/>
+    <SolidColorBrush x:Key="ComboBoxPopupBorderBrush" Color="#30363D"/>
+
+    <!-- Button Resources for Dark Theme -->
+    <SolidColorBrush x:Key="ButtonBackground" Color="#21262D"/>
+    <SolidColorBrush x:Key="ButtonForeground" Color="#F0F6FC"/>
+    <SolidColorBrush x:Key="ButtonBorderBrush" Color="#30363D"/>
+    <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#30363D"/>
+    <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#484F58"/>
+
+    <!-- TextBox Resources for Dark Theme -->
+    <SolidColorBrush x:Key="TextControlBackground" Color="#1C2128"/>
+    <SolidColorBrush x:Key="TextControlForeground" Color="#F0F6FC"/>
+    <SolidColorBrush x:Key="TextControlBorderBrush" Color="#30363D"/>
+    <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="#8B949E"/>
+
+    <!-- ListBox Resources for Dark Theme -->
+    <SolidColorBrush x:Key="ListBoxBackground" Color="#1C2128"/>
+    <SolidColorBrush x:Key="ListBoxBorderBrush" Color="#30363D"/>
+    <SolidColorBrush x:Key="ListBoxItemBackground" Color="Transparent"/>
+    <SolidColorBrush x:Key="ListBoxItemBackgroundPointerOver" Color="#21262D"/>
+    <SolidColorBrush x:Key="ListBoxItemBackgroundSelected" Color="#1E3A5F" Opacity="0.2"/>
+    <Thickness x:Key="ListBoxBorderThemeThickness">1</Thickness>
+
+    <!-- ScrollViewer/ScrollBar Resources for Dark Theme -->
+    <SolidColorBrush x:Key="ScrollBarBackground" Color="#161B22"/>
+    <SolidColorBrush x:Key="ScrollBarThumbBackground" Color="#484F58"/>
+    <SolidColorBrush x:Key="ScrollBarThumbBackgroundPointerOver" Color="#6E7681"/>
+    <SolidColorBrush x:Key="ScrollBarThumbBackgroundPressed" Color="#8B949E"/>
+
+    <!-- TreeView Resources for Dark Theme -->
+    <SolidColorBrush x:Key="TreeViewBackground" Color="#1C2128"/>
+    <SolidColorBrush x:Key="TreeViewBorderBrush" Color="#30363D"/>
+    <SolidColorBrush x:Key="TreeViewItemBackground" Color="Transparent"/>
+    <SolidColorBrush x:Key="TreeViewItemBackgroundPointerOver" Color="#21262D"/>
+    <SolidColorBrush x:Key="TreeViewItemBackgroundSelected" Color="#1E3A5F" Opacity="0.2"/>
 
   </ResourceDictionary>
 
