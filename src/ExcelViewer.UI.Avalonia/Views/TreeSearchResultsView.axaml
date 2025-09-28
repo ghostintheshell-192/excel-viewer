@@ -65,11 +65,17 @@
                                CornerRadius="0"
                                Padding="8,12,8,12"
                                Margin="0,4,0,0">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <PathIcon Data="{StaticResource SearchIconData}"
+                            <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                                <!-- Search Icon -->
+                                <PathIcon Grid.Column="0"
+                                         Data="{StaticResource SearchIconData}"
                                          Width="16" Height="16"
-                                         Foreground="{DynamicResource SearchQueryText}"/>
-                                <TextBlock Foreground="{DynamicResource SearchQueryText}"
+                                         Foreground="{DynamicResource SearchQueryText}"
+                                         Margin="0,0,8,0"/>
+
+                                <!-- Search Info Text -->
+                                <TextBlock Grid.Column="1"
+                                          Foreground="{DynamicResource SearchQueryText}"
                                           FontWeight="SemiBold">
                                     <Run Text="Search: &quot;"/>
                                     <Run Text="{Binding Query}" FontWeight="Bold"/>
@@ -77,7 +83,25 @@
                                     <Run Text="{Binding TotalResults}"/>
                                     <Run Text=" hits)"/>
                                 </TextBlock>
-                            </StackPanel>
+
+                                <!-- Selection Counter -->
+                                <TextBlock Grid.Column="2"
+                                          Text="{Binding SelectionText}"
+                                          Foreground="{DynamicResource SearchQueryText}"
+                                          FontWeight="Medium"
+                                          FontSize="12"
+                                          Margin="16,0,8,0"
+                                          VerticalAlignment="Center"/>
+
+                                <!-- Clear Button -->
+                                <Button Grid.Column="3"
+                                       Content="Clear"
+                                       Command="{Binding ClearSelectionCommand}"
+                                       Classes="ModernButton"
+                                       FontSize="11"
+                                       Padding="8,4"
+                                       MinWidth="50"/>
+                            </Grid>
                         </Border>
                     </TreeDataTemplate>
 
