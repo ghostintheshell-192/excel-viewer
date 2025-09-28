@@ -98,17 +98,15 @@ namespace ExcelViewer.UI.Avalonia.ViewModels
             foreach (var row in rows)
             {
                 var cellValue = row.GetCellAsString(columnIndex) ?? string.Empty;
-                var comparisonType = DetermineComparisonType(cellValue, allValues);
-                var cellViewModel = new RowComparisonCellViewModel(row, columnIndex, cellValue, comparisonType);
+                var comparisonResult = DetermineComparisonResult(cellValue, allValues);
+                var cellViewModel = new RowComparisonCellViewModel(row, columnIndex, cellValue, comparisonResult);
 
-                // Debug: Let's see what we're actually getting
-                System.Diagnostics.Debug.WriteLine($"Column {columnIndex}: '{cellValue}' -> {comparisonType}");
 
                 Cells.Add(cellViewModel);
             }
         }
 
-        private static ComparisonType DetermineComparisonType(string currentValue, IList<string> allValues)
+        private static CellComparisonResult DetermineComparisonResult(string currentValue, IList<string> allValues)
         {
             // Normalize values first
             var normalizedCurrentValue = (currentValue ?? "").Trim();
@@ -118,20 +116,35 @@ namespace ExcelViewer.UI.Avalonia.ViewModels
             var allNonEmptyValues = normalizedAllValues.Where(v => !string.IsNullOrWhiteSpace(v)).ToList();
             var distinctNonEmptyValues = allNonEmptyValues.Distinct().ToList();
 
+            // Handle empty values
             if (!hasValue)
             {
-                return allNonEmptyValues.Any() ? ComparisonType.Missing : ComparisonType.Match;
+                return allNonEmptyValues.Any()
+                    ? CellComparisonResult.CreateMissing(allNonEmptyValues.Count)
+                    : CellComparisonResult.CreateMatch(allValues.Count, allValues.Count);
             }
 
+            // Handle case where all non-empty values are the same
             if (distinctNonEmptyValues.Count <= 1)
             {
-                return ComparisonType.Match;
+                return CellComparisonResult.CreateMatch(allNonEmptyValues.Count, allNonEmptyValues.Count);
             }
-            else
-            {
-                var occurrencesOfThisValue = allNonEmptyValues.Count(v => v == normalizedCurrentValue);
-                return ComparisonType.Different;
-            }
+
+            // Advanced logarithmic distribution algorithm for optimal visual separation
+            var valueGroups = allNonEmptyValues
+                .GroupBy(v => v)
+                .Select(g => new { Value = g.Key, Count = g.Count() })
+                .OrderByDescending(g => g.Count)      // Primary: Most frequent first (rank 0)
+                .ThenBy(g => g.Value)                 // Secondary: Alphabetical for determinism
+                .ToList();
+
+            // Find current value's rank in the sorted groups
+            var currentRank = valueGroups.FindIndex(g => g.Value == normalizedCurrentValue);
+            var currentFrequency = valueGroups[currentRank].Count;
+            var totalGroups = valueGroups.Count;
+
+
+            return CellComparisonResult.CreateDifferent(currentFrequency, currentRank, totalGroups, allNonEmptyValues.Count);
         }
     }
 
@@ -142,15 +155,19 @@ namespace ExcelViewer.UI.Avalonia.ViewModels
         public string Value { get; }
         public string RowInfo { get; }
         public bool HasValue => !string.IsNullOrWhiteSpace(Value);
-        public ComparisonType ComparisonType { get; }
+        public CellComparisonResult ComparisonResult { get; }
 
-        public RowComparisonCellViewModel(ExcelRow sourceRow, int columnIndex, string value, ComparisonType comparisonType = ComparisonType.Match)
+        // Backward compatibility - expose the type for existing bindings
+        public ComparisonType ComparisonType => ComparisonResult.Type;
+
+        public RowComparisonCellViewModel(ExcelRow sourceRow, int columnIndex, string value, CellComparisonResult comparisonResult)
         {
             SourceRow = sourceRow ?? throw new ArgumentNullException(nameof(sourceRow));
             ColumnIndex = columnIndex;
             Value = value ?? string.Empty;
-            ComparisonType = comparisonType;
+            ComparisonResult = comparisonResult ?? CellComparisonResult.CreateMatch();
             RowInfo = $"{sourceRow.FileName} - {sourceRow.SheetName} - R{sourceRow.RowIndex + 1}";
         }
+
     }
 }

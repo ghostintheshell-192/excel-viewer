@@ -8,37 +8,93 @@ using ExcelViewer.UI.Avalonia.Models;
 namespace ExcelViewer.UI.Avalonia.Converters
 {
     /// <summary>
-    /// Converts ComparisonType to appropriate background brush for visual distinction
+    /// Converts ComparisonType or CellComparisonResult to appropriate background brush for visual distinction
+    /// Supports gradient coloring based on frequency intensity for different values
     /// </summary>
     public class ComparisonTypeToBackgroundConverter : IValueConverter
     {
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            // Debug: Let's see what the converter is actually receiving
-            System.Diagnostics.Debug.WriteLine($"Converter received: {value} (type: {value?.GetType()})");
-
-            if (value is not ComparisonType comparisonType)
+            // Handle CellComparisonResult with intensity-based gradients
+            if (value is CellComparisonResult comparisonResult)
             {
-                System.Diagnostics.Debug.WriteLine("Value is NOT ComparisonType - using default");
-                return GetResource("ComparisonMatchBackground");
+                return GetBrushForComparisonResult(comparisonResult);
             }
 
-            System.Diagnostics.Debug.WriteLine($"Converter processing: {comparisonType}");
+            // Fallback to default background
+            return GetResource("ComparisonMatchBackground");
+        }
 
-            var resourceKey = comparisonType switch
+        private static object GetBrushForComparisonResult(CellComparisonResult result)
+        {
+            return result.Type switch
             {
-                ComparisonType.Match => "ComparisonMatchBackground",
-                ComparisonType.Different => "ComparisonDifferentBackground",
-                ComparisonType.New => "ComparisonNewBackground",
-                ComparisonType.Missing => "ComparisonMissingBackground",
-                _ => "ComparisonMatchBackground"
+                ComparisonType.Match => GetResource("ComparisonMatchBackground"),
+                ComparisonType.Different => CreateGradientBrush(result.Intensity),
+                ComparisonType.New => GetResource("ComparisonNewBackground"),
+                ComparisonType.Missing => GetResource("ComparisonMissingBackground"),
+                _ => GetResource("ComparisonMatchBackground")
             };
+        }
 
-            System.Diagnostics.Debug.WriteLine($"Using resource key: {resourceKey}");
-            var result = GetResource(resourceKey);
-            System.Diagnostics.Debug.WriteLine($"GetResource returned: {result}");
 
-            return result;
+        /// <summary>
+        /// Creates a gradient brush from light pink to dark red based on intensity
+        /// </summary>
+        private static SolidColorBrush CreateGradientBrush(double intensity)
+        {
+            // Clamp intensity to valid range
+            intensity = Math.Clamp(intensity, 0.0, 1.0);
+
+            // HSL color model: H=340° (pink/red), S=70%, L=variable based on intensity
+            // intensity=0.0 → L=90% (light pink)
+            // intensity=1.0 → L=50% (dark red)
+            var lightness = 90 - (intensity * 40); // 90% to 50%
+            var saturation = 70 + (intensity * 20); // 70% to 90%
+
+            // Convert HSL to RGB
+            var color = HslToRgb(340, saturation / 100.0, lightness / 100.0);
+
+            return new SolidColorBrush(color);
+        }
+
+        /// <summary>
+        /// Converts HSL color values to RGB Color
+        /// </summary>
+        private static Color HslToRgb(double h, double s, double l)
+        {
+            h = h / 360.0; // Convert to 0-1 range
+
+            double r, g, b;
+
+            if (Math.Abs(s) < 0.001)
+            {
+                r = g = b = l; // achromatic
+            }
+            else
+            {
+                var hue2rgb = new Func<double, double, double, double>((p, q, t) =>
+                {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1.0 / 6) return p + (q - p) * 6 * t;
+                    if (t < 1.0 / 2) return q;
+                    if (t < 2.0 / 3) return p + (q - p) * (2.0 / 3 - t) * 6;
+                    return p;
+                });
+
+                var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                var p = 2 * l - q;
+                r = hue2rgb(p, q, h + 1.0 / 3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1.0 / 3);
+            }
+
+            return Color.FromRgb(
+                (byte)(r * 255),
+                (byte)(g * 255),
+                (byte)(b * 255)
+            );
         }
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

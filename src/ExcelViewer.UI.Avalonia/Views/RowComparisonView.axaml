@@ -137,7 +137,7 @@
                                     <ItemsControl ItemsSource="{Binding Cells}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate DataType="vm:RowComparisonCellViewModel">
-                                                <Border Background="{Binding ComparisonType, Converter={StaticResource ComparisonTypeToBackgroundConverter}}"
+                                                <Border Background="{Binding ComparisonResult, Converter={StaticResource ComparisonTypeToBackgroundConverter}}"
                                                         BorderBrush="{DynamicResource BorderColor}"
                                                         BorderThickness="0,0,1,1"
                                                         MinWidth="140" MaxWidth="220" MinHeight="36" Padding="12">
