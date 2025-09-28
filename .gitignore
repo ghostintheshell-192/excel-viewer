@@ -47,6 +47,9 @@ docs/images/
 # Ignore sample files and test data
 samples/
 
+# Ignore private files
+.secrets/
+
 # Legacy ignore rules
 /src/VisioHandler/Resources/Results
 /src/ExcelHandler/Resources/LogsExcel
