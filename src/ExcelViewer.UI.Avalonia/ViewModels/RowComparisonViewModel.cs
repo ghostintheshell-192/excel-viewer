@@ -63,20 +63,28 @@ namespace ExcelViewer.UI.Avalonia.ViewModels
                 return;
 
             var allHeaders = Comparison.GetAllColumnHeaders();
-            var maxColumns = Comparison.MaxColumns;
 
-            // Ensure we have enough columns to display all data
-            var columnCount = Math.Max(allHeaders.Count, maxColumns);
-
-            for (int i = 0; i < columnCount; i++)
+            // Log warnings if any structural issues were detected
+            if (Comparison.Warnings.Any())
             {
-                var header = i < allHeaders.Count ? allHeaders[i] : $"Column {i + 1}";
+                _logger.LogWarning("Row comparison detected {WarningCount} structural inconsistencies in column headers", Comparison.Warnings.Count);
+                foreach (var warning in Comparison.Warnings)
+                {
+                    _logger.LogWarning("Column '{ColumnName}': {Message} (Files: {Files})",
+                        warning.ColumnName, warning.Message, string.Join(", ", warning.AffectedFiles));
+                }
+            }
+
+            // Create columns using header-based mapping
+            for (int i = 0; i < allHeaders.Count; i++)
+            {
+                var header = allHeaders[i];
                 var columnViewModel = new RowComparisonColumnViewModel(header, i, Comparison.Rows);
                 Columns.Add(columnViewModel);
             }
 
-            _logger.LogInformation("Refreshed comparison columns: {ColumnCount} columns for {RowCount} rows",
-                columnCount, Comparison.Rows.Count);
+            _logger.LogInformation("Created row comparison with {ColumnCount} columns for {RowCount} rows using intelligent header mapping",
+                allHeaders.Count, Comparison.Rows.Count);
         }
     }
 
@@ -92,15 +100,14 @@ namespace ExcelViewer.UI.Avalonia.ViewModels
             ColumnIndex = columnIndex;
             Cells = new ObservableCollection<RowComparisonCellViewModel>();
 
-            // Get all values for this column to determine comparison types
-            var allValues = rows.Select(row => row.GetCellAsString(columnIndex) ?? string.Empty).ToList();
+            // Use intelligent header-based mapping instead of positional mapping
+            var allValues = rows.Select(row => row.GetCellAsStringByHeader(header) ?? string.Empty).ToList();
 
             foreach (var row in rows)
             {
-                var cellValue = row.GetCellAsString(columnIndex) ?? string.Empty;
+                var cellValue = row.GetCellAsStringByHeader(header) ?? string.Empty;
                 var comparisonResult = DetermineComparisonResult(cellValue, allValues);
                 var cellViewModel = new RowComparisonCellViewModel(row, columnIndex, cellValue, comparisonResult);
-
 
                 Cells.Add(cellViewModel);
             }
