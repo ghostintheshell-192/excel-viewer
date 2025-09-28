@@ -48,16 +48,9 @@ A powerful cross-platform desktop application for viewing, searching, and compar
 
 ## Installation
 
-### Option 1: Download Releases
+> **Note**: ExcelViewer is currently in active development and not yet ready for public release. Pre-built packages are not available at this time.
 
-1. Go to the [Releases](../../releases) page
-2. Download the appropriate package for your operating system:
-   - **Windows**: `ExcelViewer-win-x64.zip` or `ExcelViewer-Setup.msi`
-   - **Linux**: `ExcelViewer-linux-x64.AppImage` or `.deb`/`.rpm` packages
-   - **macOS**: `ExcelViewer-osx-x64.dmg`
-3. Extract and run the application
-
-### Option 2: Build from Source
+### Build from Source
 
 ```bash
 # Clone the repository
