@@ -42,7 +42,7 @@ backups/
 docs/issues/
 docs/reports/
 docs/vista.pdf
-docs/images/
+# Note: docs/images/ now contains website assets, not ignored
 
 # Ignore sample files and test data
 samples/
