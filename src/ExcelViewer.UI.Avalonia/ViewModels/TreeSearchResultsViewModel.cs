@@ -61,7 +61,10 @@ public class TreeSearchResultsViewModel : ViewModelBase
         // Create new search history item
         var searchItem = new SearchHistoryItem(query, results);
 
-        // Setup selection change events
+        // Setup selection change events for the search item itself (to update global counters)
+        searchItem.SelectionChanged += (s, e) => NotifySelectionChanged();
+
+        // Setup selection change events for individual sheet groups (existing logic)
         foreach (var fileGroup in searchItem.FileGroups)
         {
             foreach (var sheetGroup in fileGroup.SheetGroups)
@@ -156,10 +159,31 @@ public class SearchHistoryItem : ViewModelBase
         set => SetField(ref _fileGroups, value);
     }
 
+    // Properties for per-search selection management
+    public int SelectedCount => FileGroups
+        .SelectMany(fg => fg.SheetGroups)
+        .SelectMany(sg => sg.Results)
+        .Count(item => item.IsSelected && item.CanBeCompared);
+
+    public string SelectionText => SelectedCount switch
+    {
+        0 => "no selected rows",
+        1 => "1 selected row",
+        _ => $"{SelectedCount} selected rows"
+    };
+
+    public ICommand ClearSelectionCommand { get; private set; }
+
+    // Event to notify when selection changes for this specific search
+    public event EventHandler? SelectionChanged;
+
     public SearchHistoryItem(string query, IReadOnlyList<SearchResult> results)
     {
         Query = query;
         TotalResults = results.Count;
+
+        // Initialize Clear command
+        ClearSelectionCommand = new RelayCommand(() => { ClearSelection(); return Task.CompletedTask; });
 
         // Group results by file
         var fileGroups = results
@@ -169,6 +193,53 @@ public class SearchHistoryItem : ViewModelBase
             .ToList();
 
         FileGroups = new ObservableCollection<FileResultGroup>(fileGroups);
+
+        // Setup selection events for all items in this search
+        SetupSelectionEvents();
+    }
+
+    private void ClearSelection()
+    {
+        foreach (var fileGroup in FileGroups)
+        {
+            foreach (var sheetGroup in fileGroup.SheetGroups)
+            {
+                foreach (var item in sheetGroup.Results)
+                {
+                    if (item.IsSelected)
+                    {
+                        item.IsSelected = false;
+                    }
+                }
+            }
+        }
+        NotifySelectionChanged();
+    }
+
+    private void SetupSelectionEvents()
+    {
+        foreach (var fileGroup in FileGroups)
+        {
+            foreach (var sheetGroup in fileGroup.SheetGroups)
+            {
+                foreach (var item in sheetGroup.Results)
+                {
+                    item.SelectionChanged += OnItemSelectionChanged;
+                }
+            }
+        }
+    }
+
+    private void OnItemSelectionChanged(object? sender, EventArgs e)
+    {
+        NotifySelectionChanged();
+    }
+
+    private void NotifySelectionChanged()
+    {
+        OnPropertyChanged(nameof(SelectedCount));
+        OnPropertyChanged(nameof(SelectionText));
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
     }
 }
 
