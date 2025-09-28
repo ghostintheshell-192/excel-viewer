@@ -239,17 +239,73 @@
                             Padding="8,4"/>
                 </Grid>
 
-                <!-- Search Options -->
-                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
-                    <CheckBox Content="Case Sensitive"
-                              IsChecked="{Binding SearchViewModel.CaseSensitive}"
-                              Margin="0,0,12,0"/>
-                    <CheckBox Content="Exact Match"
-                              IsChecked="{Binding SearchViewModel.ExactMatch}"
-                              Margin="0,0,12,0"/>
-                    <CheckBox Content="Use Regex"
-                              IsChecked="{Binding SearchViewModel.UseRegexSearch}"/>
-                </StackPanel>
+                <!-- Search Options and Row Comparison Controls -->
+                <Grid Grid.Row="1" Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Search Options -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                        <CheckBox Content="Case Sensitive"
+                                  IsChecked="{Binding SearchViewModel.CaseSensitive}"
+                                  Margin="0,0,12,0"/>
+                        <CheckBox Content="Exact Match"
+                                  IsChecked="{Binding SearchViewModel.ExactMatch}"
+                                  Margin="0,0,12,0"/>
+                        <CheckBox Content="Use Regex"
+                                  IsChecked="{Binding SearchViewModel.UseRegexSearch}"/>
+                    </StackPanel>
+
+                    <!-- Row Comparison Controls (aligned to the right) -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                        <!-- Selected rows counter -->
+                        <Border Background="#E3F2FD"
+                               CornerRadius="4"
+                               Padding="8,4"
+                               IsVisible="{Binding TreeSearchResultsViewModel.CanCompareRows}">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="{Binding TreeSearchResultsViewModel.SelectedCount}"
+                                          FontWeight="SemiBold"
+                                          Foreground="#1976D2"/>
+                                <TextBlock Text="selected rows"
+                                          Foreground="#666666"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Compare Rows Button -->
+                        <Button Content="Compare Rows"
+                                Background="#FF6B35"
+                                Foreground="White"
+                                FontWeight="SemiBold"
+                                BorderThickness="0"
+                                CornerRadius="4"
+                                Padding="12,6"
+                                Command="{Binding TreeSearchResultsViewModel.CompareSelectedRowsCommand}"
+                                IsEnabled="{Binding TreeSearchResultsViewModel.CanCompareRows}"/>
+
+                        <!-- Clear Selection Button -->
+                        <Button Content="Clear"
+                                Background="#263238"
+                                Foreground="White"
+                                BorderThickness="0"
+                                CornerRadius="4"
+                                Padding="12,6"
+                                FontSize="12"
+                                Command="{Binding TreeSearchResultsViewModel.ClearSelectionCommand}"/>
+
+                        <!-- Clear History Button -->
+                        <Button Content="Clear History"
+                                Background="#263238"
+                                Foreground="White"
+                                BorderThickness="0"
+                                CornerRadius="4"
+                                Padding="12,6"
+                                FontSize="12"
+                                Command="{Binding TreeSearchResultsViewModel.ClearHistoryCommand}"/>
+                    </StackPanel>
+                </Grid>
 
                 <!-- Content Area: Tab Control -->
                 <TabControl Grid.Row="2" SelectedIndex="{Binding SelectedTabIndex}">

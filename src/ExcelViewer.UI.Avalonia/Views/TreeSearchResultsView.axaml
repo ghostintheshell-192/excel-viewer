@@ -53,73 +53,8 @@
     </UserControl.Styles>
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-
-        <!-- Enhanced Header -->
-        <Border Grid.Row="0"
-                Background="{DynamicResource SecondaryBackground}"
-                Padding="16,12"
-                BorderBrush="{DynamicResource BorderColor}"
-                BorderThickness="0,0,0,1">
-            <StackPanel Orientation="Vertical" Spacing="8">
-
-                <!-- Title Row -->
-                <StackPanel Orientation="Horizontal" Spacing="12">
-                    <PathIcon Data="{StaticResource SearchIconData}"
-                             Width="16" Height="16"
-                             Foreground="{DynamicResource PrimaryNavyBlue}"/>
-                    <TextBlock Text="Search Results"
-                              FontWeight="SemiBold"
-                              FontSize="16"
-                              Foreground="{DynamicResource PrimaryText}"/>
-                    <Button Content="Clear History"
-                            Classes="ModernButton"
-                            Command="{Binding ClearHistoryCommand}"
-                            FontSize="12"/>
-                </StackPanel>
-
-                <!-- Row Comparison Controls -->
-                <StackPanel Orientation="Horizontal"
-                           Spacing="12"
-                           IsVisible="{Binding CanCompareRows}">
-                    <Border Background="{DynamicResource InfoBackground}"
-                           CornerRadius="4"
-                           Padding="8,4">
-                        <StackPanel Orientation="Horizontal" Spacing="4">
-                            <TextBlock Text="{Binding SelectedCount}"
-                                      FontWeight="SemiBold"
-                                      Foreground="{DynamicResource InfoColor}"/>
-                            <TextBlock Text="rows selected"
-                                      Foreground="{DynamicResource SecondaryText}"/>
-                        </StackPanel>
-                    </Border>
-
-                    <Button Content="Compare Rows"
-                            Classes="CTAButton"
-                            Command="{Binding CompareSelectedRowsCommand}"
-                            IsEnabled="{Binding CanCompareRows}">
-                        <Button.Content>
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <PathIcon Data="{StaticResource CompareIconData}"
-                                         Width="14" Height="14"/>
-                                <TextBlock Text="Compare Rows"/>
-                            </StackPanel>
-                        </Button.Content>
-                    </Button>
-
-                    <Button Content="Clear Selection"
-                            Classes="ModernButton"
-                            Command="{Binding ClearSelectionCommand}"
-                            FontSize="12"/>
-                </StackPanel>
-            </StackPanel>
-        </Border>
-
         <!-- Enhanced Tree Results (Notepad++ Style) -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
             <TreeView ItemsSource="{Binding SearchHistory}"
                      Background="Transparent">
 
@@ -128,7 +63,7 @@
                     <TreeDataTemplate DataType="vm:SearchHistoryItem" ItemsSource="{Binding FileGroups}">
                         <Border Background="{DynamicResource SearchQueryBackground}"
                                CornerRadius="0"
-                               Padding="12,8"
+                               Padding="8,12,8,12"
                                Margin="0,4,0,0">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <PathIcon Data="{StaticResource SearchIconData}"
@@ -149,7 +84,7 @@
                     <!-- File Group Level -->
                     <TreeDataTemplate DataType="vm:FileResultGroup" ItemsSource="{Binding SheetGroups}">
                         <Border Background="{DynamicResource FileGroupBackground}"
-                               Padding="16,6"
+                               Padding="8,6"
                                BorderThickness="0,0,0,1"
                                BorderBrush="{DynamicResource SubtleBorder}">
                             <TextBlock FontWeight="Medium"
@@ -166,7 +101,7 @@
                     <!-- Sheet Group Level -->
                     <TreeDataTemplate DataType="vm:SheetResultGroup" ItemsSource="{Binding Results}">
                         <Border Background="{DynamicResource SheetGroupBackground}"
-                               Padding="32,4"
+                               Padding="8,4"
                                BorderThickness="0,0,0,1"
                                BorderBrush="{DynamicResource SubtleBorder}">
                             <TextBlock Foreground="{DynamicResource SecondaryText}" FontSize="13">
@@ -181,7 +116,7 @@
 
                     <!-- Individual Result Level (Notepad++ style with line numbers) -->
                     <DataTemplate DataType="vm:SearchResultItem">
-                        <Border Padding="48,3,16,3"
+                        <Border Padding="8,3,16,3"
                                BorderThickness="0,0,0,1"
                                BorderBrush="{DynamicResource SubtleBorder}"
                                Background="Transparent">
@@ -250,14 +185,31 @@
                     <Style Selector="TreeViewItem">
                         <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
                         <Setter Property="Padding" Value="0"/>
-                        <Setter Property="Margin" Value="0"/>
+                        <Setter Property="Margin" Value="-20,0,0,0"/>
                     </Style>
 
-                    <!-- Remove default TreeView indentation and bullets -->
-                    <Style Selector="TreeViewItem /template/ Border#PART_Header">
-                        <Setter Property="Padding" Value="0"/>
+                    <!-- Override TreeViewItem template to remove indentation -->
+                    <!-- Level 1: File Groups (children of Search History) -->
+                    <Style Selector="TreeViewItem TreeViewItem">
+                        <Setter Property="Margin" Value="-16,0,0,0"/>
                     </Style>
 
+                    <!-- Level 2: Sheet Groups (children of File Groups) -->
+                    <Style Selector="TreeViewItem TreeViewItem TreeViewItem">
+                        <Setter Property="Margin" Value="-16,0,0,0"/>
+                    </Style>
+
+                    <!-- Level 3: Results (children of Sheet Groups) -->
+                    <Style Selector="TreeViewItem TreeViewItem TreeViewItem TreeViewItem">
+                        <Setter Property="Margin" Value="0,0,0,0"/>
+                    </Style>
+
+                    <!-- Remove expander toggle button -->
+                    <Style Selector="TreeViewItem /template/ ToggleButton#PART_Expander">
+                        <Setter Property="IsVisible" Value="False"/>
+                    </Style>
+
+                    <!-- Hide the indentation toggle -->
                     <Style Selector="TreeViewItem /template/ ToggleButton">
                         <Setter Property="IsVisible" Value="False"/>
                     </Style>
@@ -267,8 +219,7 @@
         </ScrollViewer>
 
         <!-- Enhanced Empty State -->
-        <StackPanel Grid.Row="1"
-                   HorizontalAlignment="Center"
+        <StackPanel HorizontalAlignment="Center"
                    VerticalAlignment="Center"
                    Spacing="16"
                    IsVisible="{Binding !SearchHistory.Count}">
