@@ -42,6 +42,10 @@ backups/
 docs/issues/
 docs/reports/
 docs/vista.pdf
+docs/images/
+
+# Ignore sample files and test data
+samples/
 
 # Legacy ignore rules
 /src/VisioHandler/Resources/Results
