@@ -9,6 +9,7 @@ using ExcelViewer.UI.Avalonia.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using ExcelViewer.UI.Avalonia.Commands;
+using ExcelViewer.UI.Avalonia.Managers;
 
 namespace ExcelViewer.UI.Avalonia.ViewModels;
 
@@ -94,13 +95,9 @@ public class MainWindowViewModel : ViewModelBase
         set => SetField(ref _selectedTabIndex, value);
     }
 
+    public IThemeManager ThemeManager { get; }
     public ICommand LoadFileCommand { get; }
     public ICommand ToggleThemeCommand { get; }
-
-    // Theme properties
-    public Theme CurrentTheme => _themeManager.CurrentTheme;
-    public string ThemeButtonText => CurrentTheme == Theme.Light ? "🌙" : "☀️";
-    public string ThemeButtonTooltip => CurrentTheme == Theme.Light ? "Switch to Dark Theme" : "Switch to Light Theme";
 
     // Delegated commands from SearchViewModel
     public ICommand ShowAllFilesCommand => SearchViewModel?.ShowAllFilesCommand ?? new RelayCommand(() => Task.CompletedTask);
@@ -127,10 +124,14 @@ public class MainWindowViewModel : ViewModelBase
         _selectedTabIndex = 1;
 
         LoadFileCommand = new RelayCommand(async () => await LoadFileAsync());
-        ToggleThemeCommand = new RelayCommand(() => { ToggleTheme(); return Task.CompletedTask; });
 
-        // Subscribe to theme changes to update UI
-        _themeManager.ThemeChanged += OnThemeChanged;
+        ThemeManager = themeManager;
+        ToggleThemeCommand = new RelayCommand(() =>
+        {
+            ThemeManager.ToggleTheme();
+            return Task.CompletedTask;
+        });
+
     }
 
     public void SetSearchViewModel(SearchViewModel searchViewModel)
@@ -341,27 +342,6 @@ public class MainWindowViewModel : ViewModelBase
             // TODO: Navigate to sheet view or show sheet details
             // This could open a new window or change the current view
         }
-    }
-
-    private void ToggleTheme()
-    {
-        try
-        {
-            _themeManager.ToggleTheme();
-            _logger.LogInformation("Theme toggled to {Theme}", _themeManager.CurrentTheme);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to toggle theme");
-        }
-    }
-
-    private void OnThemeChanged(object? sender, Theme newTheme)
-    {
-        // Update UI properties when theme changes
-        OnPropertyChanged(nameof(CurrentTheme));
-        OnPropertyChanged(nameof(ThemeButtonText));
-        OnPropertyChanged(nameof(ThemeButtonTooltip));
     }
 }
 

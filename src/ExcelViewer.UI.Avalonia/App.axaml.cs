@@ -13,12 +13,13 @@ using Microsoft.Extensions.Logging;
 using ExcelViewer.Core.Application.Services;
 using ExcelViewer.Core.Application.Interfaces;
 using ExcelViewer.Infrastructure.External;
+using ExcelViewer.UI.Avalonia.Managers;
 
 namespace ExcelViewer.UI.Avalonia;
 
 public partial class App : Application
 {
-    private IHost? _host;
+    private IHost? host;
 
     public override void Initialize()
     {
@@ -28,19 +29,19 @@ public partial class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         // Create and configure the host
-        _host = CreateHostBuilder().Build();
+        host = CreateHostBuilder().Build();
 
         // Initialize theme manager
-        var themeManager = _host.Services.GetRequiredService<IThemeManager>();
+        var themeManager = host.Services.GetRequiredService<IThemeManager>();
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             // Get the main window and view model from DI container
-            var mainWindow = _host.Services.GetRequiredService<MainWindow>();
-            var mainViewModel = _host.Services.GetRequiredService<MainWindowViewModel>();
-            var searchViewModel = _host.Services.GetRequiredService<SearchViewModel>();
-            var fileDetailsViewModel = _host.Services.GetRequiredService<FileDetailsViewModel>();
-            var treeSearchResultsViewModel = _host.Services.GetRequiredService<TreeSearchResultsViewModel>();
+            var mainWindow = host.Services.GetRequiredService<MainWindow>();
+            var mainViewModel = host.Services.GetRequiredService<MainWindowViewModel>();
+            var searchViewModel = host.Services.GetRequiredService<SearchViewModel>();
+            var fileDetailsViewModel = host.Services.GetRequiredService<FileDetailsViewModel>();
+            var treeSearchResultsViewModel = host.Services.GetRequiredService<TreeSearchResultsViewModel>();
 
             // Wire up ViewModels to MainViewModel
             mainViewModel.SetSearchViewModel(searchViewModel);
@@ -51,7 +52,7 @@ public partial class App : Application
             desktop.MainWindow = mainWindow;
 
             // Handle application exit
-            desktop.Exit += (_, _) => _host?.Dispose();
+            desktop.Exit += (_, _) => host?.Dispose();
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -63,30 +64,31 @@ public partial class App : Application
             .ConfigureServices((context, services) =>
             {
                 // Register Core services
-                services.AddScoped<ICellReferenceParser, CellReferenceParser>();
-                services.AddScoped<IMergedCellProcessor, MergedCellProcessor>();
-                services.AddScoped<IExcelReaderService, ExcelReaderService>();
-                services.AddScoped<ISearchService, SearchService>();
-                services.AddScoped<IRowComparisonService, RowComparisonService>();
+                services.AddSingleton<ICellReferenceParser, CellReferenceParser>();
+                services.AddSingleton<IMergedCellProcessor, MergedCellProcessor>();
+                services.AddSingleton<IExcelReaderService, ExcelReaderService>();
+                services.AddSingleton<ISearchService, SearchService>();
+                services.AddSingleton<IRowComparisonService, RowComparisonService>();
 
                 // Register Avalonia-specific services
-                services.AddScoped<IDialogService, AvaloniaDialogService>();
-                services.AddScoped<IFilePickerService, AvaloniaFilePickerService>();
-                services.AddSingleton<IThemeManager, ThemeManager>();
+                services.AddSingleton<IDialogService, AvaloniaDialogService>();
+                services.AddSingleton<IFilePickerService, AvaloniaFilePickerService>();
+
 
                 // Register Managers and Factories
-                services.AddScoped<ISearchResultFactory, ExcelViewer.UI.Avalonia.Models.Search.SearchResultFactory>();
-                services.AddScoped<ISearchResultsManager, ExcelViewer.UI.Avalonia.Managers.Search.SearchResultsManager>();
-                services.AddScoped<ISelectionManager, ExcelViewer.UI.Avalonia.Managers.Selection.SelectionManager>();
+                services.AddSingleton<ISearchResultFactory, ExcelViewer.UI.Avalonia.Models.Search.SearchResultFactory>();
+                services.AddSingleton<ISearchResultsManager, ExcelViewer.UI.Avalonia.Managers.Search.SearchResultsManager>();
+                services.AddSingleton<ISelectionManager, ExcelViewer.UI.Avalonia.Managers.Selection.SelectionManager>();
+                services.AddSingleton<IThemeManager, ThemeManager>();
 
                 // Register ViewModels
-                services.AddScoped<MainWindowViewModel>();
-                services.AddScoped<SearchViewModel>();
-                services.AddScoped<FileDetailsViewModel>();
-                services.AddScoped<TreeSearchResultsViewModel>();
+                services.AddSingleton<MainWindowViewModel>();
+                services.AddSingleton<SearchViewModel>();
+                services.AddSingleton<FileDetailsViewModel>();
+                services.AddSingleton<TreeSearchResultsViewModel>();
 
                 // Register Views
-                services.AddScoped<MainWindow>();
+                services.AddSingleton<MainWindow>();
 
                 // Configure logging
                 services.AddLogging(builder =>

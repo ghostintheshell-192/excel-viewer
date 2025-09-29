@@ -3,6 +3,7 @@ using System.Windows.Input;
 using ExcelViewer.Core.Domain.Entities;
 using ExcelViewer.Core.Application.Interfaces;
 using Microsoft.Extensions.Logging;
+using ExcelViewer.UI.Avalonia.Commands;
 
 namespace ExcelViewer.UI.Avalonia.ViewModels;
 
@@ -38,8 +39,8 @@ public class TreeSearchResultsViewModel : ViewModelBase
 
     public TreeSearchResultsViewModel(ILogger<TreeSearchResultsViewModel> logger, IRowComparisonService rowComparisonService)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _rowComparisonService = rowComparisonService ?? throw new ArgumentNullException(nameof(rowComparisonService));
+        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this._rowComparisonService = rowComparisonService ?? throw new ArgumentNullException(nameof(rowComparisonService));
 
         ClearHistoryCommand = new RelayCommand(() => { ClearHistory(); return Task.CompletedTask; });
         CompareSelectedRowsCommand = new RelayCommand(async () => await CompareSelectedRowsAsync(), () => CanCompareRows);

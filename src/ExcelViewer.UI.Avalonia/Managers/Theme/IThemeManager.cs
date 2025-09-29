@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace ExcelViewer.UI.Avalonia.Services
+namespace ExcelViewer.UI.Avalonia.Managers
 {
     public enum Theme
     {
@@ -11,8 +11,14 @@ namespace ExcelViewer.UI.Avalonia.Services
     public interface IThemeManager : INotifyPropertyChanged
     {
         Theme CurrentTheme { get; }
+
+        // Theme properties
+        public string ThemeButtonText { get; }
+        public string ThemeButtonTooltip { get; }
         void SetTheme(Theme theme);
         void ToggleTheme();
         event EventHandler<Theme>? ThemeChanged;
+
+
     }
 }

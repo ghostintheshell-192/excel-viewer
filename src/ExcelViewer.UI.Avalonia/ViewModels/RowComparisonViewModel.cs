@@ -41,7 +41,7 @@ namespace ExcelViewer.UI.Avalonia.ViewModels
 
         public RowComparisonViewModel(ILogger<RowComparisonViewModel> logger)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             CloseCommand = new RelayCommand(() =>
             {
