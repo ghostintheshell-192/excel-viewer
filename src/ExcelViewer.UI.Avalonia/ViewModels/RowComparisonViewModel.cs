@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using ExcelViewer.Core.Domain.Entities;
+using ExcelViewer.UI.Avalonia.Commands;
 using ExcelViewer.UI.Avalonia.Models;
 using Microsoft.Extensions.Logging;
 
