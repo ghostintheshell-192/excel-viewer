@@ -11,15 +11,16 @@ using Microsoft.Extensions.DependencyInjection;
 using ExcelViewer.UI.Avalonia.Commands;
 using ExcelViewer.UI.Avalonia.Managers;
 using ExcelViewer.UI.Avalonia.Managers.Files;
+using ExcelViewer.UI.Avalonia.Managers.Comparison;
 
 namespace ExcelViewer.UI.Avalonia.ViewModels;
 
 public class MainWindowViewModel : ViewModelBase
 {
     private readonly ILoadedFilesManager _filesManager;
+    private readonly IRowComparisonCoordinator _comparisonCoordinator;
     private readonly IFilePickerService _filePickerService;
     private readonly ILogger<MainWindowViewModel> _logger;
-    private readonly IServiceProvider _serviceProvider;
     private readonly IThemeManager _themeManager;
 
     private IFileLoadResultViewModel? _selectedFile;
@@ -27,31 +28,18 @@ public class MainWindowViewModel : ViewModelBase
     private int _selectedTabIndex;
 
     public ReadOnlyObservableCollection<IFileLoadResultViewModel> LoadedFiles => _filesManager.LoadedFiles;
+    public ReadOnlyObservableCollection<RowComparisonViewModel> RowComparisons => _comparisonCoordinator.RowComparisons;
+
+    // Expose SelectedComparison from Coordinator for binding
+    public RowComparisonViewModel? SelectedComparison
+    {
+        get => _comparisonCoordinator.SelectedComparison;
+        set => _comparisonCoordinator.SelectedComparison = value;
+    }
 
     public SearchViewModel? SearchViewModel { get; private set; }
     public FileDetailsViewModel? FileDetailsViewModel { get; private set; }
     public TreeSearchResultsViewModel? TreeSearchResultsViewModel { get; private set; }
-
-    // Row comparison management
-    private readonly ObservableCollection<RowComparisonViewModel> _rowComparisons = new();
-    public ReadOnlyObservableCollection<RowComparisonViewModel> RowComparisons { get; }
-
-    private RowComparisonViewModel? _selectedComparison;
-    public RowComparisonViewModel? SelectedComparison
-    {
-        get => _selectedComparison;
-        set
-        {
-            if (SetField(ref _selectedComparison, value))
-            {
-                // Switch to comparison tab when a comparison is selected
-                if (value != null)
-                {
-                    SelectedTabIndex = 2; // Comparison tab will be index 2
-                }
-            }
-        }
-    }
 
     public IFileLoadResultViewModel? SelectedFile
     {
@@ -102,18 +90,16 @@ public class MainWindowViewModel : ViewModelBase
 
     public MainWindowViewModel(
         ILoadedFilesManager filesManager,
+        IRowComparisonCoordinator comparisonCoordinator,
         IFilePickerService filePickerService,
         ILogger<MainWindowViewModel> logger,
-        IServiceProvider serviceProvider,
         IThemeManager themeManager)
     {
         _filesManager = filesManager ?? throw new ArgumentNullException(nameof(filesManager));
+        _comparisonCoordinator = comparisonCoordinator ?? throw new ArgumentNullException(nameof(comparisonCoordinator));
         _filePickerService = filePickerService ?? throw new ArgumentNullException(nameof(filePickerService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         _themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
-
-        RowComparisons = new ReadOnlyObservableCollection<RowComparisonViewModel>(_rowComparisons);
 
         // Initialize with Search Results tab selected
         _selectedTabIndex = 1;
@@ -131,6 +117,19 @@ public class MainWindowViewModel : ViewModelBase
         _filesManager.FileLoaded += OnFileLoaded;
         _filesManager.FileRemoved += OnFileRemoved;
         _filesManager.FileLoadFailed += OnFileLoadFailed;
+
+        // Subscribe to comparison coordinator events
+        _comparisonCoordinator.SelectionChanged += OnComparisonSelectionChanged;
+        _comparisonCoordinator.PropertyChanged += OnComparisonCoordinatorPropertyChanged;
+    }
+
+    private void OnComparisonCoordinatorPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        // Propagate PropertyChanged from Coordinator to ViewModel
+        if (e.PropertyName == nameof(IRowComparisonCoordinator.SelectedComparison))
+        {
+            OnPropertyChanged(nameof(SelectedComparison));
+        }
     }
 
     public void SetSearchViewModel(SearchViewModel searchViewModel)
@@ -183,37 +182,15 @@ public class MainWindowViewModel : ViewModelBase
 
     private void OnRowComparisonCreated(object? sender, RowComparison comparison)
     {
-        try
+        _comparisonCoordinator.CreateComparison(comparison);
+    }
+
+    private void OnComparisonSelectionChanged(object? sender, ComparisonSelectionChangedEventArgs e)
+    {
+        // Switch to comparison tab when a comparison is selected
+        if (e.NewSelection != null)
         {
-            var comparisonLogger = _serviceProvider.GetRequiredService<ILogger<RowComparisonViewModel>>();
-            var comparisonViewModel = new RowComparisonViewModel(comparison, comparisonLogger);
-
-            // Handle close request
-            comparisonViewModel.CloseRequested += (s, e) =>
-            {
-                var vm = s as RowComparisonViewModel;
-                if (vm != null && _rowComparisons.Contains(vm))
-                {
-                    _rowComparisons.Remove(vm);
-                    _logger.LogInformation("Removed row comparison: {ComparisonName}", vm.Title);
-
-                    // If this was the selected comparison, clear selection
-                    if (SelectedComparison == vm)
-                    {
-                        SelectedComparison = null;
-                    }
-                }
-            };
-
-            _rowComparisons.Add(comparisonViewModel);
-            SelectedComparison = comparisonViewModel; // Auto-select the new comparison
-
-            _logger.LogInformation("Added new row comparison: {ComparisonName} with {RowCount} rows",
-                comparison.Name, comparison.Rows.Count);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to create row comparison view model");
+            SelectedTabIndex = 2; // Comparison tab
         }
     }
 
