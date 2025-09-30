@@ -10,14 +10,14 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using ExcelViewer.UI.Avalonia.Commands;
 using ExcelViewer.UI.Avalonia.Managers;
+using ExcelViewer.UI.Avalonia.Managers.Files;
 
 namespace ExcelViewer.UI.Avalonia.ViewModels;
 
 public class MainWindowViewModel : ViewModelBase
 {
-    private readonly IExcelReaderService _excelReaderService;
+    private readonly ILoadedFilesManager _filesManager;
     private readonly IFilePickerService _filePickerService;
-    private readonly IDialogService _dialogService;
     private readonly ILogger<MainWindowViewModel> _logger;
     private readonly IServiceProvider _serviceProvider;
     private readonly IThemeManager _themeManager;
@@ -26,8 +26,7 @@ public class MainWindowViewModel : ViewModelBase
     private object? _currentView;
     private int _selectedTabIndex;
 
-    private readonly ObservableCollection<IFileLoadResultViewModel> _loadedFiles = new();
-    public ReadOnlyObservableCollection<IFileLoadResultViewModel> LoadedFiles { get; }
+    public ReadOnlyObservableCollection<IFileLoadResultViewModel> LoadedFiles => _filesManager.LoadedFiles;
 
     public SearchViewModel? SearchViewModel { get; private set; }
     public FileDetailsViewModel? FileDetailsViewModel { get; private set; }
@@ -53,7 +52,6 @@ public class MainWindowViewModel : ViewModelBase
             }
         }
     }
-
 
     public IFileLoadResultViewModel? SelectedFile
     {
@@ -103,21 +101,18 @@ public class MainWindowViewModel : ViewModelBase
     public ICommand ShowAllFilesCommand => SearchViewModel?.ShowAllFilesCommand ?? new RelayCommand(() => Task.CompletedTask);
 
     public MainWindowViewModel(
-        IExcelReaderService excelReaderService,
+        ILoadedFilesManager filesManager,
         IFilePickerService filePickerService,
-        IDialogService dialogService,
         ILogger<MainWindowViewModel> logger,
         IServiceProvider serviceProvider,
         IThemeManager themeManager)
     {
-        _excelReaderService = excelReaderService ?? throw new ArgumentNullException(nameof(excelReaderService));
+        _filesManager = filesManager ?? throw new ArgumentNullException(nameof(filesManager));
         _filePickerService = filePickerService ?? throw new ArgumentNullException(nameof(filePickerService));
-        _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         _themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
 
-        LoadedFiles = new ReadOnlyObservableCollection<IFileLoadResultViewModel>(_loadedFiles);
         RowComparisons = new ReadOnlyObservableCollection<RowComparisonViewModel>(_rowComparisons);
 
         // Initialize with Search Results tab selected
@@ -132,6 +127,10 @@ public class MainWindowViewModel : ViewModelBase
             return Task.CompletedTask;
         });
 
+        // Subscribe to file manager events
+        _filesManager.FileLoaded += OnFileLoaded;
+        _filesManager.FileRemoved += OnFileRemoved;
+        _filesManager.FileLoadFailed += OnFileLoadFailed;
     }
 
     public void SetSearchViewModel(SearchViewModel searchViewModel)
@@ -218,120 +217,56 @@ public class MainWindowViewModel : ViewModelBase
         }
     }
 
-
-
-
-
     private async Task LoadFileAsync()
     {
-        try
+        var files = await _filePickerService.OpenFilesAsync("Select Excel Files", new[] { "*.xlsx", "*.xls" });
+        if (files?.Any() == true)
         {
-            var files = await _filePickerService.OpenFilesAsync("Select Excel Files", new[] { "*.xlsx", "*.xls" });
-            if (files?.Any() == true)
-            {
-                _logger.LogInformation("Loading {FileCount} files", files.Count());
-
-                var loadedExcelFiles = await _excelReaderService.LoadFilesAsync(files);
-
-                foreach (var excelFile in loadedExcelFiles)
-                {
-                    // Check for duplicates
-                    if (LoadedFiles.Any(f => f.FilePath.Equals(excelFile.FilePath, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        await _dialogService.ShowMessageAsync(
-                            $"File {excelFile.FileName} is already loaded.",
-                            "Duplicate File");
-                        continue;
-                    }
-
-                    _loadedFiles.Add(new FileLoadResultViewModel(excelFile));
-
-                    if (excelFile.HasErrors)
-                    {
-                        _logger.LogWarning("File {FilePath} loaded with errors", excelFile.FilePath);
-                    }
-                }
-
-                _logger.LogInformation("Successfully loaded {FileCount} files", loadedExcelFiles.Count);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error loading files");
-            await _dialogService.ShowErrorAsync(
-                $"Error loading files: {ex.Message}",
-                "Load Error");
+            await _filesManager.LoadFilesAsync(files);
         }
     }
 
-
-    private void RemoveFile(IFileLoadResultViewModel? file)
-    {
-        if (file != null && _loadedFiles.Contains(file))
-        {
-            _loadedFiles.Remove(file);
-            _logger.LogInformation("Removed file: {FileName}", file.FileName);
-        }
-    }
-
-    // Event handlers for FileDetailsViewModel
+    // Event handlers for FileDetailsViewModel - delegate to FilesManager
     private void OnRemoveFromListRequested(IFileLoadResultViewModel? file)
     {
-        RemoveFile(file);
+        _filesManager.RemoveFile(file);
     }
 
     private void OnCleanAllDataRequested(IFileLoadResultViewModel? file)
     {
-        if (file != null)
-        {
-            // TODO: Clean search results for this file
-            // TODO: Clean any cached data for this file
-            _logger.LogInformation("Cleaning all data for file: {FileName}", file.FileName);
-
-            RemoveFile(file);
-        }
+        // TODO: Clean search results for this file
+        // TODO: Clean any cached data for this file
+        _filesManager.RemoveFile(file);
     }
 
     private void OnRemoveNotificationRequested(IFileLoadResultViewModel? file)
     {
-        // For failed files, just remove from list (no data to clean)
-        RemoveFile(file);
+        _filesManager.RemoveFile(file);
     }
 
     private async void OnTryAgainRequested(IFileLoadResultViewModel? file)
     {
         if (file != null)
         {
-            try
-            {
-                _logger.LogInformation("Retrying file load for: {FileName}", file.FileName);
-
-                // Remove the failed file first
-                RemoveFile(file);
-
-                // Attempt to reload
-                var reloadedFiles = await _excelReaderService.LoadFilesAsync(new[] { file.FilePath });
-
-                foreach (var reloadedFile in reloadedFiles)
-                {
-                    _loadedFiles.Add(new FileLoadResultViewModel(reloadedFile));
-
-                    if (reloadedFile.HasErrors)
-                    {
-                        _logger.LogWarning("File {FilePath} reloaded with errors", reloadedFile.FilePath);
-                    }
-                    else
-                    {
-                        _logger.LogInformation("File {FilePath} reloaded successfully", reloadedFile.FilePath);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrying file load for: {FileName}", file.FileName);
-                await _dialogService.ShowErrorAsync($"Failed to reload file: {ex.Message}", "Reload Error");
-            }
+            await _filesManager.RetryLoadAsync(file.FilePath);
         }
+    }
+
+    // Event handlers for FilesManager events
+    private void OnFileLoaded(object? sender, FileLoadedEventArgs e)
+    {
+        _logger.LogInformation("File loaded: {FileName} (HasErrors: {HasErrors})",
+            e.File.FileName, e.HasErrors);
+    }
+
+    private void OnFileRemoved(object? sender, FileRemovedEventArgs e)
+    {
+        _logger.LogInformation("File removed: {FileName}", e.File.FileName);
+    }
+
+    private void OnFileLoadFailed(object? sender, FileLoadFailedEventArgs e)
+    {
+        _logger.LogError(e.Exception, "File load failed: {FilePath}", e.FilePath);
     }
 
     private void OnViewSheetsRequested(IFileLoadResultViewModel? file)

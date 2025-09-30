@@ -33,18 +33,8 @@ namespace ExcelViewer.Infrastructure.External
             var results = new List<ExcelFile>();
             foreach (var filePath in filePaths)
             {
-                try
-                {
-                    var file = await LoadFileAsync(filePath);
-                    results.Add(file);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Critical error reading file: {Path}", filePath);
-                    var errors = new List<ExcelError> { ExcelError.Critical("File", $"Critical error reading file: {ex.Message}", ex) };
-                    var failedFile = new ExcelFile(filePath, LoadStatus.Failed, new Dictionary<string, DataTable>(), errors);
-                    results.Add(failedFile);
-                }
+                var file = await LoadFileAsync(filePath);
+                results.Add(file);
             }
             return results;
         }
@@ -53,6 +43,19 @@ namespace ExcelViewer.Infrastructure.External
         {
             var errors = new List<ExcelError>();
             var sheets = new Dictionary<string, DataTable>();
+
+            // Validation: Fail fast for invalid input
+            if (string.IsNullOrWhiteSpace(filePath))
+            {
+                errors.Add(ExcelError.Critical("File", "File path is null or empty"));
+                return new ExcelFile(filePath ?? "unknown", LoadStatus.Failed, sheets, errors);
+            }
+
+            if (!File.Exists(filePath))
+            {
+                errors.Add(ExcelError.Critical("File", $"File not found: {filePath}"));
+                return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
+            }
 
             try
             {
@@ -97,10 +100,32 @@ namespace ExcelViewer.Infrastructure.External
                     return new ExcelFile(filePath, status, sheets, errors);
                 });
             }
-            catch (Exception ex)
+            catch (FileFormatException ex)
             {
-                _logger.LogError(ex, "Failed to read Excel file: {Path}", filePath);
-                errors.Add(ExcelError.FileError($"Failed to read file: {ex.Message}", ex));
+                // File format errors: .xls files, corrupted packages, unsupported formats
+                _logger.LogError(ex, "Unsupported or corrupted file format: {Path}", filePath);
+                errors.Add(ExcelError.Critical("File", $"Unsupported file format (.xls files are not supported, use .xlsx): {ex.Message}", ex));
+                return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
+            }
+            catch (IOException ex)
+            {
+                // File I/O errors: locked, permission denied, network issues
+                _logger.LogError(ex, "I/O error reading Excel file: {Path}", filePath);
+                errors.Add(ExcelError.Critical("File", $"Cannot access file: {ex.Message}", ex));
+                return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
+            }
+            catch (InvalidOperationException ex)
+            {
+                // OpenXml-specific errors: corrupted file structure
+                _logger.LogError(ex, "Invalid Excel file format: {Path}", filePath);
+                errors.Add(ExcelError.Critical("File", $"Invalid Excel file: {ex.Message}", ex));
+                return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
+            }
+            catch (OpenXmlPackageException ex)
+            {
+                // OpenXml package errors: file corrupted or not a valid Excel file
+                _logger.LogError(ex, "Excel file is corrupted or invalid: {Path}", filePath);
+                errors.Add(ExcelError.Critical("File", $"Corrupted Excel file: {ex.Message}", ex));
                 return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
             }
         }

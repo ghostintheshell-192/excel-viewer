@@ -6,6 +6,7 @@ using ExcelViewer.UI.Avalonia.ViewModels;
 using ExcelViewer.UI.Avalonia.Services;
 using ExcelViewer.UI.Avalonia.Managers.Search;
 using ExcelViewer.UI.Avalonia.Managers.Selection;
+using ExcelViewer.UI.Avalonia.Managers.Files;
 using ExcelViewer.UI.Avalonia.Models.Search;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -80,6 +81,7 @@ public partial class App : Application
                 services.AddSingleton<ISearchResultsManager, ExcelViewer.UI.Avalonia.Managers.Search.SearchResultsManager>();
                 services.AddSingleton<ISelectionManager, ExcelViewer.UI.Avalonia.Managers.Selection.SelectionManager>();
                 services.AddSingleton<IThemeManager, ThemeManager>();
+                services.AddSingleton<ILoadedFilesManager, LoadedFilesManager>();
 
                 // Register ViewModels
                 services.AddSingleton<MainWindowViewModel>();
