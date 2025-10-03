@@ -12,12 +12,14 @@
 ## Development Methodology
 
 ### Core Principles
+
 - **Security First**: 100% local processing, no cloud dependencies
 - **Professional Grade**: Enterprise-ready features and reliability
 - **Cross-Platform**: Native performance on Windows, Linux, macOS
 - **Clean Architecture**: Separation of concerns, testable, maintainable
 
 ### Architecture Philosophy
+
 - **Domain-Driven Design**: Business logic in Core layer
 - **MVVM Pattern**: Clean separation UI/business logic
 - **Dependency Injection**: Loose coupling, testable components
@@ -26,12 +28,14 @@
 ## Technology Stack
 
 ### Core Technologies
+
 - **.NET 8**: Modern framework, LTS support
 - **C# 12**: Latest language features
 - **Avalonia UI**: Cross-platform native UI
 - **DocumentFormat.OpenXml**: Excel file processing
 
 ### Development Tools
+
 - **IDE**: Visual Studio Code / Visual Studio / JetBrains Rider
 - **Testing**: xUnit + Moq + FluentAssertions
 - **CI/CD**: GitHub Actions
@@ -40,7 +44,8 @@
 ## Project Structure Standards
 
 ### Solution Organization
-```
+
+```text
 ExcelViewer/
 ├── src/
 │   ├── ExcelViewer.Core/           # Business logic (platform agnostic)
@@ -52,6 +57,7 @@ ExcelViewer/
 ```
 
 ### Namespace Conventions
+
 - **ExcelViewer.Core**: Business entities, services, interfaces
 - **ExcelViewer.Core.Models**: Domain models and DTOs
 - **ExcelViewer.Core.Services**: Business logic and file processing
@@ -62,12 +68,14 @@ ExcelViewer/
 ## Coding Standards
 
 ### C# Specific Guidelines
+
 - **PascalCase**: Classes, methods, properties, public fields
 - **camelCase**: Local variables, private fields (with _ prefix)
 - **ALL_CAPS**: Constants
 - **Interfaces**: Prefix with 'I' (IExcelReaderService)
 
 ### Code Quality Rules
+
 - **Methods**: Maximum 25 lines, single responsibility
 - **Classes**: Focused, cohesive responsibilities
 - **Dependencies**: Inject through constructor, use interfaces
@@ -75,7 +83,20 @@ ExcelViewer/
 - **Comments**: Only when complex logic needs explanation
 - **Language**: All code and comments in English
 
+### Code Style Enforcement
+
+- **Tool**: `dotnet format`
+- **Configuration**: `.editorconfig` with severity = error for naming rules
+- **Automation**: Pre-commit hook verifies formatting before commit
+- **Workflow**:
+  1. Write code
+  2. Run `dotnet format` to fix formatting automatically
+  3. Manually fix any naming violations (IDE1006) if needed
+  4. Commit (hook blocks if not compliant)
+- **Manual check**: `dotnet format --verify-no-changes`
+
 ### File Organization
+
 - **One class per file**: Class name matches file name
 - **Using statements**: System first, then third-party, then project
 - **Regions**: Minimal use, prefer small focused classes
@@ -84,12 +105,14 @@ ExcelViewer/
 ## Testing Strategy
 
 ### Test Structure
+
 - **Unit Tests**: Core business logic, 90%+ coverage
 - **Integration Tests**: File processing, cross-platform scenarios
 - **UI Tests**: Critical user workflows
 - **Performance Tests**: Large file handling benchmarks
 
 ### Testing Conventions
+
 - **Naming**: MethodName_Scenario_ExpectedResult
 - **AAA Pattern**: Arrange, Act, Assert
 - **Test Data**: Use builders for complex objects
@@ -98,12 +121,14 @@ ExcelViewer/
 ## Security & Compliance
 
 ### Data Protection
+
 - **Local Processing**: No network communication during processing
 - **Memory Management**: Secure cleanup of sensitive data
 - **File Access**: Read-only source files, secure temp file handling
 - **Audit Trail**: User action logging for enterprise versions
 
 ### Commercial Considerations
+
 - **Licensing**: Built-in license validation and enforcement
 - **Anti-Tampering**: Code obfuscation for release builds
 - **Update Mechanism**: Secure update delivery and validation
@@ -112,12 +137,14 @@ ExcelViewer/
 ## Performance Requirements
 
 ### Target Metrics
+
 - **File Loading**: <2 seconds for 10MB Excel files
 - **Comparison**: <5 seconds for medium complexity files
 - **Memory Usage**: <500MB for largest supported files
 - **UI Responsiveness**: <100ms response time for user interactions
 
 ### Optimization Strategies
+
 - **Async Operations**: Background processing with progress indication
 - **Lazy Loading**: Load data on demand for large datasets
 - **Memory Efficiency**: Dispose resources promptly, avoid leaks
@@ -126,12 +153,14 @@ ExcelViewer/
 ## Business Logic Guidelines
 
 ### Domain Models
+
 - **Immutable Entities**: Use readonly properties where possible
 - **Value Objects**: For domain concepts without identity
 - **Aggregate Roots**: Clear boundaries for data consistency
 - **Domain Events**: For decoupled communication between modules
 
 ### Service Design
+
 - **Interface Segregation**: Small, focused interfaces
 - **Single Responsibility**: One reason to change per service
 - **Stateless Services**: Avoid service state, use parameters
@@ -140,12 +169,14 @@ ExcelViewer/
 ## UI/UX Principles
 
 ### Avalonia UI Guidelines
+
 - **MVVM Compliance**: No code-behind logic, use view models
 - **Data Binding**: Prefer declarative XAML over procedural code
 - **Commands**: Use ICommand for user actions
 - **Converters**: For display logic that doesn't belong in view models
 
 ### User Experience
+
 - **Responsive Design**: Handle long operations gracefully
 - **Error Communication**: Clear, actionable error messages
 - **Professional Appearance**: Consistent with business software
@@ -154,11 +185,13 @@ ExcelViewer/
 ## Deployment & Distribution
 
 ### Platform Support
+
 - **Windows**: MSI installer + portable executable
 - **Linux**: AppImage, .deb/.rpm packages
 - **macOS**: .dmg installer + app bundle
 
 ### Build Configuration
+
 - **Debug**: Development builds with full debugging symbols
 - **Release**: Optimized builds with code obfuscation
 - **Self-Contained**: Include .NET runtime for easy deployment
@@ -167,12 +200,14 @@ ExcelViewer/
 ## Documentation Standards
 
 ### Code Documentation
+
 - **XML Comments**: Public APIs and complex methods
 - **README Files**: Setup and usage instructions
 - **Architecture Docs**: High-level system design
 - **API Documentation**: For any exposed interfaces
 
 ### Project Documentation
+
 - **Overview**: Business goals and technical approach
 - **Technical Specs**: Detailed implementation guidelines
 - **Roadmap**: Feature development timeline
@@ -181,6 +216,7 @@ ExcelViewer/
 ## Git Workflow
 
 ### Branch Strategy
+
 - **main**: Production-ready code only (releases commerciali)
 - **develop**: Integration branch (branch principale per lo sviluppo)
 - **feature/***: Individual feature development
@@ -188,6 +224,7 @@ ExcelViewer/
 - **fix/***: Bug fixes specifici
 
 ### Workflow Commands
+
 ```bash
 # Sviluppo quotidiano
 git checkout develop
@@ -207,26 +244,11 @@ git push origin main --tags
 ```
 
 ### Commit Standards
+
 - **Conventional Commits**: feat, fix, docs, style, refactor, test
 - **Clear Messages**: Explain why, not just what
 - **Atomic Commits**: One logical change per commit
 - **Code Reviews**: All changes reviewed before merge
-
-## Commercial Considerations
-
-### Intellectual Property
-- **Source Code**: Dual Licensed (MIT + Commercial)
-- **Open Source**: MIT license for community and non-commercial use
-- **Commercial**: Separate license for enterprise features and support
-- **Third-Party**: License compliance, attribution
-- **Customer Data**: No collection, local processing only
-- **Branding**: Trademark and logo protection
-
-### Customer Support
-- **Error Logging**: Comprehensive for support scenarios
-- **Version Tracking**: Clear versioning for support
-- **Documentation**: User guides, troubleshooting
-- **Update Mechanism**: Seamless, secure updates
 
 ---
 
