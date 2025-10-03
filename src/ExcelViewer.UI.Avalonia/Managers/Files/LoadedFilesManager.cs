@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using ExcelViewer.Core.Domain.Entities;
 using ExcelViewer.Core.Domain.ValueObjects;
 using ExcelViewer.Infrastructure.External;
 using ExcelViewer.UI.Avalonia.Services;
@@ -122,7 +123,7 @@ public class LoadedFilesManager : ILoadedFilesManager
     /// Processes a loaded Excel file and determines whether to add it to the collection.
     /// Respects the LoadStatus from Core to decide how to handle the file.
     /// </summary>
-    private async Task ProcessLoadedFileAsync(Core.Domain.Entities.ExcelFile excelFile)
+    private async Task ProcessLoadedFileAsync(ExcelFile excelFile)
     {
         // Check for duplicates
         if (LoadedFiles.Any(f => f.FilePath.Equals(excelFile.FilePath, StringComparison.OrdinalIgnoreCase)))
@@ -177,7 +178,7 @@ public class LoadedFilesManager : ILoadedFilesManager
     /// <summary>
     /// Adds a file to the collection and notifies listeners.
     /// </summary>
-    private void AddFileToCollection(Core.Domain.Entities.ExcelFile excelFile, bool hasErrors)
+    private void AddFileToCollection(ExcelFile excelFile, bool hasErrors)
     {
         var fileViewModel = new FileLoadResultViewModel(excelFile);
         _loadedFiles.Add(fileViewModel);

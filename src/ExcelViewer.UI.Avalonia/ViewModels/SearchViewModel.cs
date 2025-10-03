@@ -112,49 +112,49 @@ public class SearchViewModel : ViewModelBase
         ISelectionManager selectionManager,
         ILogger<SearchViewModel> logger)
     {
-        this._searchResultsManager = searchResultsManager ?? throw new ArgumentNullException(nameof(searchResultsManager));
-        this._selectionManager = selectionManager ?? throw new ArgumentNullException(nameof(selectionManager));
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _searchResultsManager = searchResultsManager ?? throw new ArgumentNullException(nameof(searchResultsManager));
+        _selectionManager = selectionManager ?? throw new ArgumentNullException(nameof(selectionManager));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         // Wire up events from managers to notify UI of changes
-        this._searchResultsManager.ResultsChanged += (s, e) =>
+        _searchResultsManager.ResultsChanged += (s, e) =>
         {
             base.OnPropertyChanged(nameof(SearchResults));
             base.OnPropertyChanged(nameof(GroupedResults));
         };
 
-        this._searchResultsManager.SuggestionsChanged += (s, e) =>
+        _searchResultsManager.SuggestionsChanged += (s, e) =>
         {
             base.OnPropertyChanged(nameof(Suggestions));
             UpdateSearchSuggestions();
         };
 
-        this._searchResultsManager.GroupedResultsUpdated += (s, e) =>
-            this._selectionManager.UpdateGroupedResults(e.GroupedResults);
+        _searchResultsManager.GroupedResultsUpdated += (s, e) =>
+            _selectionManager.UpdateGroupedResults(e.GroupedResults);
 
-        this._selectionManager.SelectionChanged += (s, e) =>
+        _selectionManager.SelectionChanged += (s, e) =>
         {
             base.OnPropertyChanged(nameof(SelectedCells));
             base.OnPropertyChanged(nameof(SelectedSheets));
         };
 
-        this._selectionManager.VisibilityChanged += (s, e) =>
+        _selectionManager.VisibilityChanged += (s, e) =>
             base.OnPropertyChanged(nameof(GroupedResults));
 
         // Initialize commands
         SearchCommand = new RelayCommand(async () => await PerformSearchAsync(SearchQuery), () => !string.IsNullOrWhiteSpace(SearchQuery));
         ClearSearchCommand = new RelayCommand(() => Task.Run(ClearSearch));
-        ShowAllFilesCommand = new RelayCommand(() => Task.Run(() => this._selectionManager.ShowAllFiles()));
+        ShowAllFilesCommand = new RelayCommand(() => Task.Run(() => _selectionManager.ShowAllFiles()));
 
         ToggleCellSelectionCommand = new RelayCommand<ICellOccurrence>(
-            (ICellOccurrence cell) => this._selectionManager.ToggleCellSelection(cell));
+            (ICellOccurrence cell) => _selectionManager.ToggleCellSelection(cell));
         ToggleSheetSelectionCommand = new RelayCommand<ISheetOccurrence>(
-            (ISheetOccurrence sheet) => this._selectionManager.ToggleSheetSelection(sheet));
+            (ISheetOccurrence sheet) => _selectionManager.ToggleSheetSelection(sheet));
         ToggleFileVisibilityCommand = new RelayCommand<IFileLoadResultViewModel>(
-            (IFileLoadResultViewModel file) => this._selectionManager.ToggleFileVisibility(file));
+            (IFileLoadResultViewModel file) => _selectionManager.ToggleFileVisibility(file));
         ShowOnlyFileCommand = new RelayCommand<IFileLoadResultViewModel>(
-            (IFileLoadResultViewModel file) => this._selectionManager.ShowOnlyFile(file));
-        ClearSelectionsCommand = new RelayCommand(() => Task.Run(() => this._selectionManager.ClearSelections()));
+            (IFileLoadResultViewModel file) => _selectionManager.ShowOnlyFile(file));
+        ClearSelectionsCommand = new RelayCommand(() => Task.Run(() => _selectionManager.ClearSelections()));
     }
 
     public void Initialize(ReadOnlyObservableCollection<IFileLoadResultViewModel> loadedFiles)

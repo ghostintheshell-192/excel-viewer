@@ -204,22 +204,16 @@ public class MainWindowViewModel : ViewModelBase
     }
 
     // Event handlers for FileDetailsViewModel - delegate to FilesManager
-    private void OnRemoveFromListRequested(IFileLoadResultViewModel? file)
-    {
-        _filesManager.RemoveFile(file);
-    }
+    private void OnRemoveFromListRequested(IFileLoadResultViewModel? file) => _filesManager.RemoveFile(file);
 
     private void OnCleanAllDataRequested(IFileLoadResultViewModel? file)
     {
-        // TODO: Clean search results for this file
-        // TODO: Clean any cached data for this file
+        // TODO: Implement search results cleanup for this file
+        _logger.LogInformation("Clean all data requested for: {FileName}", file?.FileName);
         _filesManager.RemoveFile(file);
     }
 
-    private void OnRemoveNotificationRequested(IFileLoadResultViewModel? file)
-    {
-        _filesManager.RemoveFile(file);
-    }
+    private void OnRemoveNotificationRequested(IFileLoadResultViewModel? file) => _filesManager.RemoveFile(file);
 
     private async void OnTryAgainRequested(IFileLoadResultViewModel? file)
     {

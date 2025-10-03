@@ -1,8 +1,8 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
-using ExcelViewer.Core.Domain.Entities;
 using ExcelViewer.Core.Domain.ValueObjects;
 using ExcelViewer.UI.Avalonia.Commands;
+using ExcelViewer.UI.Avalonia.Models;
 using Microsoft.Extensions.Logging;
 
 namespace ExcelViewer.UI.Avalonia.ViewModels;
@@ -256,34 +256,4 @@ public class FileDetailsViewModel : ViewModelBase
     public event Action<IFileLoadResultViewModel?>? RemoveNotificationRequested;
     public event Action<IFileLoadResultViewModel?>? TryAgainRequested;
     public event Action<IFileLoadResultViewModel?>? ViewSheetsRequested;
-}
-
-public class FileDetailProperty
-{
-    public string Key { get; set; }
-    public string Value { get; set; }
-
-    public FileDetailProperty(string key, string value)
-    {
-        Key = key;
-        Value = value;
-    }
-
-    public bool IsSeparator => string.IsNullOrEmpty(Key) && string.IsNullOrEmpty(Value);
-    public bool IsHeader => !string.IsNullOrEmpty(Key) && string.IsNullOrEmpty(Value);
-    public bool IsRegularRow => !IsSeparator && !IsHeader;
-}
-
-public class FileDetailAction
-{
-    public string Name { get; set; }
-    public ICommand Command { get; set; }
-    public string Description { get; set; }
-
-    public FileDetailAction(string name, ICommand command, string description)
-    {
-        Name = name;
-        Command = command;
-        Description = description;
-    }
 }
