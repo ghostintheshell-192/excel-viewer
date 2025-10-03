@@ -5,24 +5,24 @@ namespace ExcelViewer.UI.Avalonia.Commands
 {
     public class RelayCommand : ICommand
     {
-        private readonly Func<Task> execute;
-        private readonly Func<bool>? canExecute;
+        private readonly Func<Task> _execute;
+        private readonly Func<bool>? _canExecute;
 
         public RelayCommand(Func<Task> execute, Func<bool>? canExecute = null)
         {
-            this.execute = execute ?? throw new ArgumentNullException(nameof(execute));
-            this.canExecute = canExecute;
+            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
+            _canExecute = canExecute;
         }
 
         public event EventHandler? CanExecuteChanged;
 
-        public bool CanExecute(object? parameter) => canExecute?.Invoke() ?? true;
+        public bool CanExecute(object? parameter) => _canExecute?.Invoke() ?? true;
 
         public async void Execute(object? parameter)
         {
             if (CanExecute(parameter))
             {
-                await execute();
+                await _execute();
             }
         }
 
@@ -34,19 +34,19 @@ namespace ExcelViewer.UI.Avalonia.Commands
 
     public class RelayCommand<T> : ICommand
     {
-        private readonly Action<T> execute;
-        private readonly Func<T, bool>? canExecute;
+        private readonly Action<T> _execute;
+        private readonly Func<T, bool>? _canExecute;
 
         public RelayCommand(Action<T> execute, Func<T, bool>? canExecute = null)
         {
-            this.execute = execute ?? throw new ArgumentNullException(nameof(execute));
-            this.canExecute = canExecute;
+            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
+            _canExecute = canExecute;
         }
 
         public event EventHandler? CanExecuteChanged;
-        public bool CanExecute(object? parameter) => canExecute?.Invoke((T)parameter!) ?? true;
+        public bool CanExecute(object? parameter) => _canExecute?.Invoke((T)parameter!) ?? true;
 
-        public void Execute(object? parameter) => execute((T)parameter!);
+        public void Execute(object? parameter) => _execute((T)parameter!);
 
         public void RaiseCanExecuteChanged()
         {

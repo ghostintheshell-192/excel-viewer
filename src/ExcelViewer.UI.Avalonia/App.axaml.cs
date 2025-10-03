@@ -21,7 +21,7 @@ namespace ExcelViewer.UI.Avalonia;
 
 public partial class App : Application
 {
-    private IHost? host;
+    private IHost? _host;
 
     public override void Initialize()
     {
@@ -31,19 +31,19 @@ public partial class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         // Create and configure the host
-        host = CreateHostBuilder().Build();
+        _host = CreateHostBuilder().Build();
 
         // Initialize theme manager
-        var themeManager = host.Services.GetRequiredService<IThemeManager>();
+        var themeManager = _host.Services.GetRequiredService<IThemeManager>();
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             // Get the main window and view model from DI container
-            var mainWindow = host.Services.GetRequiredService<MainWindow>();
-            var mainViewModel = host.Services.GetRequiredService<MainWindowViewModel>();
-            var searchViewModel = host.Services.GetRequiredService<SearchViewModel>();
-            var fileDetailsViewModel = host.Services.GetRequiredService<FileDetailsViewModel>();
-            var treeSearchResultsViewModel = host.Services.GetRequiredService<TreeSearchResultsViewModel>();
+            var mainWindow = _host.Services.GetRequiredService<MainWindow>();
+            var mainViewModel = _host.Services.GetRequiredService<MainWindowViewModel>();
+            var searchViewModel = _host.Services.GetRequiredService<SearchViewModel>();
+            var fileDetailsViewModel = _host.Services.GetRequiredService<FileDetailsViewModel>();
+            var treeSearchResultsViewModel = _host.Services.GetRequiredService<TreeSearchResultsViewModel>();
 
             // Wire up ViewModels to MainViewModel
             mainViewModel.SetSearchViewModel(searchViewModel);
@@ -54,7 +54,7 @@ public partial class App : Application
             desktop.MainWindow = mainWindow;
 
             // Handle application exit
-            desktop.Exit += (_, _) => host?.Dispose();
+            desktop.Exit += (_, _) => _host?.Dispose();
         }
 
         base.OnFrameworkInitializationCompleted();
