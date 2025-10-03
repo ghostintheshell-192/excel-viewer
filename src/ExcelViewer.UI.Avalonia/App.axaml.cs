@@ -67,6 +67,7 @@ public partial class App : Application
             {
                 // Register Core services
                 services.AddSingleton<ICellReferenceParser, CellReferenceParser>();
+                services.AddSingleton<ICellValueReader, CellValueReader>();
                 services.AddSingleton<IMergedCellProcessor, MergedCellProcessor>();
                 services.AddSingleton<IExcelReaderService, ExcelReaderService>();
                 services.AddSingleton<ISearchService, SearchService>();

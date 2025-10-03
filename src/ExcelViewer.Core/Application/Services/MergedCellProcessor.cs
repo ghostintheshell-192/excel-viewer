@@ -7,10 +7,12 @@ namespace ExcelViewer.Core.Application.Services
     public class MergedCellProcessor : IMergedCellProcessor
     {
         private readonly ICellReferenceParser _cellParser;
+        private readonly ICellValueReader _cellValueReader;
 
-        public MergedCellProcessor(ICellReferenceParser cellParser)
+        public MergedCellProcessor(ICellReferenceParser cellParser, ICellValueReader cellValueReader)
         {
             _cellParser = cellParser ?? throw new ArgumentNullException(nameof(cellParser));
+            _cellValueReader = cellValueReader ?? throw new ArgumentNullException(nameof(cellValueReader));
         }
 
         public Dictionary<string, string> ProcessMergedCells(WorksheetPart worksheetPart, SharedStringTable? sharedStringTable)
@@ -37,7 +39,7 @@ namespace ExcelViewer.Core.Application.Services
                 if (sourceCell == null)
                     continue;
 
-                var sourceValue = GetCellValue(sourceCell, sharedStringTable);
+                var sourceValue = _cellValueReader.GetCellValue(sourceCell, sharedStringTable);
                 PopulateMergedRange(mergedCells, range[0], range[1], sourceValue);
             }
 
@@ -61,26 +63,5 @@ namespace ExcelViewer.Core.Application.Services
             }
         }
 
-        private string GetCellValue(Cell cell, SharedStringTable? sharedStringTable)
-        {
-            if (cell == null)
-                return string.Empty;
-
-            string value = cell.InnerText;
-
-            if (cell.DataType != null && cell.DataType.Value == CellValues.SharedString && sharedStringTable != null)
-            {
-                if (int.TryParse(value, out int index))
-                {
-                    value = sharedStringTable.ElementAt(index).InnerText;
-                }
-            }
-            else if (cell.DataType != null && cell.DataType.Value == CellValues.Boolean)
-            {
-                value = value == "1" ? "TRUE" : "FALSE";
-            }
-
-            return value ?? string.Empty;
-        }
     }
 }

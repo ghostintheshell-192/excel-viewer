@@ -20,12 +20,14 @@ namespace ExcelViewer.Infrastructure.External
         private readonly ILogger<ExcelReaderService> _logger;
         private readonly ICellReferenceParser _cellParser;
         private readonly IMergedCellProcessor _mergedCellProcessor;
+        private readonly ICellValueReader _cellValueReader;
 
-        public ExcelReaderService(ILogger<ExcelReaderService> logger, ICellReferenceParser cellParser, IMergedCellProcessor mergedCellProcessor)
+        public ExcelReaderService(ILogger<ExcelReaderService> logger, ICellReferenceParser cellParser, IMergedCellProcessor mergedCellProcessor, ICellValueReader cellValueReader)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _cellParser = cellParser ?? throw new ArgumentNullException(nameof(cellParser));
             _mergedCellProcessor = mergedCellProcessor ?? throw new ArgumentNullException(nameof(mergedCellProcessor));
+            _cellValueReader = cellValueReader ?? throw new ArgumentNullException(nameof(cellValueReader));
         }
 
         public async Task<List<ExcelFile>> LoadFilesAsync(IEnumerable<string> filePaths)
@@ -282,24 +284,7 @@ namespace ExcelViewer.Infrastructure.External
 
         private string GetCellValue(Cell cell, SharedStringTable? sharedStringTable)
         {
-            if (cell == null)
-                return string.Empty;
-
-            string value = cell.InnerText;
-
-            if (cell.DataType != null && cell.DataType.Value == CellValues.SharedString && sharedStringTable != null)
-            {
-                if (int.TryParse(value, out int index))
-                {
-                    value = sharedStringTable.ElementAt(index).InnerText;
-                }
-            }
-            else if (cell.DataType != null && cell.DataType.Value == CellValues.Boolean)
-            {
-                value = value == "1" ? "TRUE" : "FALSE";
-            }
-
-            return value ?? string.Empty;
+            return _cellValueReader.GetCellValue(cell, sharedStringTable);
         }
     }
 }
