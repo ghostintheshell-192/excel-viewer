@@ -25,6 +25,26 @@
 - **Dependency Injection**: Loose coupling, testable components
 - **Event-Driven**: Responsive UI with async operations
 
+### Error Handling Philosophy
+
+**"Fail Fast for bugs, Never Throw for business errors"**
+
+- **Exceptions = Programming Bugs** (ArgumentNullException, InvalidOperationException)
+  - Use for precondition violations that should never happen
+  - Constructor validation, invalid state transitions
+
+- **Result Objects = Business Errors** (ExcelFile with LoadStatus.Failed)
+  - Use for expected domain outcomes (file not found, corrupted data)
+  - Core/Domain layer returns Result objects, never throws for business logic
+  - UI layer checks Status property instead of catching exceptions
+
+- **Layered Strategy**:
+  - **Core/Domain**: Never Throw → Return Result objects
+  - **Infrastructure**: Fail Fast → Validate preconditions only
+  - **UI/Application**: Minimal Catch → Safety net only (`OutOfMemoryException`, generic `Exception`)
+
+- **Avoid Redundant Catches**: Don't catch exceptions already handled by lower layers
+
 ## Technology Stack
 
 ### Core Technologies
