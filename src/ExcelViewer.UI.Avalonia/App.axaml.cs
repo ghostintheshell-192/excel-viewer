@@ -72,10 +72,13 @@ public partial class App : Application
                 services.AddSingleton<IExcelReaderService, ExcelReaderService>();
                 services.AddSingleton<ISearchService, SearchService>();
                 services.AddSingleton<IRowComparisonService, RowComparisonService>();
+                services.AddSingleton<IExceptionHandler, ExceptionHandler>();
 
                 // Register Avalonia-specific services
                 services.AddSingleton<IDialogService, AvaloniaDialogService>();
                 services.AddSingleton<IFilePickerService, AvaloniaFilePickerService>();
+                services.AddSingleton<IErrorNotificationService, ErrorNotificationService>();
+                services.AddSingleton<IActivityLogService, ActivityLogService>();
 
 
                 // Register Managers and Factories
