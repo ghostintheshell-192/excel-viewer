@@ -1,5 +1,6 @@
 using ExcelViewer.Core.Domain.Entities;
 using ExcelViewer.Core.Domain.ValueObjects;
+using ExcelViewer.Core.Domain.Exceptions;
 using ExcelViewer.Core.Application.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Data;
@@ -33,11 +34,14 @@ namespace ExcelViewer.Infrastructure.External
         public async Task<List<ExcelFile>> LoadFilesAsync(IEnumerable<string> filePaths)
         {
             var results = new List<ExcelFile>();
+
+
             foreach (var filePath in filePaths)
             {
                 var file = await LoadFileAsync(filePath);
                 results.Add(file);
             }
+
             return results;
         }
 
@@ -48,16 +52,7 @@ namespace ExcelViewer.Infrastructure.External
 
             // Validation: Fail fast for invalid input
             if (string.IsNullOrWhiteSpace(filePath))
-            {
-                errors.Add(ExcelError.Critical("File", "File path is null or empty"));
-                return new ExcelFile(filePath ?? "unknown", LoadStatus.Failed, sheets, errors);
-            }
-
-            if (!File.Exists(filePath))
-            {
-                errors.Add(ExcelError.Critical("File", $"File not found: {filePath}"));
-                return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
-            }
+                throw new ArgumentNullException(nameof(filePath));
 
             try
             {
@@ -68,7 +63,7 @@ namespace ExcelViewer.Infrastructure.External
 
                     if (workbookPart == null)
                     {
-                        errors.Add(ExcelError.FileError("Workbook part not found in Excel file"));
+                        errors.Add(ExcelError.Critical("File", "File corrotto: workbook part mancante"));
                         return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
                     }
 
@@ -87,20 +82,40 @@ namespace ExcelViewer.Infrastructure.External
                         try
                         {
                             var worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id);
+
+                            if (worksheetPart is null)
+                            {
+                                errors.Add(ExcelError.SheetError(sheetName, "Worksheet part not found, skipping sheet"));
+                                continue;
+                            }
+
                             var dataTable = ProcessSheet(Path.GetFileNameWithoutExtension(filePath), sheetName, workbookPart, worksheetPart);
                             sheets[sheetName] = dataTable;
                             _logger.LogDebug("Sheet {SheetName} read successfully", sheetName);
                         }
-                        catch (Exception ex)
+                        catch (InvalidCastException ex)
                         {
-                            _logger.LogError(ex, "Error reading sheet {SheetName}", sheetName);
-                            errors.Add(ExcelError.SheetError(sheetName, $"Failed to read sheet: {ex.Message}", ex));
+                            // GetPartById potrebbe ritornare un tipo diverso
+                            _logger.LogError(ex, "Invalid sheet part type for {SheetName}", sheetName);
+                            errors.Add(ExcelError.SheetError(sheetName, $"Invalid sheet structure", ex));
+                        }
+                        catch (OpenXmlPackageException ex)
+                        {
+                            // Errori specifici OpenXML per singoli sheet
+                            _logger.LogError(ex, "Corrupted sheet {SheetName}", sheetName);
+                            errors.Add(ExcelError.SheetError(sheetName, $"Sheet corrupted: {ex.Message}", ex));
                         }
                     }
 
                     var status = DetermineLoadStatus(sheets, errors);
                     return new ExcelFile(filePath, status, sheets, errors);
                 });
+            }
+            catch (ArgumentNullException ex)
+            {
+                // Questo NON dovrebbe mai succedere in produzione, ma catch per sicurezza
+                _logger.LogError(ex, "Null filepath passed to LoadFileAsync");
+                throw; // Rilancia - è un bug di programmazione
             }
             catch (FileFormatException ex)
             {

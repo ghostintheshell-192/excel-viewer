@@ -22,6 +22,8 @@ public class MainWindowViewModel : ViewModelBase
     private readonly IFilePickerService _filePickerService;
     private readonly ILogger<MainWindowViewModel> _logger;
     private readonly IThemeManager _themeManager;
+    private readonly IActivityLogService _activityLog;
+    private readonly IDialogService _dialogService;
 
     private IFileLoadResultViewModel? _selectedFile;
     private object? _currentView;
@@ -93,13 +95,17 @@ public class MainWindowViewModel : ViewModelBase
         IRowComparisonCoordinator comparisonCoordinator,
         IFilePickerService filePickerService,
         ILogger<MainWindowViewModel> logger,
-        IThemeManager themeManager)
+        IThemeManager themeManager,
+        IActivityLogService activityLog,
+        IDialogService dialogService)
     {
         _filesManager = filesManager ?? throw new ArgumentNullException(nameof(filesManager));
         _comparisonCoordinator = comparisonCoordinator ?? throw new ArgumentNullException(nameof(comparisonCoordinator));
         _filePickerService = filePickerService ?? throw new ArgumentNullException(nameof(filePickerService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
+        _activityLog = activityLog ?? throw new ArgumentNullException(nameof(activityLog));
+        _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
 
         // Initialize with Search Results tab selected
         _selectedTabIndex = 1;
@@ -196,10 +202,38 @@ public class MainWindowViewModel : ViewModelBase
 
     private async Task LoadFileAsync()
     {
-        var files = await _filePickerService.OpenFilesAsync("Select Excel Files", new[] { "*.xlsx", "*.xls" });
-        if (files?.Any() == true)
+        try
         {
+            _activityLog.LogInfo("Apertura selezione file...", "FileLoad");
+
+            var files = await _filePickerService.OpenFilesAsync("Select Excel Files", new[] { "*.xlsx", "*.xls" });
+
+            if (files?.Any() != true)
+            {
+                // User cancelled or didn't select any files - this is normal
+                _activityLog.LogInfo("Selezione file annullata dall'utente", "FileLoad");
+                return;
+            }
+
+            _activityLog.LogInfo($"Caricamento di {files.Count()} file...", "FileLoad");
             await _filesManager.LoadFilesAsync(files);
+
+            _activityLog.LogInfo($"Caricamento completato: {files.Count()} file", "FileLoad");
+        }
+        catch (Exception ex)
+        {
+            // Safety net for unexpected errors
+            // Note: FilePickerService and ExcelReaderService handle their own errors internally
+            // This catch is only for truly unexpected issues (OOM, async state corruption, etc.)
+            _logger.LogError(ex, "Unexpected error when loading files");
+            _activityLog.LogError("Errore imprevisto durante il caricamento", ex, "FileLoad");
+
+            await _dialogService.ShowErrorAsync(
+                "Si è verificato un errore imprevisto durante il caricamento dei file.\n\n" +
+                $"Dettaglio: {ex.Message}\n\n" +
+                "L'operazione è stata annullata.",
+                "Errore Caricamento"
+            );
         }
     }
 
@@ -215,11 +249,39 @@ public class MainWindowViewModel : ViewModelBase
 
     private void OnRemoveNotificationRequested(IFileLoadResultViewModel? file) => _filesManager.RemoveFile(file);
 
-    private async void OnTryAgainRequested(IFileLoadResultViewModel? file)
+    private void OnTryAgainRequested(IFileLoadResultViewModel? file)
     {
-        if (file != null)
+        if (file == null)
         {
+            _logger.LogWarning("Try again requested but file is null");
+            return;
+        }
+
+        // Use fire-and-forget pattern with proper error handling
+        _ = RetryLoadFileAsync(file);
+    }
+
+    private async Task RetryLoadFileAsync(IFileLoadResultViewModel file)
+    {
+        try
+        {
+            _activityLog.LogInfo($"Nuovo tentativo di caricamento: {file.FileName}", "FileRetry");
+            _logger.LogInformation("Retrying file load for: {FilePath}", file.FilePath);
+
             await _filesManager.RetryLoadAsync(file.FilePath);
+
+            _activityLog.LogInfo($"Tentativo completato: {file.FileName}", "FileRetry");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrying file load: {FilePath}", file.FilePath);
+            _activityLog.LogError($"Errore nel ricaricamento di {file.FileName}", ex, "FileRetry");
+
+            await _dialogService.ShowErrorAsync(
+                $"Impossibile ricaricare il file '{file.FileName}'.\n\n" +
+                $"Dettaglio: {ex.Message}",
+                "Errore Ricaricamento"
+            );
         }
     }
 

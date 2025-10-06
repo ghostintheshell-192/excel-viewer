@@ -48,14 +48,72 @@ public class LoadedFilesManager : ILoadedFilesManager
 
         _logger.LogInformation("Loading {FileCount} files", filePaths.Count());
 
-        var loadedExcelFiles = await _excelReaderService.LoadFilesAsync(filePaths);
-
-        foreach (var excelFile in loadedExcelFiles)
+        try
         {
-            await ProcessLoadedFileAsync(excelFile);
-        }
+            var loadedExcelFiles = await _excelReaderService.LoadFilesAsync(filePaths);
 
-        _logger.LogInformation("Successfully processed {FileCount} files", loadedExcelFiles.Count);
+            if (loadedExcelFiles == null)
+            {
+                _logger.LogError("ExcelReaderService returned null result");
+                await _dialogService.ShowErrorAsync(
+                    "Errore imprevisto durante il caricamento dei file.\n\n" +
+                    "Il servizio di lettura ha restituito un risultato non valido.",
+                    "Errore Caricamento");
+                return;
+            }
+
+            // Process each file individually, continuing even if one fails
+            var successCount = 0;
+            var failureCount = 0;
+
+            foreach (var excelFile in loadedExcelFiles)
+            {
+                try
+                {
+                    await ProcessLoadedFileAsync(excelFile);
+                    successCount++;
+                }
+                catch (Exception ex)
+                {
+                    // Log error but continue processing other files
+                    _logger.LogError(ex, "Error processing file {FilePath}", excelFile?.FilePath ?? "unknown");
+                    failureCount++;
+
+                    // Still try to add the file with error status if possible
+                    if (excelFile != null)
+                    {
+                        FileLoadFailed?.Invoke(this, new FileLoadFailedEventArgs(
+                            excelFile.FilePath,
+                            ex));
+                    }
+                }
+            }
+
+            _logger.LogInformation("File processing completed: {SuccessCount} succeeded, {FailureCount} failed",
+                successCount, failureCount);
+        }
+        catch (OutOfMemoryException ex)
+        {
+            // System resource exhaustion
+            _logger.LogError(ex, "Out of memory while loading files");
+            await _dialogService.ShowErrorAsync(
+                "Memoria insufficiente per caricare i file selezionati.\n\n" +
+                "Prova a:\n" +
+                "- Chiudere altre applicazioni\n" +
+                "- Caricare meno file alla volta\n" +
+                "- Riavviare l'applicazione",
+                "Memoria Insufficiente");
+        }
+        catch (Exception ex)
+        {
+            // Unexpected errors - log and notify
+            _logger.LogError(ex, "Unexpected error loading files");
+            await _dialogService.ShowErrorAsync(
+                "Errore imprevisto durante il caricamento dei file.\n\n" +
+                $"Dettaglio: {ex.Message}\n\n" +
+                "L'operazione è stata annullata.",
+                "Errore Caricamento");
+        }
     }
 
     public void RemoveFile(IFileLoadResultViewModel? file)
@@ -88,34 +146,80 @@ public class LoadedFilesManager : ILoadedFilesManager
 
         _logger.LogInformation("Retrying file load for: {FilePath}", filePath);
 
-        // Remove existing failed file entry
-        var existingFile = _loadedFiles.FirstOrDefault(f =>
-            f.FilePath.Equals(filePath, StringComparison.OrdinalIgnoreCase));
-
-        if (existingFile != null)
+        try
         {
-            RemoveFile(existingFile);
+            // Remove existing failed file entry
+            var existingFile = _loadedFiles.FirstOrDefault(f =>
+                f.FilePath.Equals(filePath, StringComparison.OrdinalIgnoreCase));
+
+            if (existingFile != null)
+            {
+                RemoveFile(existingFile);
+            }
+
+            // Attempt to reload
+            var reloadedFiles = await _excelReaderService.LoadFilesAsync(new[] { filePath });
+
+            if (reloadedFiles == null || !reloadedFiles.Any())
+            {
+                _logger.LogError("Retry failed: ExcelReaderService returned no results for {FilePath}", filePath);
+                await _dialogService.ShowErrorAsync(
+                    $"Impossibile ricaricare il file.\n\n" +
+                    $"File: {Path.GetFileName(filePath)}\n\n" +
+                    "Il servizio di lettura non ha restituito risultati.",
+                    "Errore Ricaricamento");
+                return;
+            }
+
+            foreach (var reloadedFile in reloadedFiles)
+            {
+                try
+                {
+                    await ProcessLoadedFileAsync(reloadedFile);
+
+                    if (reloadedFile.Status == LoadStatus.Success)
+                    {
+                        _logger.LogInformation("File {FilePath} reloaded successfully", reloadedFile.FilePath);
+                    }
+                    else if (reloadedFile.Status == LoadStatus.PartialSuccess)
+                    {
+                        _logger.LogWarning("File {FilePath} reloaded with warnings", reloadedFile.FilePath);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("File {FilePath} reload failed", reloadedFile.FilePath);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error processing reloaded file {FilePath}", reloadedFile?.FilePath ?? filePath);
+
+                    if (reloadedFile != null)
+                    {
+                        FileLoadFailed?.Invoke(this, new FileLoadFailedEventArgs(
+                            reloadedFile.FilePath,
+                            ex));
+                    }
+                }
+            }
         }
-
-        // Attempt to reload
-        var reloadedFiles = await _excelReaderService.LoadFilesAsync(new[] { filePath });
-
-        foreach (var reloadedFile in reloadedFiles)
+        catch (OutOfMemoryException ex)
         {
-            await ProcessLoadedFileAsync(reloadedFile);
-
-            if (reloadedFile.Status == LoadStatus.Success)
-            {
-                _logger.LogInformation("File {FilePath} reloaded successfully", reloadedFile.FilePath);
-            }
-            else if (reloadedFile.Status == LoadStatus.PartialSuccess)
-            {
-                _logger.LogWarning("File {FilePath} reloaded with warnings", reloadedFile.FilePath);
-            }
-            else
-            {
-                _logger.LogWarning("File {FilePath} reload failed", reloadedFile.FilePath);
-            }
+            _logger.LogError(ex, "Out of memory during retry: {FilePath}", filePath);
+            await _dialogService.ShowErrorAsync(
+                "Memoria insufficiente per ricaricare il file.\n\n" +
+                $"File: {Path.GetFileName(filePath)}\n\n" +
+                "Il file potrebbe essere troppo grande. Prova a chiudere altre applicazioni.",
+                "Memoria Insufficiente");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error during retry: {FilePath}", filePath);
+            await _dialogService.ShowErrorAsync(
+                $"Errore imprevisto durante il ricaricamento.\n\n" +
+                $"File: {Path.GetFileName(filePath)}\n\n" +
+                $"Dettaglio: {ex.Message}",
+                "Errore Ricaricamento");
         }
     }
 

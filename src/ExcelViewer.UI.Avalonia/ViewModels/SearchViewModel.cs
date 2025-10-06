@@ -34,7 +34,7 @@ public class SearchViewModel : ViewModelBase
                 // If the search query is empty or only whitespace, clear results immediately
                 if (string.IsNullOrWhiteSpace(value))
                 {
-                    _ = _searchResultsManager.PerformSearchAsync("", new SearchOptions());
+                    _ = SafeClearResultsAsync();
                 }
 
                 // Notify search command that CanExecute state may have changed
@@ -164,6 +164,8 @@ public class SearchViewModel : ViewModelBase
 
     private async Task PerformSearchAsync(string query)
     {
+        // SearchResultsManager handles all error cases internally
+        // No need for try-catch here
         if (string.IsNullOrWhiteSpace(query))
         {
             await _searchResultsManager.PerformSearchAsync("");
@@ -188,8 +190,24 @@ public class SearchViewModel : ViewModelBase
             SearchQuery = string.Empty;
             // The SearchQuery setter will automatically trigger clearing of results
             // But let's also explicitly clear to be sure
-            _ = _searchResultsManager.PerformSearchAsync("", new SearchOptions());
+            _ = SafeClearResultsAsync();
         });
+    }
+
+    /// <summary>
+    /// Safely clears search results with error handling for fire-and-forget calls.
+    /// </summary>
+    private async Task SafeClearResultsAsync()
+    {
+        try
+        {
+            await _searchResultsManager.PerformSearchAsync("", new SearchOptions());
+        }
+        catch (Exception ex)
+        {
+            // Log but don't crash - clearing results is not critical
+            _logger.LogError(ex, "Error clearing search results");
+        }
     }
 
 
