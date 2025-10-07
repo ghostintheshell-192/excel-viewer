@@ -15,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using ExcelViewer.Core.Application.Services;
 using ExcelViewer.Core.Application.Interfaces;
 using ExcelViewer.Infrastructure.External;
+using ExcelViewer.Infrastructure.External.Readers;
 using ExcelViewer.UI.Avalonia.Managers;
 
 namespace ExcelViewer.UI.Avalonia;
@@ -69,6 +70,11 @@ public partial class App : Application
                 services.AddSingleton<ICellReferenceParser, CellReferenceParser>();
                 services.AddSingleton<ICellValueReader, CellValueReader>();
                 services.AddSingleton<IMergedCellProcessor, MergedCellProcessor>();
+
+                // Register file format readers (must be before ExcelReaderService)
+                services.AddSingleton<IFileFormatReader, OpenXmlFileReader>();
+                // TODO: Add XlsFileReader and CsvFileReader when implemented
+
                 services.AddSingleton<IExcelReaderService, ExcelReaderService>();
                 services.AddSingleton<ISearchService, SearchService>();
                 services.AddSingleton<IRowComparisonService, RowComparisonService>();

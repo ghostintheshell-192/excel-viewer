@@ -8,6 +8,10 @@
   <ItemGroup>
     <!-- Core libraries -->
     <PackageVersion Include="DocumentFormat.OpenXml" Version="3.2.0" />
+    <PackageVersion Include="ExcelDataReader" Version="3.7.0" />
+    <PackageVersion Include="ExcelDataReader.DataSet" Version="3.7.0" />
+    <PackageVersion Include="CsvHelper" Version="33.0.1" />
+    <PackageVersion Include="System.Text.Encoding.CodePages" Version="8.0.0" />
 
     <!-- Microsoft Extensions -->
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.2" />
