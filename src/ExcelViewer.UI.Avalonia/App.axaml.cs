@@ -73,7 +73,8 @@ public partial class App : Application
 
                 // Register file format readers (must be before ExcelReaderService)
                 services.AddSingleton<IFileFormatReader, OpenXmlFileReader>();
-                // TODO: Add XlsFileReader and CsvFileReader when implemented
+                services.AddSingleton<IFileFormatReader, XlsFileReader>();
+                // TODO: Add CsvFileReader when implemented
 
                 services.AddSingleton<IExcelReaderService, ExcelReaderService>();
                 services.AddSingleton<ISearchService, SearchService>();
