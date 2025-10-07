@@ -45,11 +45,30 @@ public class AvaloniaFilePickerService : IFilePickerService
                 var fileTypes = new List<FilePickerFileType>();
 
                 // Excel files filter
-                if (fileTypeFilters.Any(f => f.Contains("xlsx") || f.Contains("xls")))
+                if (fileTypeFilters.Any(f => f.Contains("xlsx") || f.Contains("xls") || f.Contains("csv")))
                 {
-                    fileTypes.Add(new FilePickerFileType("Excel Files")
+                    // All supported spreadsheet formats
+                    fileTypes.Add(new FilePickerFileType("All Supported Formats")
                     {
-                        Patterns = new[] { "*.xlsx", "*.xls" }
+                        Patterns = new[] { "*.xlsx", "*.xlsm", "*.xltx", "*.xltm", "*.xls", "*.xlt", "*.csv" }
+                    });
+
+                    // Modern Excel formats
+                    fileTypes.Add(new FilePickerFileType("Excel Files (Modern)")
+                    {
+                        Patterns = new[] { "*.xlsx", "*.xlsm", "*.xltx", "*.xltm" }
+                    });
+
+                    // Legacy Excel formats
+                    fileTypes.Add(new FilePickerFileType("Excel Files (Legacy)")
+                    {
+                        Patterns = new[] { "*.xls", "*.xlt" }
+                    });
+
+                    // CSV files
+                    fileTypes.Add(new FilePickerFileType("CSV Files")
+                    {
+                        Patterns = new[] { "*.csv" }
                     });
                 }
 
