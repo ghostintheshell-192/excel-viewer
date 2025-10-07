@@ -2,6 +2,7 @@ using ExcelViewer.Core.Application.Interfaces;
 using ExcelViewer.Core.Application.Services;
 using ExcelViewer.Core.Domain.ValueObjects;
 using ExcelViewer.Infrastructure.External;
+using ExcelViewer.Infrastructure.External.Readers;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -20,12 +21,17 @@ namespace ExcelViewer.Tests.Integration
         public ExcelReaderServiceIntegrationTests()
         {
             // Setup real dependencies (not mocks) for integration testing
-            var logger = new Mock<ILogger<ExcelReaderService>>();
+            var serviceLogger = new Mock<ILogger<ExcelReaderService>>();
+            var readerLogger = new Mock<ILogger<OpenXmlFileReader>>();
             var cellParser = new CellReferenceParser();
             var cellValueReader = new CellValueReader();
             var mergedCellProcessor = new MergedCellProcessor(cellParser, cellValueReader);
 
-            _service = new ExcelReaderService(logger.Object, cellParser, mergedCellProcessor, cellValueReader);
+            // Create OpenXmlFileReader with its dependencies
+            var openXmlReader = new OpenXmlFileReader(readerLogger.Object, cellParser, mergedCellProcessor, cellValueReader);
+            var readers = new List<IFileFormatReader> { openXmlReader };
+
+            _service = new ExcelReaderService(readers, serviceLogger.Object);
 
             // Get path to TestData directory
             _testDataPath = Path.Combine(

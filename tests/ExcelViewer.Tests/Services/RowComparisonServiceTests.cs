@@ -5,6 +5,7 @@ using ExcelViewer.Core.Domain.Entities;
 using ExcelViewer.Core.Domain.Exceptions;
 using ExcelViewer.Core.Domain.ValueObjects;
 using ExcelViewer.Infrastructure.External;
+using ExcelViewer.Infrastructure.External.Readers;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -296,12 +297,17 @@ namespace ExcelViewer.Tests.Services
 
         private IExcelReaderService CreateRealExcelReaderService()
         {
-            var logger = new Mock<ILogger<ExcelReaderService>>();
+            var serviceLogger = new Mock<ILogger<ExcelReaderService>>();
+            var readerLogger = new Mock<ILogger<OpenXmlFileReader>>();
             var cellParser = new CellReferenceParser();
             var cellValueReader = new CellValueReader();
             var mergedCellProcessor = new MergedCellProcessor(cellParser, cellValueReader);
 
-            return new ExcelReaderService(logger.Object, cellParser, mergedCellProcessor, cellValueReader);
+            // Create OpenXmlFileReader with its dependencies
+            var openXmlReader = new OpenXmlFileReader(readerLogger.Object, cellParser, mergedCellProcessor, cellValueReader);
+            var readers = new List<IFileFormatReader> { openXmlReader };
+
+            return new ExcelReaderService(readers, serviceLogger.Object);
         }
 
         private string GetTestFilePath(string category, string filename)
