@@ -2,11 +2,13 @@
 
 A powerful cross-platform desktop application for viewing, searching, and comparing Excel files. Built with .NET 8 and Avalonia UI for native performance on Windows, Linux, and macOS.
 
+🌐 **[Visit the official website](https://ghostintheshell-192.github.io/excel-viewer/)** | 📥 **[Download Latest Release](https://github.com/ghostintheshell-192/excel-viewer/releases/latest)**
+
 ## Features
 
 ### **Excel File Support**
 
-- Load multiple Excel files (.xlsx)
+- Load multiple Excel files (.xlsx, .xls, .csv)
 - View all sheets and data in a clean interface
 - Handle errors gracefully with detailed error reporting
 - Support for merged cells and complex layouts
@@ -48,13 +50,21 @@ A powerful cross-platform desktop application for viewing, searching, and compar
 
 ## Installation
 
-> **Note**: ExcelViewer is currently in active development and not yet ready for public release. Pre-built packages are not available at this time.
+### Download Pre-built Binaries
+
+Visit the **[Releases page](https://github.com/ghostintheshell-192/excel-viewer/releases/latest)** to download the latest version for your platform:
+
+- **Windows**: `excel-viewer-windows-x64.zip`
+- **Linux**: `excel-viewer-linux-x64.tar.gz`
+- **macOS**: `excel-viewer-macos-x64.tar.gz`
+
+Extract the archive and run the executable. No installation required - all dependencies are included.
 
 ### Build from Source
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/excel-viewer.git
+git clone https://github.com/ghostintheshell-192/excel-viewer.git
 cd excel-viewer
 
 # Build the application
@@ -69,7 +79,7 @@ dotnet run --project src/ExcelViewer.UI.Avalonia
 ### Loading Files
 
 1. Click **"Load File"** or use `Ctrl+O`
-2. Select one or more Excel files (.xlsx, .xls)
+2. Select one or more Excel files (.xlsx, .xls, .csv)
 3. Files appear in the left panel with status indicators
 
 ### Searching Content
@@ -176,14 +186,22 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### Getting Help
 
 - Check the [Documentation](docs/)
-- Report bugs via [Issues](../../issues)
-- Ask questions in [Discussions](../../discussions)
+- Report bugs via [Issues](https://github.com/ghostintheshell-192/excel-viewer/issues)
+- Ask questions in [Discussions](https://github.com/ghostintheshell-192/excel-viewer/discussions)
+- View release notes in [CHANGELOG.md](CHANGELOG.md)
 
 ## Roadmap
 
+### Version 1.0.0 (Released)
+
+- ✅ Support for .xlsx, .xls, .csv files
+- ✅ Multi-file loading and comparison
+- ✅ Advanced search with regex support
+- ✅ Row comparison with visual highlighting
+- ✅ Cross-platform support (Windows, Linux, macOS)
+
 ### Upcoming Features
 
-- [ ] Support for .xls, .csv files
 - [ ] Export search results to Excel
 - [ ] Advanced filtering and sorting
 - [ ] Chart and graph visualization
