@@ -58,7 +58,7 @@
 
         <!-- Comparison Content -->
         <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-            <Grid>
+            <Grid Grid.IsSharedSizeScope="True">
                 <Grid.ColumnDefinitions>
                     <!-- Row Info Column -->
                     <ColumnDefinition Width="250" MinWidth="200"/>
@@ -91,12 +91,19 @@
                             <Border Background="{DynamicResource ComparisonHeaderBackground}"
                                     BorderBrush="{DynamicResource BorderColor}"
                                     BorderThickness="0,0,1,1"
-                                    MinWidth="140" MaxWidth="220" Padding="12">
-                                <TextBlock Text="{Binding Header}"
-                                          FontWeight="SemiBold"
-                                          Foreground="White"
-                                          TextTrimming="CharacterEllipsis"
-                                          VerticalAlignment="Center"/>
+                                    Padding="12"
+                                    MinWidth="140">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" SharedSizeGroup="{Binding ColumnIndex, StringFormat='Col{0}'}"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Header}"
+                                              FontWeight="SemiBold"
+                                              Foreground="White"
+                                              TextTrimming="CharacterEllipsis"
+                                              VerticalAlignment="Center"
+                                              MaxWidth="220"/>
+                                </Grid>
                             </Border>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
@@ -140,13 +147,20 @@
                                                 <Border Background="{Binding ComparisonResult, Converter={StaticResource ComparisonTypeToBackgroundConverter}}"
                                                         BorderBrush="{DynamicResource BorderColor}"
                                                         BorderThickness="0,0,1,1"
-                                                        MinWidth="140" MaxWidth="220" MinHeight="36" Padding="12">
-                                                    <TextBlock Text="{Binding Value}"
-                                                              VerticalAlignment="Center"
-                                                              TextTrimming="CharacterEllipsis"
-                                                              FontSize="12"
-                                                              Foreground="{DynamicResource PrimaryText}"
-                                                              ToolTip.Tip="{Binding Value}"/>
+                                                        MinHeight="36" Padding="12"
+                                                        MinWidth="140">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto" SharedSizeGroup="{Binding ColumnIndex, StringFormat='Col{0}'}"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{Binding Value}"
+                                                                  VerticalAlignment="Center"
+                                                                  TextTrimming="CharacterEllipsis"
+                                                                  FontSize="12"
+                                                                  Foreground="{DynamicResource PrimaryText}"
+                                                                  ToolTip.Tip="{Binding Value}"
+                                                                  MaxWidth="220"/>
+                                                    </Grid>
                                                 </Border>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
