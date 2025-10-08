@@ -18,69 +18,67 @@
     </UserControl.Resources>
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-
-        <!-- Header -->
-        <Border Grid.Row="0" Background="{DynamicResource ComparisonHeaderBackground}" Padding="16">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <StackPanel Grid.Column="0" Orientation="Vertical" VerticalAlignment="Center">
-                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="18" Foreground="White"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                        <TextBlock Text="{Binding RowCount}" FontWeight="SemiBold" Foreground="White"/>
-                        <TextBlock Text=" rows compared" Margin="4,0,16,0" Foreground="White"/>
-                        <TextBlock Text="Created:" Margin="0,0,6,0" Foreground="White"/>
-                        <TextBlock Text="{Binding CreatedAt, StringFormat='HH:mm:ss'}" Foreground="White"/>
-                    </StackPanel>
-                </StackPanel>
-
-                <Button Grid.Column="1" Content="✕"
-                        Command="{Binding CloseCommand}"
-                        Background="Transparent"
-                        Foreground="White"
-                        BorderThickness="0"
-                        FontSize="18"
-                        FontWeight="Bold"
-                        Padding="12"
-                        Width="44" Height="44"
-                        HorizontalContentAlignment="Center"
-                        VerticalContentAlignment="Center"
-                        ToolTip.Tip="Close comparison"/>
-            </Grid>
-        </Border>
-
-        <!-- Comparison Content -->
-        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+        <!-- Comparison Content with Header -->
+        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
             <Grid Grid.IsSharedSizeScope="True">
                 <Grid.ColumnDefinitions>
                     <!-- Row Info Column -->
                     <ColumnDefinition Width="250" MinWidth="200"/>
                     <!-- Dynamic columns for data -->
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
-                    <!-- Headers -->
+                    <!-- Header -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- Column Headers -->
                     <RowDefinition Height="Auto"/>
                     <!-- Data -->
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
+                <!-- Header spanning all columns -->
+                <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                        Background="{DynamicResource ComparisonHeaderBackground}" Padding="16">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Vertical" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="18" Foreground="White"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                <TextBlock Text="{Binding RowCount}" FontWeight="SemiBold" Foreground="White"/>
+                                <TextBlock Text=" rows compared" Margin="4,0,16,0" Foreground="White"/>
+                                <TextBlock Text="Created:" Margin="0,0,6,0" Foreground="White"/>
+                                <TextBlock Text="{Binding CreatedAt, StringFormat='HH:mm:ss'}" Foreground="White"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <Button Grid.Column="1" Content="✕"
+                                Command="{Binding CloseCommand}"
+                                Background="Transparent"
+                                Foreground="White"
+                                BorderThickness="0"
+                                FontSize="18"
+                                FontWeight="Bold"
+                                Padding="12"
+                                Width="44" Height="44"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                ToolTip.Tip="Close comparison"/>
+                    </Grid>
+                </Border>
+
                 <!-- Row Info Header -->
-                <Border Grid.Column="0" Grid.Row="0" Background="{DynamicResource ComparisonHeaderBackground}"
+                <Border Grid.Column="0" Grid.Row="1" Background="{DynamicResource ComparisonHeaderBackground}"
                         BorderBrush="{DynamicResource BorderColor}"
                         BorderThickness="0,0,1,1" Padding="12">
                     <TextBlock Text="Source" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center"/>
                 </Border>
 
                 <!-- Column Headers -->
-                <ItemsControl Grid.Column="1" Grid.Row="0" ItemsSource="{Binding Columns}">
+                <ItemsControl Grid.Column="1" Grid.Row="1" ItemsSource="{Binding Columns}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <StackPanel Orientation="Horizontal"/>
@@ -110,7 +108,7 @@
                 </ItemsControl>
 
                 <!-- Row Data -->
-                <ItemsControl Grid.Column="0" Grid.Row="1" ItemsSource="{Binding Comparison.Rows}">
+                <ItemsControl Grid.Column="0" Grid.Row="2" ItemsSource="{Binding Comparison.Rows}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="entities:ExcelRow">
                             <Border Background="{DynamicResource SecondaryBackground}"
@@ -129,10 +127,7 @@
                 </ItemsControl>
 
                 <!-- Cell Data Grid -->
-                <ScrollViewer Grid.Column="1" Grid.Row="1"
-                              HorizontalScrollBarVisibility="Auto"
-                              VerticalScrollBarVisibility="Disabled">
-                    <ItemsControl ItemsSource="{Binding Columns}">
+                <ItemsControl Grid.Column="1" Grid.Row="2" ItemsSource="{Binding Columns}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <StackPanel Orientation="Horizontal"/>
@@ -168,14 +163,12 @@
                                 </StackPanel>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+                </ItemsControl>
             </Grid>
         </ScrollViewer>
 
         <!-- Empty State -->
-        <StackPanel Grid.Row="1"
-                   HorizontalAlignment="Center"
+        <StackPanel HorizontalAlignment="Center"
                    VerticalAlignment="Center"
                    IsVisible="{Binding !RowCount}">
             <TextBlock Text="📊" FontSize="32" HorizontalAlignment="Center" Opacity="0.3"/>
