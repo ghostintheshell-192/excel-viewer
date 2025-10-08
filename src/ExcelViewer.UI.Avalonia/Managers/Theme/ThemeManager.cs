@@ -4,9 +4,9 @@ using Avalonia.Controls;
 using Avalonia.Styling;
 using Microsoft.Extensions.Logging;
 
-namespace ExcelViewer.UI.Avalonia.Services
+namespace ExcelViewer.UI.Avalonia.Managers
 {
-    public class ThemeManager : IThemeManager
+    public class ThemeManager : INotifyPropertyChanged, IThemeManager
     {
         private readonly ILogger<ThemeManager> _logger;
         private Theme _currentTheme = Theme.Light;
@@ -20,10 +20,18 @@ namespace ExcelViewer.UI.Avalonia.Services
                 {
                     _currentTheme = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentTheme)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ThemeButtonText)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ThemeButtonTooltip)));
                     ThemeChanged?.Invoke(this, value);
                 }
             }
         }
+
+        public string ThemeButtonText => CurrentTheme == Theme.Light ? "🌙" : "☀️";
+        public string ThemeButtonTooltip => CurrentTheme == Theme.Light
+            ? "Switch to Dark Theme"
+            : "Switch to Light Theme";
+
 
         public event PropertyChangedEventHandler? PropertyChanged;
         public event EventHandler<Theme>? ThemeChanged;

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExcelViewer - Excel Analysis Tool</title>
+    <meta name="description" content="A powerful cross-platform desktop application for viewing, searching, and comparing Excel files. Built with .NET 8 and Avalonia UI.">
+    <meta name="keywords" content="Excel, viewer, comparison, analysis, desktop, cross-platform, .NET, Avalonia">
+    <meta name="author" content="ExcelViewer Team">
+    <meta name="google-site-verification" content="cInm__1Sri-AmNKuAlRD4hmpvKxIvHX_-mOdpRFsdDs" />
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="ExcelViewer - Excel Analysis Tool">
+    <meta property="og:description" content="Cross-platform desktop application for advanced Excel file analysis, search, and comparison.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://ghostintheshell-192.github.io/excel-viewer/">
+    <meta property="og:image" content="https://ghostintheshell-192.github.io/excel-viewer/images/main-gui-page-light.png">
+
+    <!-- Twitter Card Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ExcelViewer - Excel Analysis Tool">
+    <meta name="twitter:description" content="Cross-platform desktop application for advanced Excel file analysis, search, and comparison.">
+    <meta name="twitter:image" content="https://ghostintheshell-192.github.io/excel-viewer/images/main-gui-page-light.png">
+
+    <!-- Additional SEO -->
+    <link rel="canonical" href="https://ghostintheshell-192.github.io/excel-viewer/">
+    <meta name="robots" content="index, follow">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="styles/main.css">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <img src="assets/logo.svg" alt="ExcelViewer" class="logo">
+                <span class="brand-name">ExcelViewer</span>
+            </div>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#about">About</a>
+                <a href="#docs">Documentation</a>
+                <a href="https://github.com/ghostintheshell-192/excel-viewer" target="_blank" class="github-link">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                    GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1>Excel Analysis Made Simple</h1>
+                    <p class="hero-subtitle">A cross-platform desktop application for viewing, searching, and comparing Excel files. Built with modern .NET technology for native performance on Windows, Linux, and macOS.</p>
+                    <div class="hero-buttons">
+                        <!-- <a href="https://github.com/ghostintheshell-192/excel-viewer" class="btn btn-primary">View Project</a> -->
+                        <a href="https://github.com/ghostintheshell-192/excel-viewer" target="_blank" class="btn btn-secondary">View on GitHub</a>
+                    </div>
+                    <div class="hero-features">
+                        <div class="feature-badge">Cross-Platform</div>
+                        <div class="feature-badge">Advanced Search</div>
+                        <div class="feature-badge">Row Comparison</div>
+                        <div class="feature-badge">Modern UI</div>
+                    </div>
+                </div>
+                <div class="hero-image">
+                    <div class="app-screenshot">
+                        <img src="images/main-gui-page-light.png" alt="ExcelViewer main interface" class="hero-screenshot">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>Features for Excel Analysis</h2>
+                <p>Everything you need to work with Excel files efficiently</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon icon-excel">XLS</div>
+                    <h3>Excel File Support</h3>
+                    <p>Load multiple <a href="https://support.microsoft.com/en-us/office/excel-specifications-and-limits-1672b34d-7043-467e-8e27-269d656771c3" target="_blank" rel="noopener">Excel files (.xlsx)</a> simultaneously. View all sheets and data with intelligent error handling and support for merged cells.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon icon-search">FIND</div>
+                    <h3>Advanced Search</h3>
+                    <p>Search across all loaded files, sheets, and cell content. Supports case-sensitive matching, exact matches, and powerful regex patterns with organized tree-view results.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon icon-compare">DIFF</div>
+                    <h3>Row Comparison</h3>
+                    <p>Compare rows from different Excel files with intelligent column header mapping. Visual highlighting shows differences and similarities at a glance.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon icon-ui">UI</div>
+                    <h3>Modern Interface</h3>
+                    <p>Clean, responsive interface with Fluent Design. Light and dark theme support for comfortable viewing in any environment.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon icon-platform">OS</div>
+                    <h3>Cross-Platform</h3>
+                    <p>Native performance on Windows, Linux, and macOS. Built with <a href="https://dotnet.microsoft.com/en-us/download/dotnet/8.0" target="_blank" rel="noopener">.NET 8</a> and <a href="https://avaloniaui.net/" target="_blank" rel="noopener">Avalonia UI</a> for consistent experience across all platforms.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon icon-privacy">SAFE</div>
+                    <h3>Privacy First</h3>
+                    <p>100% local processing with no cloud dependencies. Your data stays on your machine, ideal for sensitive information.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Screenshots Section -->
+    <section class="screenshots">
+        <div class="container">
+            <div class="section-header">
+                <h2>See ExcelViewer in Action</h2>
+                <p>Clean interface designed for productivity</p>
+            </div>
+            <div class="screenshot-gallery">
+                <div class="screenshot-item">
+                    <img src="images/search-tree-view-light.png" alt="Search results in tree view" class="screenshot">
+                    <div class="screenshot-caption">Advanced search with tree-organized results across multiple files</div>
+                </div>
+                <div class="screenshot-item">
+                    <img src="images/comparison-view-light.png" alt="Row comparison interface" class="screenshot">
+                    <div class="screenshot-caption">Side-by-side row comparison with column mapping and highlighting</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <div class="section-header">
+                <h2>About ExcelViewer</h2>
+                <p>Currently in development - exploring Excel analysis possibilities</p>
+            </div>
+            <div class="about-content">
+                <div class="about-card">
+                    <div class="about-icon icon-dev">DEV</div>
+                    <h3>Development Status</h3>
+                    <p>ExcelViewer is actively being developed. Core features are functional but the project is not yet ready for public release.</p>
+                </div>
+                <div class="about-card">
+                    <div class="about-icon icon-goal">GOAL</div>
+                    <h3>Project Goals</h3>
+                    <p>Building a reliable cross-platform Excel analysis tool with focus on search capabilities and data comparison features.</p>
+                </div>
+                <div class="about-card">
+                    <div class="about-icon icon-code">CODE</div>
+                    <h3>Get Involved</h3>
+                    <p>Interested in the project? Check out the source code, follow development progress, or contribute ideas on GitHub.</p>
+                    <a href="https://github.com/ghostintheshell-192/excel-viewer" class="btn btn-secondary">View on GitHub</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Documentation Section -->
+    <section id="docs" class="documentation">
+        <div class="container">
+            <div class="section-header">
+                <h2>Documentation & Support</h2>
+                <p>Everything you need to get started and master ExcelViewer</p>
+            </div>
+            <div class="docs-grid">
+                <div class="doc-card">
+                    <div class="doc-icon icon-start">START</div>
+                    <h3>Quick Start Guide</h3>
+                    <p>Get up and running with ExcelViewer in minutes. Learn the basics of loading files, searching, and creating comparisons.</p>
+                    <a href="https://github.com/ghostintheshell-192/excel-viewer#quick-start" class="doc-link">Read Guide →</a>
+                </div>
+                <div class="doc-card">
+                    <div class="doc-icon icon-docs">DOCS</div>
+                    <h3>User Manual</h3>
+                    <p>Comprehensive documentation covering all features, advanced usage patterns, and troubleshooting tips.</p>
+                    <a href="https://github.com/ghostintheshell-192/excel-viewer/tree/main/docs" class="doc-link">View Docs →</a>
+                </div>
+                <div class="doc-card">
+                    <div class="doc-icon icon-dev-guide">BUILD</div>
+                    <h3>Developer Guide</h3>
+                    <p>Want to contribute or build from source? Learn about the architecture, development setup, and contribution guidelines.</p>
+                    <a href="https://github.com/ghostintheshell-192/excel-viewer#development" class="doc-link">Developer Info →</a>
+                </div>
+                <div class="doc-card">
+                    <div class="doc-icon icon-support">HELP</div>
+                    <h3>Community Support</h3>
+                    <p>Get help from the community, report bugs, request features, and stay updated with the latest developments.</p>
+                    <a href="https://github.com/ghostintheshell-192/excel-viewer/issues" class="doc-link">Get Support →</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-brand">
+                        <img src="assets/logo.svg" alt="ExcelViewer" class="footer-logo">
+                        <span class="footer-brand-name">ExcelViewer</span>
+                    </div>
+                    <p class="footer-description">Excel analysis tools with complete data privacy and offline processing.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Product</h4>
+                    <ul class="footer-links">
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#about">About</a></li>
+                        <li><a href="https://github.com/ghostintheshell-192/excel-viewer">Source Code</a></li>
+                        <li><a href="https://github.com/ghostintheshell-192/excel-viewer#roadmap">Roadmap</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <ul class="footer-links">
+                        <li><a href="#docs">Documentation</a></li>
+                        <li><a href="https://github.com/ghostintheshell-192/excel-viewer#quick-start">Quick Start</a></li>
+                        <li><a href="https://github.com/ghostintheshell-192/excel-viewer#development">Developer Guide</a></li>
+                        <li><a href="https://github.com/ghostintheshell-192/excel-viewer#contributing">Contributing</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Community</h4>
+                    <ul class="footer-links">
+                        <li><a href="https://github.com/ghostintheshell-192/excel-viewer">GitHub</a></li>
+                        <li><a href="https://github.com/ghostintheshell-192/excel-viewer/issues">Issues</a></li>
+                        <li><a href="https://github.com/ghostintheshell-192/excel-viewer/discussions">Discussions</a></li>
+                        <li><a href="https://github.com/ghostintheshell-192/excel-viewer/blob/main/LICENSE">License</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 ExcelViewer. Released under the <a href="https://github.com/ghostintheshell-192/excel-viewer/blob/main/LICENSE">MIT License</a>.</p>
+                <p>Developed with ❤️ and <a href="https://claude.ai/claude-code" target="_blank" rel="noopener">Claude Code</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="scripts/main.js"></script>
+</body>
+</html>

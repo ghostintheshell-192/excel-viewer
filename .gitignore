@@ -42,6 +42,13 @@ backups/
 docs/issues/
 docs/reports/
 docs/vista.pdf
+# Note: docs/images/ now contains website assets, not ignored
+
+# Ignore sample files and test data
+samples/
+
+# Ignore private files
+.secrets/
 
 # Legacy ignore rules
 /src/VisioHandler/Resources/Results

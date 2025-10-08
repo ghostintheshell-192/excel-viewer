@@ -6,6 +6,8 @@ using ExcelViewer.UI.Avalonia.ViewModels;
 using ExcelViewer.UI.Avalonia.Services;
 using ExcelViewer.UI.Avalonia.Managers.Search;
 using ExcelViewer.UI.Avalonia.Managers.Selection;
+using ExcelViewer.UI.Avalonia.Managers.Files;
+using ExcelViewer.UI.Avalonia.Managers.Comparison;
 using ExcelViewer.UI.Avalonia.Models.Search;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -13,6 +15,8 @@ using Microsoft.Extensions.Logging;
 using ExcelViewer.Core.Application.Services;
 using ExcelViewer.Core.Application.Interfaces;
 using ExcelViewer.Infrastructure.External;
+using ExcelViewer.Infrastructure.External.Readers;
+using ExcelViewer.UI.Avalonia.Managers;
 
 namespace ExcelViewer.UI.Avalonia;
 
@@ -63,30 +67,43 @@ public partial class App : Application
             .ConfigureServices((context, services) =>
             {
                 // Register Core services
-                services.AddScoped<ICellReferenceParser, CellReferenceParser>();
-                services.AddScoped<IMergedCellProcessor, MergedCellProcessor>();
-                services.AddScoped<IExcelReaderService, ExcelReaderService>();
-                services.AddScoped<ISearchService, SearchService>();
-                services.AddScoped<IRowComparisonService, RowComparisonService>();
+                services.AddSingleton<ICellReferenceParser, CellReferenceParser>();
+                services.AddSingleton<ICellValueReader, CellValueReader>();
+                services.AddSingleton<IMergedCellProcessor, MergedCellProcessor>();
+
+                // Register file format readers (must be before ExcelReaderService)
+                services.AddSingleton<IFileFormatReader, OpenXmlFileReader>();
+                services.AddSingleton<IFileFormatReader, XlsFileReader>();
+                services.AddSingleton<IFileFormatReader, CsvFileReader>();
+
+                services.AddSingleton<IExcelReaderService, ExcelReaderService>();
+                services.AddSingleton<ISearchService, SearchService>();
+                services.AddSingleton<IRowComparisonService, RowComparisonService>();
+                services.AddSingleton<IExceptionHandler, ExceptionHandler>();
 
                 // Register Avalonia-specific services
-                services.AddScoped<IDialogService, AvaloniaDialogService>();
-                services.AddScoped<IFilePickerService, AvaloniaFilePickerService>();
-                services.AddSingleton<IThemeManager, ThemeManager>();
+                services.AddSingleton<IDialogService, AvaloniaDialogService>();
+                services.AddSingleton<IFilePickerService, AvaloniaFilePickerService>();
+                services.AddSingleton<IErrorNotificationService, ErrorNotificationService>();
+                services.AddSingleton<IActivityLogService, ActivityLogService>();
+
 
                 // Register Managers and Factories
-                services.AddScoped<ISearchResultFactory, ExcelViewer.UI.Avalonia.Models.Search.SearchResultFactory>();
-                services.AddScoped<ISearchResultsManager, ExcelViewer.UI.Avalonia.Managers.Search.SearchResultsManager>();
-                services.AddScoped<ISelectionManager, ExcelViewer.UI.Avalonia.Managers.Selection.SelectionManager>();
+                services.AddSingleton<ISearchResultFactory, ExcelViewer.UI.Avalonia.Models.Search.SearchResultFactory>();
+                services.AddSingleton<ISearchResultsManager, ExcelViewer.UI.Avalonia.Managers.Search.SearchResultsManager>();
+                services.AddSingleton<ISelectionManager, ExcelViewer.UI.Avalonia.Managers.Selection.SelectionManager>();
+                services.AddSingleton<IThemeManager, ThemeManager>();
+                services.AddSingleton<ILoadedFilesManager, LoadedFilesManager>();
+                services.AddSingleton<IRowComparisonCoordinator, RowComparisonCoordinator>();
 
                 // Register ViewModels
-                services.AddScoped<MainWindowViewModel>();
-                services.AddScoped<SearchViewModel>();
-                services.AddScoped<FileDetailsViewModel>();
-                services.AddScoped<TreeSearchResultsViewModel>();
+                services.AddSingleton<MainWindowViewModel>();
+                services.AddSingleton<SearchViewModel>();
+                services.AddSingleton<FileDetailsViewModel>();
+                services.AddSingleton<TreeSearchResultsViewModel>();
 
                 // Register Views
-                services.AddScoped<MainWindow>();
+                services.AddSingleton<MainWindow>();
 
                 // Configure logging
                 services.AddLogging(builder =>

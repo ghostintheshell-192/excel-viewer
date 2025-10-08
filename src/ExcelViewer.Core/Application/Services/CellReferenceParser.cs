@@ -5,12 +5,12 @@ namespace ExcelViewer.Core.Application.Services
 {
     public class CellReferenceParser : ICellReferenceParser
     {
-        private static readonly Regex ColumnRegex = new("[A-Za-z]+", RegexOptions.Compiled);
-        private static readonly Regex RowRegex = new("[0-9]+", RegexOptions.Compiled);
+        private static readonly Regex _columnRegex = new("[A-Za-z]+", RegexOptions.Compiled);
+        private static readonly Regex _rowRegex = new("[0-9]+", RegexOptions.Compiled);
 
         public string GetColumnName(string cellReference)
         {
-            var match = ColumnRegex.Match(cellReference);
+            var match = _columnRegex.Match(cellReference);
             return match.Success ? match.Value : string.Empty;
         }
 
@@ -29,7 +29,7 @@ namespace ExcelViewer.Core.Application.Services
 
         public int GetRowIndex(string cellReference)
         {
-            var match = RowRegex.Match(cellReference);
+            var match = _rowRegex.Match(cellReference);
             if (int.TryParse(match.Value, out int rowIndex))
             {
                 return rowIndex - 1; // Convert to 0-based

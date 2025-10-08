@@ -1,5 +1,6 @@
 using System.Data;
 using ExcelViewer.Core.Domain.Entities;
+using ExcelViewer.Core.Domain.Exceptions;
 using ExcelViewer.Core.Application.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -52,7 +53,7 @@ namespace ExcelViewer.Core.Application.Services
 
             var sheet = searchResult.SourceFile.GetSheet(searchResult.SheetName);
             if (sheet == null)
-                throw new InvalidOperationException($"Sheet '{searchResult.SheetName}' not found in file '{searchResult.FileName}'");
+                throw ComparisonException.MissingSheet(searchResult.SheetName, searchResult.FileName);
 
             if (searchResult.Row >= sheet.Rows.Count)
                 throw new ArgumentOutOfRangeException(nameof(searchResult), $"Row index {searchResult.Row} is out of range for sheet '{searchResult.SheetName}'");
@@ -79,7 +80,7 @@ namespace ExcelViewer.Core.Application.Services
 
             var sheet = file.GetSheet(sheetName);
             if (sheet == null)
-                throw new InvalidOperationException($"Sheet '{sheetName}' not found in file '{file.FileName}'");
+                throw ComparisonException.MissingSheet(sheetName, file.FilePath);
 
             var headers = new List<string>();
 

@@ -8,50 +8,40 @@ using ExcelViewer.UI.Avalonia.Models.Search;
 using ExcelViewer.UI.Avalonia.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
+using ExcelViewer.UI.Avalonia.Commands;
+using ExcelViewer.UI.Avalonia.Managers;
+using ExcelViewer.UI.Avalonia.Managers.Files;
+using ExcelViewer.UI.Avalonia.Managers.Comparison;
 
 namespace ExcelViewer.UI.Avalonia.ViewModels;
 
 public class MainWindowViewModel : ViewModelBase
 {
-    private readonly IExcelReaderService _excelReaderService;
+    private readonly ILoadedFilesManager _filesManager;
+    private readonly IRowComparisonCoordinator _comparisonCoordinator;
     private readonly IFilePickerService _filePickerService;
-    private readonly IDialogService _dialogService;
     private readonly ILogger<MainWindowViewModel> _logger;
-    private readonly IServiceProvider _serviceProvider;
     private readonly IThemeManager _themeManager;
+    private readonly IActivityLogService _activityLog;
+    private readonly IDialogService _dialogService;
 
     private IFileLoadResultViewModel? _selectedFile;
     private object? _currentView;
     private int _selectedTabIndex;
 
-    private readonly ObservableCollection<IFileLoadResultViewModel> _loadedFiles = new();
-    public ReadOnlyObservableCollection<IFileLoadResultViewModel> LoadedFiles { get; }
+    public ReadOnlyObservableCollection<IFileLoadResultViewModel> LoadedFiles => _filesManager.LoadedFiles;
+    public ReadOnlyObservableCollection<RowComparisonViewModel> RowComparisons => _comparisonCoordinator.RowComparisons;
+
+    // Expose SelectedComparison from Coordinator for binding
+    public RowComparisonViewModel? SelectedComparison
+    {
+        get => _comparisonCoordinator.SelectedComparison;
+        set => _comparisonCoordinator.SelectedComparison = value;
+    }
 
     public SearchViewModel? SearchViewModel { get; private set; }
     public FileDetailsViewModel? FileDetailsViewModel { get; private set; }
     public TreeSearchResultsViewModel? TreeSearchResultsViewModel { get; private set; }
-
-    // Row comparison management
-    private readonly ObservableCollection<RowComparisonViewModel> _rowComparisons = new();
-    public ReadOnlyObservableCollection<RowComparisonViewModel> RowComparisons { get; }
-
-    private RowComparisonViewModel? _selectedComparison;
-    public RowComparisonViewModel? SelectedComparison
-    {
-        get => _selectedComparison;
-        set
-        {
-            if (SetField(ref _selectedComparison, value))
-            {
-                // Switch to comparison tab when a comparison is selected
-                if (value != null)
-                {
-                    SelectedTabIndex = 2; // Comparison tab will be index 2
-                }
-            }
-        }
-    }
-
 
     public IFileLoadResultViewModel? SelectedFile
     {
@@ -93,43 +83,59 @@ public class MainWindowViewModel : ViewModelBase
         set => SetField(ref _selectedTabIndex, value);
     }
 
+    public IThemeManager ThemeManager { get; }
     public ICommand LoadFileCommand { get; }
     public ICommand ToggleThemeCommand { get; }
-
-    // Theme properties
-    public Theme CurrentTheme => _themeManager.CurrentTheme;
-    public string ThemeButtonText => CurrentTheme == Theme.Light ? "🌙" : "☀️";
-    public string ThemeButtonTooltip => CurrentTheme == Theme.Light ? "Switch to Dark Theme" : "Switch to Light Theme";
 
     // Delegated commands from SearchViewModel
     public ICommand ShowAllFilesCommand => SearchViewModel?.ShowAllFilesCommand ?? new RelayCommand(() => Task.CompletedTask);
 
     public MainWindowViewModel(
-        IExcelReaderService excelReaderService,
+        ILoadedFilesManager filesManager,
+        IRowComparisonCoordinator comparisonCoordinator,
         IFilePickerService filePickerService,
-        IDialogService dialogService,
         ILogger<MainWindowViewModel> logger,
-        IServiceProvider serviceProvider,
-        IThemeManager themeManager)
+        IThemeManager themeManager,
+        IActivityLogService activityLog,
+        IDialogService dialogService)
     {
-        _excelReaderService = excelReaderService ?? throw new ArgumentNullException(nameof(excelReaderService));
+        _filesManager = filesManager ?? throw new ArgumentNullException(nameof(filesManager));
+        _comparisonCoordinator = comparisonCoordinator ?? throw new ArgumentNullException(nameof(comparisonCoordinator));
         _filePickerService = filePickerService ?? throw new ArgumentNullException(nameof(filePickerService));
-        _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         _themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
-
-        LoadedFiles = new ReadOnlyObservableCollection<IFileLoadResultViewModel>(_loadedFiles);
-        RowComparisons = new ReadOnlyObservableCollection<RowComparisonViewModel>(_rowComparisons);
+        _activityLog = activityLog ?? throw new ArgumentNullException(nameof(activityLog));
+        _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
 
         // Initialize with Search Results tab selected
         _selectedTabIndex = 1;
 
         LoadFileCommand = new RelayCommand(async () => await LoadFileAsync());
-        ToggleThemeCommand = new RelayCommand(() => { ToggleTheme(); return Task.CompletedTask; });
 
-        // Subscribe to theme changes to update UI
-        _themeManager.ThemeChanged += OnThemeChanged;
+        ThemeManager = themeManager;
+        ToggleThemeCommand = new RelayCommand(() =>
+        {
+            ThemeManager.ToggleTheme();
+            return Task.CompletedTask;
+        });
+
+        // Subscribe to file manager events
+        _filesManager.FileLoaded += OnFileLoaded;
+        _filesManager.FileRemoved += OnFileRemoved;
+        _filesManager.FileLoadFailed += OnFileLoadFailed;
+
+        // Subscribe to comparison coordinator events
+        _comparisonCoordinator.SelectionChanged += OnComparisonSelectionChanged;
+        _comparisonCoordinator.PropertyChanged += OnComparisonCoordinatorPropertyChanged;
+    }
+
+    private void OnComparisonCoordinatorPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        // Propagate PropertyChanged from Coordinator to ViewModel
+        if (e.PropertyName == nameof(IRowComparisonCoordinator.SelectedComparison))
+        {
+            OnPropertyChanged(nameof(SelectedComparison));
+        }
     }
 
     public void SetSearchViewModel(SearchViewModel searchViewModel)
@@ -182,154 +188,118 @@ public class MainWindowViewModel : ViewModelBase
 
     private void OnRowComparisonCreated(object? sender, RowComparison comparison)
     {
-        try
-        {
-            var comparisonLogger = _serviceProvider.GetRequiredService<ILogger<RowComparisonViewModel>>();
-            var comparisonViewModel = new RowComparisonViewModel(comparison, comparisonLogger);
-
-            // Handle close request
-            comparisonViewModel.CloseRequested += (s, e) =>
-            {
-                var vm = s as RowComparisonViewModel;
-                if (vm != null && _rowComparisons.Contains(vm))
-                {
-                    _rowComparisons.Remove(vm);
-                    _logger.LogInformation("Removed row comparison: {ComparisonName}", vm.Title);
-
-                    // If this was the selected comparison, clear selection
-                    if (SelectedComparison == vm)
-                    {
-                        SelectedComparison = null;
-                    }
-                }
-            };
-
-            _rowComparisons.Add(comparisonViewModel);
-            SelectedComparison = comparisonViewModel; // Auto-select the new comparison
-
-            _logger.LogInformation("Added new row comparison: {ComparisonName} with {RowCount} rows",
-                comparison.Name, comparison.Rows.Count);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to create row comparison view model");
-        }
+        _comparisonCoordinator.CreateComparison(comparison);
     }
 
-
-
-
+    private void OnComparisonSelectionChanged(object? sender, ComparisonSelectionChangedEventArgs e)
+    {
+        // Switch to comparison tab when a comparison is selected
+        if (e.NewSelection != null)
+        {
+            SelectedTabIndex = 2; // Comparison tab
+        }
+    }
 
     private async Task LoadFileAsync()
     {
         try
         {
+            _activityLog.LogInfo("Apertura selezione file...", "FileLoad");
+
             var files = await _filePickerService.OpenFilesAsync("Select Excel Files", new[] { "*.xlsx", "*.xls" });
-            if (files?.Any() == true)
+
+            if (files?.Any() != true)
             {
-                _logger.LogInformation("Loading {FileCount} files", files.Count());
-
-                var loadedExcelFiles = await _excelReaderService.LoadFilesAsync(files);
-
-                foreach (var excelFile in loadedExcelFiles)
-                {
-                    // Check for duplicates
-                    if (LoadedFiles.Any(f => f.FilePath.Equals(excelFile.FilePath, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        await _dialogService.ShowMessageAsync(
-                            $"File {excelFile.FileName} is already loaded.",
-                            "Duplicate File");
-                        continue;
-                    }
-
-                    _loadedFiles.Add(new FileLoadResultViewModel(excelFile));
-
-                    if (excelFile.HasErrors)
-                    {
-                        _logger.LogWarning("File {FilePath} loaded with errors", excelFile.FilePath);
-                    }
-                }
-
-                _logger.LogInformation("Successfully loaded {FileCount} files", loadedExcelFiles.Count);
+                // User cancelled or didn't select any files - this is normal
+                _activityLog.LogInfo("Selezione file annullata dall'utente", "FileLoad");
+                return;
             }
+
+            _activityLog.LogInfo($"Caricamento di {files.Count()} file...", "FileLoad");
+            await _filesManager.LoadFilesAsync(files);
+
+            _activityLog.LogInfo($"Caricamento completato: {files.Count()} file", "FileLoad");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error loading files");
+            // Safety net for unexpected errors
+            // Note: FilePickerService and ExcelReaderService handle their own errors internally
+            // This catch is only for truly unexpected issues (OOM, async state corruption, etc.)
+            _logger.LogError(ex, "Unexpected error when loading files");
+            _activityLog.LogError("Errore imprevisto durante il caricamento", ex, "FileLoad");
+
             await _dialogService.ShowErrorAsync(
-                $"Error loading files: {ex.Message}",
-                "Load Error");
+                "Si è verificato un errore imprevisto durante il caricamento dei file.\n\n" +
+                $"Dettaglio: {ex.Message}\n\n" +
+                "L'operazione è stata annullata.",
+                "Errore Caricamento"
+            );
         }
     }
 
-
-    private void RemoveFile(IFileLoadResultViewModel? file)
-    {
-        if (file != null && _loadedFiles.Contains(file))
-        {
-            _loadedFiles.Remove(file);
-            _logger.LogInformation("Removed file: {FileName}", file.FileName);
-        }
-    }
-
-    // Event handlers for FileDetailsViewModel
-    private void OnRemoveFromListRequested(IFileLoadResultViewModel? file)
-    {
-        RemoveFile(file);
-    }
+    // Event handlers for FileDetailsViewModel - delegate to FilesManager
+    private void OnRemoveFromListRequested(IFileLoadResultViewModel? file) => _filesManager.RemoveFile(file);
 
     private void OnCleanAllDataRequested(IFileLoadResultViewModel? file)
     {
-        if (file != null)
-        {
-            // TODO: Clean search results for this file
-            // TODO: Clean any cached data for this file
-            _logger.LogInformation("Cleaning all data for file: {FileName}", file.FileName);
+        // TODO: Implement search results cleanup for this file
+        _logger.LogInformation("Clean all data requested for: {FileName}", file?.FileName);
+        _filesManager.RemoveFile(file);
+    }
 
-            RemoveFile(file);
+    private void OnRemoveNotificationRequested(IFileLoadResultViewModel? file) => _filesManager.RemoveFile(file);
+
+    private void OnTryAgainRequested(IFileLoadResultViewModel? file)
+    {
+        if (file == null)
+        {
+            _logger.LogWarning("Try again requested but file is null");
+            return;
+        }
+
+        // Use fire-and-forget pattern with proper error handling
+        _ = RetryLoadFileAsync(file);
+    }
+
+    private async Task RetryLoadFileAsync(IFileLoadResultViewModel file)
+    {
+        try
+        {
+            _activityLog.LogInfo($"Nuovo tentativo di caricamento: {file.FileName}", "FileRetry");
+            _logger.LogInformation("Retrying file load for: {FilePath}", file.FilePath);
+
+            await _filesManager.RetryLoadAsync(file.FilePath);
+
+            _activityLog.LogInfo($"Tentativo completato: {file.FileName}", "FileRetry");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrying file load: {FilePath}", file.FilePath);
+            _activityLog.LogError($"Errore nel ricaricamento di {file.FileName}", ex, "FileRetry");
+
+            await _dialogService.ShowErrorAsync(
+                $"Impossibile ricaricare il file '{file.FileName}'.\n\n" +
+                $"Dettaglio: {ex.Message}",
+                "Errore Ricaricamento"
+            );
         }
     }
 
-    private void OnRemoveNotificationRequested(IFileLoadResultViewModel? file)
+    // Event handlers for FilesManager events
+    private void OnFileLoaded(object? sender, FileLoadedEventArgs e)
     {
-        // For failed files, just remove from list (no data to clean)
-        RemoveFile(file);
+        _logger.LogInformation("File loaded: {FileName} (HasErrors: {HasErrors})",
+            e.File.FileName, e.HasErrors);
     }
 
-    private async void OnTryAgainRequested(IFileLoadResultViewModel? file)
+    private void OnFileRemoved(object? sender, FileRemovedEventArgs e)
     {
-        if (file != null)
-        {
-            try
-            {
-                _logger.LogInformation("Retrying file load for: {FileName}", file.FileName);
+        _logger.LogInformation("File removed: {FileName}", e.File.FileName);
+    }
 
-                // Remove the failed file first
-                RemoveFile(file);
-
-                // Attempt to reload
-                var reloadedFiles = await _excelReaderService.LoadFilesAsync(new[] { file.FilePath });
-
-                foreach (var reloadedFile in reloadedFiles)
-                {
-                    _loadedFiles.Add(new FileLoadResultViewModel(reloadedFile));
-
-                    if (reloadedFile.HasErrors)
-                    {
-                        _logger.LogWarning("File {FilePath} reloaded with errors", reloadedFile.FilePath);
-                    }
-                    else
-                    {
-                        _logger.LogInformation("File {FilePath} reloaded successfully", reloadedFile.FilePath);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrying file load for: {FileName}", file.FileName);
-                await _dialogService.ShowErrorAsync($"Failed to reload file: {ex.Message}", "Reload Error");
-            }
-        }
+    private void OnFileLoadFailed(object? sender, FileLoadFailedEventArgs e)
+    {
+        _logger.LogError(e.Exception, "File load failed: {FilePath}", e.FilePath);
     }
 
     private void OnViewSheetsRequested(IFileLoadResultViewModel? file)
@@ -341,77 +311,5 @@ public class MainWindowViewModel : ViewModelBase
             // This could open a new window or change the current view
         }
     }
-
-    private void ToggleTheme()
-    {
-        try
-        {
-            _themeManager.ToggleTheme();
-            _logger.LogInformation("Theme toggled to {Theme}", _themeManager.CurrentTheme);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to toggle theme");
-        }
-    }
-
-    private void OnThemeChanged(object? sender, Theme newTheme)
-    {
-        // Update UI properties when theme changes
-        OnPropertyChanged(nameof(CurrentTheme));
-        OnPropertyChanged(nameof(ThemeButtonText));
-        OnPropertyChanged(nameof(ThemeButtonTooltip));
-    }
 }
 
-// Simple RelayCommand implementation
-public class RelayCommand : ICommand
-{
-    private readonly Func<Task> _execute;
-    private readonly Func<bool>? _canExecute;
-
-    public RelayCommand(Func<Task> execute, Func<bool>? canExecute = null)
-    {
-        _execute = execute ?? throw new ArgumentNullException(nameof(execute));
-        _canExecute = canExecute;
-    }
-
-    public event EventHandler? CanExecuteChanged;
-
-    public bool CanExecute(object? parameter) => _canExecute?.Invoke() ?? true;
-
-    public async void Execute(object? parameter)
-    {
-        if (CanExecute(parameter))
-        {
-            await _execute();
-        }
-    }
-
-    public void RaiseCanExecuteChanged()
-    {
-        CanExecuteChanged?.Invoke(this, EventArgs.Empty);
-    }
-}
-
-public class RelayCommand<T> : ICommand
-{
-    private readonly Action<T> _execute;
-    private readonly Func<T, bool>? _canExecute;
-
-    public RelayCommand(Action<T> execute, Func<T, bool>? canExecute = null)
-    {
-        _execute = execute ?? throw new ArgumentNullException(nameof(execute));
-        _canExecute = canExecute;
-    }
-
-    public event EventHandler? CanExecuteChanged;
-    public bool CanExecute(object? parameter) => _canExecute?.Invoke((T)parameter!) ?? true;
-
-    public void Execute(object? parameter) => _execute((T)parameter!);
-
-    public void RaiseCanExecuteChanged()
-    {
-        CanExecuteChanged?.Invoke(this, EventArgs.Empty);
-    }
-}

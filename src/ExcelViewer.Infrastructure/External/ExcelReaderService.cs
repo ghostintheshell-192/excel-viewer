@@ -3,278 +3,81 @@ using ExcelViewer.Core.Domain.ValueObjects;
 using ExcelViewer.Core.Application.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Data;
-using DocumentFormat.OpenXml;
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace ExcelViewer.Infrastructure.External
 {
+    /// <summary>
+    /// Service for loading Excel files using format-specific readers
+    /// </summary>
     public interface IExcelReaderService
     {
-        Task<ExcelFile> LoadFileAsync(string filePath);
-        Task<List<ExcelFile>> LoadFilesAsync(IEnumerable<string> filePaths);
+        Task<ExcelFile> LoadFileAsync(string filePath, CancellationToken cancellationToken = default);
+        Task<List<ExcelFile>> LoadFilesAsync(IEnumerable<string> filePaths, CancellationToken cancellationToken = default);
     }
 
+    /// <summary>
+    /// Orchestrator that delegates file reading to appropriate format-specific readers
+    /// </summary>
     public class ExcelReaderService : IExcelReaderService
     {
+        private readonly IEnumerable<IFileFormatReader> _readers;
         private readonly ILogger<ExcelReaderService> _logger;
-        private readonly ICellReferenceParser _cellParser;
-        private readonly IMergedCellProcessor _mergedCellProcessor;
 
-        public ExcelReaderService(ILogger<ExcelReaderService> logger, ICellReferenceParser cellParser, IMergedCellProcessor mergedCellProcessor)
+        public ExcelReaderService(
+            IEnumerable<IFileFormatReader> readers,
+            ILogger<ExcelReaderService> logger)
         {
+            _readers = readers ?? throw new ArgumentNullException(nameof(readers));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _cellParser = cellParser ?? throw new ArgumentNullException(nameof(cellParser));
-            _mergedCellProcessor = mergedCellProcessor ?? throw new ArgumentNullException(nameof(mergedCellProcessor));
         }
 
-        public async Task<List<ExcelFile>> LoadFilesAsync(IEnumerable<string> filePaths)
+        public async Task<List<ExcelFile>> LoadFilesAsync(IEnumerable<string> filePaths, CancellationToken cancellationToken = default)
         {
             var results = new List<ExcelFile>();
+
             foreach (var filePath in filePaths)
             {
-                try
-                {
-                    var file = await LoadFileAsync(filePath);
-                    results.Add(file);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Critical error reading file: {Path}", filePath);
-                    var errors = new List<ExcelError> { ExcelError.Critical("File", $"Critical error reading file: {ex.Message}", ex) };
-                    var failedFile = new ExcelFile(filePath, LoadStatus.Failed, new Dictionary<string, DataTable>(), errors);
-                    results.Add(failedFile);
-                }
+                var file = await LoadFileAsync(filePath, cancellationToken);
+                results.Add(file);
             }
+
             return results;
         }
 
-        public async Task<ExcelFile> LoadFileAsync(string filePath)
+        public async Task<ExcelFile> LoadFileAsync(string filePath, CancellationToken cancellationToken = default)
         {
-            var errors = new List<ExcelError>();
-            var sheets = new Dictionary<string, DataTable>();
+            // Validation: Fail fast for invalid input
+            if (string.IsNullOrWhiteSpace(filePath))
+                throw new ArgumentNullException(nameof(filePath));
 
-            try
+            var extension = Path.GetExtension(filePath)?.ToLowerInvariant();
+            _logger.LogInformation("Loading file {FilePath} with extension {Extension}", filePath, extension);
+
+            // Find appropriate reader based on file extension
+            var reader = _readers.FirstOrDefault(r => r.SupportedExtensions.Contains(extension));
+
+            if (reader == null)
             {
-                return await Task.Run(() =>
+                _logger.LogWarning("No reader found for extension {Extension}", extension);
+
+                var supportedFormats = string.Join(", ",
+                    _readers.SelectMany(r => r.SupportedExtensions).Distinct().OrderBy(e => e));
+
+                var errors = new List<ExcelError>
                 {
-                    using var document = OpenDocument(filePath);
-                    var workbookPart = document.WorkbookPart;
+                    ExcelError.Critical("File",
+                        $"Unsupported file format '{extension}'. Supported formats: {supportedFormats}")
+                };
 
-                    if (workbookPart == null)
-                    {
-                        errors.Add(ExcelError.FileError("Workbook part not found in Excel file"));
-                        return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
-                    }
-
-                    var sheetElements = GetSheets(workbookPart);
-                    _logger.LogInformation("Reading Excel file with {SheetCount} sheets", sheetElements.Count());
-
-                    foreach (var sheet in sheetElements)
-                    {
-                        var sheetName = sheet.Name?.Value;
-                        if (string.IsNullOrEmpty(sheetName))
-                        {
-                            errors.Add(ExcelError.Warning("File", "Found sheet with empty name, skipping"));
-                            continue;
-                        }
-
-                        try
-                        {
-                            var worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id);
-                            var dataTable = ProcessSheet(Path.GetFileNameWithoutExtension(filePath), sheetName, workbookPart, worksheetPart);
-                            sheets[sheetName] = dataTable;
-                            _logger.LogDebug("Sheet {SheetName} read successfully", sheetName);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, "Error reading sheet {SheetName}", sheetName);
-                            errors.Add(ExcelError.SheetError(sheetName, $"Failed to read sheet: {ex.Message}", ex));
-                        }
-                    }
-
-                    var status = DetermineLoadStatus(sheets, errors);
-                    return new ExcelFile(filePath, status, sheets, errors);
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to read Excel file: {Path}", filePath);
-                errors.Add(ExcelError.FileError($"Failed to read file: {ex.Message}", ex));
-                return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
-            }
-        }
-
-        private SpreadsheetDocument OpenDocument(string filePath)
-        {
-            return SpreadsheetDocument.Open(filePath, false);
-        }
-
-        private IEnumerable<Sheet> GetSheets(WorkbookPart workbookPart)
-        {
-            return workbookPart.Workbook.Descendants<Sheet>();
-        }
-
-        private DataTable ProcessSheet(string fileName, string sheetName, WorkbookPart workbookPart, WorksheetPart worksheetPart)
-        {
-            var tableName = CreateTableName(fileName, sheetName);
-            var dataTable = new DataTable(tableName);
-            var sharedStringTable = workbookPart.SharedStringTablePart?.SharedStringTable;
-
-            var mergedCells = _mergedCellProcessor.ProcessMergedCells(worksheetPart, sharedStringTable);
-            var headerColumns = ProcessHeaderRow(worksheetPart, sharedStringTable, mergedCells);
-
-            if (!headerColumns.Any())
-            {
-                _logger.LogWarning("Sheet {SheetName} has no header row", sheetName);
-                return dataTable;
+                return new ExcelFile(filePath, LoadStatus.Failed,
+                    new Dictionary<string, DataTable>(), errors);
             }
 
-            CreateDataTableColumns(dataTable, headerColumns);
-            PopulateDataRows(dataTable, worksheetPart, sharedStringTable, mergedCells, headerColumns);
+            _logger.LogDebug("Using {ReaderType} for {Extension}",
+                reader.GetType().Name, extension);
 
-            return dataTable;
-        }
-
-        private string CreateTableName(string fileName, string sheetName)
-        {
-            var safeFileName = fileName.Replace(' ', '_').Replace('-', '_');
-            var safeSheetName = sheetName.Replace(' ', '_').Replace('-', '_');
-            return $"{safeFileName}_{safeSheetName}";
-        }
-
-        private Dictionary<int, string> ProcessHeaderRow(WorksheetPart worksheetPart, SharedStringTable? sharedStringTable, Dictionary<string, string> mergedCells)
-        {
-            var firstRow = worksheetPart.Worksheet.Descendants<Row>().FirstOrDefault();
-            if (firstRow == null)
-                return new Dictionary<int, string>();
-
-            var headerValues = new Dictionary<int, string>();
-            foreach (var cell in firstRow.Elements<Cell>())
-            {
-                if (cell.CellReference == null) continue;
-
-                int columnIndex = _cellParser.GetColumnIndex(cell.CellReference.Value);
-                string cellValue = GetCellValueWithMerge(cell, sharedStringTable, mergedCells);
-                headerValues[columnIndex] = cellValue;
-            }
-
-            return headerValues;
-        }
-
-        private void CreateDataTableColumns(DataTable dataTable, Dictionary<int, string> headerColumns)
-        {
-            if (!headerColumns.Any()) return;
-
-            int firstCol = headerColumns.Keys.Min();
-            int lastCol = headerColumns.Keys.Max();
-            var columnNameCounts = new Dictionary<string, int>();
-
-            for (int i = firstCol; i <= lastCol; i++)
-            {
-                string headerValue = headerColumns.TryGetValue(i, out var value) && !string.IsNullOrWhiteSpace(value)
-                    ? value
-                    : $"Column_{i}";
-
-                string uniqueColumnName = EnsureUniqueColumnName(headerValue, columnNameCounts);
-                dataTable.Columns.Add(uniqueColumnName);
-            }
-        }
-
-        private string EnsureUniqueColumnName(string baseName, Dictionary<string, int> columnNameCounts)
-        {
-            if (!columnNameCounts.ContainsKey(baseName))
-            {
-                columnNameCounts[baseName] = 1;
-                return baseName;
-            }
-
-            columnNameCounts[baseName]++;
-            return $"{baseName}_{columnNameCounts[baseName]}";
-        }
-
-        private void PopulateDataRows(DataTable dataTable, WorksheetPart worksheetPart, SharedStringTable? sharedStringTable, Dictionary<string, string> mergedCells, Dictionary<int, string> headerColumns)
-        {
-            int firstCol = headerColumns.Keys.Min();
-            bool isFirstRow = true;
-
-            foreach (var row in worksheetPart.Worksheet.Descendants<Row>())
-            {
-                if (isFirstRow)
-                {
-                    isFirstRow = false;
-                    continue; // Skip header row
-                }
-
-                var dataRow = CreateDataRow(dataTable, row, sharedStringTable, mergedCells, firstCol);
-                if (dataRow != null)
-                {
-                    dataTable.Rows.Add(dataRow);
-                }
-            }
-        }
-
-        private DataRow? CreateDataRow(DataTable dataTable, Row row, SharedStringTable? sharedStringTable, Dictionary<string, string> mergedCells, int firstCol)
-        {
-            var dataRow = dataTable.NewRow();
-            bool hasData = false;
-
-            foreach (var cell in row.Elements<Cell>())
-            {
-                if (cell.CellReference == null) continue;
-
-                int columnIndex = _cellParser.GetColumnIndex(cell.CellReference.Value) - firstCol;
-                if (columnIndex < 0 || columnIndex >= dataTable.Columns.Count)
-                    continue;
-
-                string cellValue = GetCellValueWithMerge(cell, sharedStringTable, mergedCells);
-                dataRow[columnIndex] = cellValue;
-                hasData = true;
-            }
-
-            return hasData ? dataRow : null;
-        }
-
-        private string GetCellValueWithMerge(Cell cell, SharedStringTable? sharedStringTable, Dictionary<string, string> mergedCells)
-        {
-            if (cell.CellReference?.Value != null && mergedCells.TryGetValue(cell.CellReference.Value, out string mergedValue))
-            {
-                return mergedValue;
-            }
-
-            return GetCellValue(cell, sharedStringTable);
-        }
-
-        private LoadStatus DetermineLoadStatus(Dictionary<string, DataTable> sheets, List<ExcelError> errors)
-        {
-            var hasErrors = errors.Any(e => e.Level == ErrorLevel.Error || e.Level == ErrorLevel.Critical);
-
-            if (!hasErrors)
-                return LoadStatus.Success;
-
-            return sheets.Any() ? LoadStatus.PartialSuccess : LoadStatus.Failed;
-        }
-
-        private string GetCellValue(Cell cell, SharedStringTable? sharedStringTable)
-        {
-            if (cell == null)
-                return string.Empty;
-
-            string value = cell.InnerText;
-
-            if (cell.DataType != null && cell.DataType.Value == CellValues.SharedString && sharedStringTable != null)
-            {
-                if (int.TryParse(value, out int index))
-                {
-                    value = sharedStringTable.ElementAt(index).InnerText;
-                }
-            }
-            else if (cell.DataType != null && cell.DataType.Value == CellValues.Boolean)
-            {
-                value = value == "1" ? "TRUE" : "FALSE";
-            }
-
-            return value ?? string.Empty;
+            // Delegate to format-specific reader
+            return await reader.ReadAsync(filePath, cancellationToken);
         }
     }
 }

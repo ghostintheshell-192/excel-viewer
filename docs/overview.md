@@ -1,49 +1,48 @@
 # ExcelViewer - Project Overview
 
-## Executive Summary
+## What It Does
 
-ExcelViewer is a cross-platform desktop application designed for comparing and analyzing Excel files. Built with .NET 8 and Avalonia UI, it targets data-sensitive industries requiring on-premise processing with no cloud dependencies.
+ExcelViewer is a desktop application for comparing and analyzing Excel files. It's built with .NET 8 and Avalonia UI to work on Windows, Linux, and macOS. The application processes everything locally—no cloud uploads, no external dependencies.
 
-## Vision Statement
+## Why It Exists
 
-To become the leading desktop tool for Excel file comparison and analysis, serving finance, defense, healthcare, and compliance professionals who require secure, local data processing.
+Many professionals in finance, healthcare, and government work with sensitive data that cannot be sent to online services. Existing Excel comparison tools are either too basic, cloud-based, or expensive enterprise solutions. ExcelViewer fills the gap by providing professional-grade comparison features while keeping all data processing on your machine.
 
-## Target Market
+## Target Users
 
-### Primary Markets
-- **Financial Services**: Investment banks, hedge funds, asset managers
-- **Defense & Government**: Contractors handling classified data
-- **Healthcare**: HIPAA-compliant data processing
-- **Legal**: Attorney-client privileged documents
-- **Manufacturing**: Trade secret protection
+Professionals who work with sensitive Excel data and need secure, local processing:
 
-### Market Opportunity
-- **TAM**: $500M+ (business productivity tools)
-- **SAM**: $50M (Excel-specific tools)
-- **SOM**: $5M (premium desktop solutions)
+- Financial analysts working with confidential models
+- Government contractors handling classified information
+- Healthcare professionals processing HIPAA-protected data
+- Legal teams managing privileged documents
+- Manufacturing engineers protecting trade secrets
 
-## Product Goals
+## Current Status
 
-### Phase 1: MVP (Commercial Launch)
-- ✅ Excel file loading and parsing
-- ✅ Visual comparison with highlighting
-- ✅ Search and filter capabilities
-- ✅ Professional reporting and export
-- ✅ Cross-platform support (Windows/Linux/macOS)
+The application has a working foundation with core features implemented:
 
-### Phase 2: Professional Features
+- ✅ **Excel file loading**: Full support for .xlsx files with proper parsing
+- ✅ **Search functionality**: Advanced search across files with hierarchical results display
+- ✅ **Row comparison**: Select search results and compare complete rows side-by-side
+- ✅ **Professional UI**: Modern interface with light/dark themes and responsive design
+- ✅ **Cross-platform**: Native performance on Windows, Linux, and macOS
+
+### Next Development Phase
+
+- Export capabilities (HTML, PDF, Excel)
+- Performance optimization for large files
 - Advanced comparison algorithms
 - Batch processing capabilities
-- Custom report templates
 - API for automation
-- Integration with version control
 
-### Phase 3: Enterprise Suite
-- Network deployment
-- Multi-user collaboration
+### Future Features
+
+- Integration with version control systems
+- Multi-user collaboration tools
 - Audit trail and compliance reporting
-- Custom branding and white-labeling
-- Enterprise SSO integration
+- Enterprise authentication (SSO)
+- Custom reporting templates
 
 ## Competitive Advantage
 
@@ -55,48 +54,40 @@ To become the leading desktop tool for Excel file comparison and analysis, servi
 
 ## Technology Stack
 
-- **Core**: .NET 8, C#
-- **UI Framework**: Avalonia UI
+- **Core**: .NET 8, C# 12
+- **UI Framework**: Avalonia UI with MVVM pattern
 - **Excel Processing**: DocumentFormat.OpenXml
-- **Architecture**: Clean Architecture, MVVM pattern
-- **Testing**: xUnit, Moq
-- **CI/CD**: GitHub Actions
-- **Packaging**: Self-contained deployments
+- **Architecture**: Clean Architecture (Core/Infrastructure/UI layers)
+- **Dependency Injection**: Microsoft.Extensions.DependencyInjection
+- **Logging**: Microsoft.Extensions.Logging with structured logging
+- **Testing**: xUnit, Moq, FluentAssertions
+- **Version Control**: Git with develop branch workflow
+- **Packaging**: Self-contained deployments for each platform
 
-## Success Metrics
+## Technical Goals
 
-### Technical KPIs
 - File processing speed: <1 second for 10MB files
 - Cross-platform compatibility: 100% feature parity
 - Crash rate: <0.1%
 - Memory efficiency: <500MB for largest files
-
-### Business KPIs
-- Customer acquisition: 200+ licenses in Year 1
-- Revenue target: $30K+ in Year 1
-- Customer satisfaction: >90% positive reviews
-- Support ticket resolution: <24 hours
+- User satisfaction: >90% positive feedback
 
 ## Risk Assessment
 
 ### Technical Risks
+
 - **Avalonia maturity**: Mitigation through thorough testing
 - **Excel compatibility**: Extensive file format testing
 - **Performance on large files**: Streaming and optimization
 
-### Market Risks
-- **Competition from free tools**: Focus on professional features
-- **Economic downturn**: Target essential compliance use cases
-- **Technology shifts**: Maintain modern technology stack
-
-## Next Steps
+## Development Next Steps
 
 1. ✅ Complete Avalonia UI infrastructure
-2. Enhance core features and performance optimization
-3. Implement professional features (licensing, reporting)
-4. Beta testing with target customers
-5. Launch marketing campaign
-6. Iterate based on customer feedback
+2. ✅ Implement core comparison and search features
+3. Add export capabilities (HTML, PDF, Excel)
+4. Performance optimization for large files
+5. Enhanced error handling and user feedback
+6. Comprehensive testing and bug fixes
 
 ---
 

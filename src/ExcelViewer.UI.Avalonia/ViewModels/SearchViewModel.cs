@@ -7,6 +7,7 @@ using ExcelViewer.UI.Avalonia.Managers.Selection;
 using ExcelViewer.UI.Avalonia.Models.Search;
 using Microsoft.Extensions.Logging;
 using Avalonia.Threading;
+using ExcelViewer.UI.Avalonia.Commands;
 
 namespace ExcelViewer.UI.Avalonia.ViewModels;
 
@@ -33,7 +34,7 @@ public class SearchViewModel : ViewModelBase
                 // If the search query is empty or only whitespace, clear results immediately
                 if (string.IsNullOrWhiteSpace(value))
                 {
-                    _ = _searchResultsManager.PerformSearchAsync("", new SearchOptions());
+                    _ = SafeClearResultsAsync();
                 }
 
                 // Notify search command that CanExecute state may have changed
@@ -118,13 +119,13 @@ public class SearchViewModel : ViewModelBase
         // Wire up events from managers to notify UI of changes
         _searchResultsManager.ResultsChanged += (s, e) =>
         {
-            OnPropertyChanged(nameof(SearchResults));
-            OnPropertyChanged(nameof(GroupedResults));
+            base.OnPropertyChanged(nameof(SearchResults));
+            base.OnPropertyChanged(nameof(GroupedResults));
         };
 
         _searchResultsManager.SuggestionsChanged += (s, e) =>
         {
-            OnPropertyChanged(nameof(Suggestions));
+            base.OnPropertyChanged(nameof(Suggestions));
             UpdateSearchSuggestions();
         };
 
@@ -133,12 +134,12 @@ public class SearchViewModel : ViewModelBase
 
         _selectionManager.SelectionChanged += (s, e) =>
         {
-            OnPropertyChanged(nameof(SelectedCells));
-            OnPropertyChanged(nameof(SelectedSheets));
+            base.OnPropertyChanged(nameof(SelectedCells));
+            base.OnPropertyChanged(nameof(SelectedSheets));
         };
 
         _selectionManager.VisibilityChanged += (s, e) =>
-            OnPropertyChanged(nameof(GroupedResults));
+            base.OnPropertyChanged(nameof(GroupedResults));
 
         // Initialize commands
         SearchCommand = new RelayCommand(async () => await PerformSearchAsync(SearchQuery), () => !string.IsNullOrWhiteSpace(SearchQuery));
@@ -146,13 +147,13 @@ public class SearchViewModel : ViewModelBase
         ShowAllFilesCommand = new RelayCommand(() => Task.Run(() => _selectionManager.ShowAllFiles()));
 
         ToggleCellSelectionCommand = new RelayCommand<ICellOccurrence>(
-            cell => _selectionManager.ToggleCellSelection(cell));
+            (ICellOccurrence cell) => _selectionManager.ToggleCellSelection(cell));
         ToggleSheetSelectionCommand = new RelayCommand<ISheetOccurrence>(
-            sheet => _selectionManager.ToggleSheetSelection(sheet));
+            (ISheetOccurrence sheet) => _selectionManager.ToggleSheetSelection(sheet));
         ToggleFileVisibilityCommand = new RelayCommand<IFileLoadResultViewModel>(
-            file => _selectionManager.ToggleFileVisibility(file));
+            (IFileLoadResultViewModel file) => _selectionManager.ToggleFileVisibility(file));
         ShowOnlyFileCommand = new RelayCommand<IFileLoadResultViewModel>(
-            file => _selectionManager.ShowOnlyFile(file));
+            (IFileLoadResultViewModel file) => _selectionManager.ShowOnlyFile(file));
         ClearSelectionsCommand = new RelayCommand(() => Task.Run(() => _selectionManager.ClearSelections()));
     }
 
@@ -163,6 +164,8 @@ public class SearchViewModel : ViewModelBase
 
     private async Task PerformSearchAsync(string query)
     {
+        // SearchResultsManager handles all error cases internally
+        // No need for try-catch here
         if (string.IsNullOrWhiteSpace(query))
         {
             await _searchResultsManager.PerformSearchAsync("");
@@ -187,8 +190,24 @@ public class SearchViewModel : ViewModelBase
             SearchQuery = string.Empty;
             // The SearchQuery setter will automatically trigger clearing of results
             // But let's also explicitly clear to be sure
-            _ = _searchResultsManager.PerformSearchAsync("", new SearchOptions());
+            _ = SafeClearResultsAsync();
         });
+    }
+
+    /// <summary>
+    /// Safely clears search results with error handling for fire-and-forget calls.
+    /// </summary>
+    private async Task SafeClearResultsAsync()
+    {
+        try
+        {
+            await _searchResultsManager.PerformSearchAsync("", new SearchOptions());
+        }
+        catch (Exception ex)
+        {
+            // Log but don't crash - clearing results is not critical
+            _logger.LogError(ex, "Error clearing search results");
+        }
     }
 
 
