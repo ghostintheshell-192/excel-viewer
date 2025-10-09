@@ -1,0 +1,23 @@
+{
+  "recommendations": [
+    // Git
+    "eamodio.gitlens",
+    "mhutchie.git-graph",
+
+    // C# / .NET
+    "ms-dotnettools.csharp",
+    "ms-dotnettools.csdevkit",
+    "kreativ-software.csharpextensions",
+
+    // XAML / Avalonia
+    "avaloniateam.vscode-avalonia",
+
+    // Code Quality
+    "editorconfig.editorconfig",
+    "streetsidesoftware.code-spell-checker",
+
+    // Utilities
+    "gruntfuggly.todo-tree",
+    "wayou.vscode-todo-highlight"
+  ]
+}

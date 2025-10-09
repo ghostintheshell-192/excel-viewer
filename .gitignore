@@ -39,16 +39,23 @@ backups/
 *_backup.vstx
 
 # Ignore temporary documentation and internal reports
-docs/issues/
-docs/reports/
 docs/vista.pdf
 # Note: docs/images/ now contains website assets, not ignored
 
 # Ignore sample files and test data
 samples/
 
-# Ignore private files
+# Ignore personal files (NEVER commit this directory!)
+# Contains: business strategies, private notes, personal scripts
+.personal/
+
+# Legacy private directory (deprecated - use .personal/ instead)
 .secrets/
+
+# Claude Code temporary todo lists (do NOT commit)
+**/claude-todos*.md
+**/temp-todos*.md
+.claude/todos/
 
 # Legacy ignore rules
 /src/VisioHandler/Resources/Results

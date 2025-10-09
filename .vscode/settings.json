@@ -1,0 +1,43 @@
+{
+  // Git Branch Protection
+  "git.branchProtection": ["main", "develop"],
+  "git.branchProtectionPrompt": "alwaysPrompt",
+
+  // GitLens - Enhanced Git visualization
+  "gitlens.statusBar.enabled": true,
+  "gitlens.statusBar.alignment": "left",
+  "gitlens.currentLine.enabled": false,
+
+  // Visual warning for protected branches
+  "window.title": "${dirty}${activeEditorShort}${separator}${rootName}${separator}[${gitBranchName}]",
+
+  // Editor configuration
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit"
+  },
+
+  // C# specific
+  "omnisharp.enableEditorConfigSupport": true,
+  "omnisharp.enableRoslynAnalyzers": true,
+
+  // Files to exclude from explorer
+  "files.exclude": {
+    "**/bin": true,
+    "**/obj": true,
+    "**/.vs": true,
+    "**/.secrets": true,
+    "**/.personal": true
+  },
+
+  // Files to exclude from search
+  "search.exclude": {
+    "**/bin": true,
+    "**/obj": true,
+    "**/node_modules": true,
+    "**/.personal": true
+  },
+
+  // Recommended extensions reminder
+  "extensions.ignoreRecommendations": false
+}
