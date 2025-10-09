@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 Documentation
+    url: https://github.com/ghostintheshell-192/excel-viewer/blob/main/docs/project/README.md
+    about: Read the project documentation and technical specs
+  - name: 💬 Ask a Question
+    url: https://github.com/ghostintheshell-192/excel-viewer/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: 🌐 Website
+    url: https://ghostintheshell-192.github.io/excel-viewer/
+    about: Visit the project website for more information

@@ -1,0 +1,117 @@
+name: 🔧 Quick Fix
+description: Small improvement, refactoring, or minor change (not a major feature)
+title: "[Quick Fix]: "
+labels: ["quick-fix", "good-first-issue"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Use this template for:**
+        - UI/UX tweaks (button alignment, spacing, colors)
+        - Code refactoring (small improvements to existing code)
+        - Documentation updates
+        - Minor bug fixes (typos, edge cases)
+        - Performance optimizations (specific, isolated)
+
+        **For major features, use the Feature Request template instead!**
+
+  - type: dropdown
+    id: fix-type
+    attributes:
+      label: Type of Fix
+      description: What kind of quick fix is this?
+      options:
+        - UI/UX tweak
+        - Code refactoring
+        - Documentation update
+        - Minor bug fix
+        - Performance optimization
+        - Code cleanup
+        - Test improvement
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What needs to be done?
+      description: Brief description (2-3 sentences)
+      placeholder: |
+        Example: The "Load File" button is misaligned in the toolbar.
+        It should be vertically centered with other buttons.
+    validations:
+      required: true
+
+  - type: textarea
+    id: location
+    attributes:
+      label: Where is this?
+      description: Which file(s) or component(s) need to be modified?
+      placeholder: |
+        Example:
+        - File: src/ExcelViewer.UI.Avalonia/Views/MainWindow.axaml
+        - Line: ~45
+    validations:
+      required: false
+
+  - type: textarea
+    id: expected-outcome
+    attributes:
+      label: Expected Outcome
+      description: What should happen after this fix?
+      placeholder: "Button should be properly aligned with other toolbar items"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: estimated-time
+    attributes:
+      label: Estimated Time
+      description: How long do you think this will take?
+      options:
+        - "< 15 minutes"
+        - "15-30 minutes"
+        - "30-60 minutes"
+        - "> 1 hour (maybe not a quick fix?)"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: implementation-checklist
+    attributes:
+      label: Implementation Checklist
+      description: Steps to complete (edit as needed)
+      options:
+        - label: Create feature branch (e.g., `fix/button-alignment`)
+          required: false
+        - label: Make changes
+          required: false
+        - label: Test changes locally
+          required: false
+        - label: Run `dotnet format` to ensure code style
+          required: false
+        - label: Update CHANGELOG if user-visible change
+          required: false
+        - label: Create PR
+          required: false
+
+  - type: textarea
+    id: additional-notes
+    attributes:
+      label: Additional Notes
+      description: Any other relevant information
+      placeholder: "Screenshots, code snippets, related issues"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: pre-submission
+    attributes:
+      label: Pre-submission Check
+      options:
+        - label: This is a small, focused change (not a major feature)
+          required: true
+        - label: I have checked this isn't already being worked on
+          required: true
