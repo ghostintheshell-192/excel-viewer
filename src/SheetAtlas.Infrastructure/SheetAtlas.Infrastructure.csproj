@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <SupportedOSPlatformVersion></SupportedOSPlatformVersion>
+    <TargetPlatformVersion></TargetPlatformVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DocumentFormat.OpenXml" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+    <PackageReference Include="ExcelDataReader" />
+    <PackageReference Include="ExcelDataReader.DataSet" />
+    <PackageReference Include="CsvHelper" />
+    <PackageReference Include="System.Text.Encoding.CodePages" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../SheetAtlas.Core/SheetAtlas.Core.csproj" />
+  </ItemGroup>
+
+</Project>

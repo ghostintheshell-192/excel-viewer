@@ -1,0 +1,53 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35818.85 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SheetAtlas.Core", "src\SheetAtlas.Core\SheetAtlas.Core.csproj", "{1DBB37D1-007C-D181-D527-6E48C9AC7D31}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{B81F802E-605B-42D6-8BA5-3535F6117ACC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{C1234567-8901-2345-6789-ABCDEFABCDEF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SheetAtlas.Infrastructure", "src\SheetAtlas.Infrastructure\SheetAtlas.Infrastructure.csproj", "{2BB47D2E-117D-E182-E628-7F59D8BD8E42}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SheetAtlas.UI.Avalonia", "src\SheetAtlas.UI.Avalonia\SheetAtlas.UI.Avalonia.csproj", "{3C597667-3FF1-48E8-978D-57A81DA55212}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SheetAtlas.Tests", "tests\SheetAtlas.Tests\SheetAtlas.Tests.csproj", "{A9AC2A6B-DD8B-4F6C-B16A-C4AC9606F9C8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1DBB37D1-007C-D181-D527-6E48C9AC7D31}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1DBB37D1-007C-D181-D527-6E48C9AC7D31}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1DBB37D1-007C-D181-D527-6E48C9AC7D31}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1DBB37D1-007C-D181-D527-6E48C9AC7D31}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2BB47D2E-117D-E182-E628-7F59D8BD8E42}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2BB47D2E-117D-E182-E628-7F59D8BD8E42}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2BB47D2E-117D-E182-E628-7F59D8BD8E42}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2BB47D2E-117D-E182-E628-7F59D8BD8E42}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C597667-3FF1-48E8-978D-57A81DA55212}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C597667-3FF1-48E8-978D-57A81DA55212}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C597667-3FF1-48E8-978D-57A81DA55212}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C597667-3FF1-48E8-978D-57A81DA55212}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A9AC2A6B-DD8B-4F6C-B16A-C4AC9606F9C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9AC2A6B-DD8B-4F6C-B16A-C4AC9606F9C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9AC2A6B-DD8B-4F6C-B16A-C4AC9606F9C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9AC2A6B-DD8B-4F6C-B16A-C4AC9606F9C8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7F721B72-5689-4C52-9484-851EA249C01A}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1DBB37D1-007C-D181-D527-6E48C9AC7D31} = {B81F802E-605B-42D6-8BA5-3535F6117ACC}
+		{2BB47D2E-117D-E182-E628-7F59D8BD8E42} = {B81F802E-605B-42D6-8BA5-3535F6117ACC}
+		{3C597667-3FF1-48E8-978D-57A81DA55212} = {B81F802E-605B-42D6-8BA5-3535F6117ACC}
+		{A9AC2A6B-DD8B-4F6C-B16A-C4AC9606F9C8} = {C1234567-8901-2345-6789-ABCDEFABCDEF}
+	EndGlobalSection
+EndGlobal

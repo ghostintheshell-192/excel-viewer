@@ -1,4 +1,4 @@
-# ExcelViewer
+# SheetAtlas
 
 A powerful cross-platform desktop application for viewing, searching, and comparing Excel files. Built with .NET 8 and Avalonia UI for native performance on Windows, Linux, and macOS.
 
@@ -71,7 +71,7 @@ cd excel-viewer
 dotnet build --configuration Release
 
 # Run the application
-dotnet run --project src/ExcelViewer.UI.Avalonia
+dotnet run --project src/SheetAtlas.UI.Avalonia
 ```
 
 ## Quick Start
@@ -118,7 +118,7 @@ dotnet run --project src/ExcelViewer.UI.Avalonia
 
 ## Architecture
 
-ExcelViewer follows Clean Architecture principles:
+SheetAtlas follows Clean Architecture principles:
 
 - **Core Layer**: Business logic, domain entities, and interfaces
 - **Infrastructure Layer**: Excel file processing using OpenXML
@@ -152,13 +152,13 @@ dotnet publish --configuration Release --self-contained
 ### Project Structure
 
 ```text
-ExcelViewer/
+SheetAtlas/
 ├── src/
-│   ├── ExcelViewer.Core/           # Business logic
-│   ├── ExcelViewer.Infrastructure/ # File processing
-│   └── ExcelViewer.UI.Avalonia/   # User interface
+│   ├── SheetAtlas.Core/           # Business logic
+│   ├── SheetAtlas.Infrastructure/ # File processing
+│   └── SheetAtlas.UI.Avalonia/   # User interface
 ├── tests/
-│   └── ExcelViewer.Tests/         # Unit and integration tests
+│   └── SheetAtlas.Tests/         # Unit and integration tests
 ├── docs/                          # Documentation
 └── build/                         # Build scripts
 ```
@@ -219,4 +219,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Made with ❤️ using .NET 8 and Avalonia UI**
 
-*ExcelViewer is designed for professionals who need powerful Excel analysis tools with complete data privacy and offline processing.*
+*SheetAtlas is designed for professionals who need powerful Excel analysis tools with complete data privacy and offline processing.*

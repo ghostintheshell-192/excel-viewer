@@ -1,6 +1,6 @@
-# ExcelViewer - Documentation Structure
+# SheetAtlas - Documentation Structure
 
-This directory contains all documentation for the ExcelViewer project, organized by purpose.
+This directory contains all documentation for the SheetAtlas project, organized by purpose.
 
 ## 📁 Structure
 
@@ -19,7 +19,7 @@ This directory contains all documentation for the ExcelViewer project, organized
 ---
 
 ### `project/`
-**Project documentation** - Technical and business documentation about ExcelViewer
+**Project documentation** - Technical and business documentation about SheetAtlas
 
 **Contents:**
 - `overview.md` - Project overview, goals, and current status
