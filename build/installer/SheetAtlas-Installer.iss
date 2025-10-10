@@ -53,8 +53,6 @@ ArchitecturesInstallIn64BitMode=x64
 ; UI Configuration
 WizardStyle=modern
 DisableWelcomePage=no
-WizardImageFile=compiler:WizModernImage-IS.bmp
-WizardSmallImageFile=compiler:WizModernSmallImage-IS.bmp
 
 ; Privileges
 PrivilegesRequired=admin
