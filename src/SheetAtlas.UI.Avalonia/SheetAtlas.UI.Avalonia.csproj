@@ -5,6 +5,7 @@
     <UseWindowsForms>false</UseWindowsForms>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>../../assets/icons/app.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,5 +24,12 @@
   <ItemGroup>
     <ProjectReference Include="../SheetAtlas.Core/SheetAtlas.Core.csproj" />
     <ProjectReference Include="../SheetAtlas.Infrastructure/SheetAtlas.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <!-- Application icon for Windows -->
+  <ItemGroup>
+    <Content Include="../../assets/icons/app.ico" Link="app.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 </Project>
