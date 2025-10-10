@@ -24,7 +24,7 @@ namespace SheetAtlas.Tests.Services
         }
 
         [Fact]
-        public async Task ExtractRowFromSearchResultAsync_SheetNotFound_ThrowsComparisonException()
+        public void ExtractRowFromSearchResult_SheetNotFound_ThrowsComparisonException()
         {
             // Arrange
             var excelFile = CreateExcelFileWithSheet("ExistingSheet");
@@ -36,27 +36,23 @@ namespace SheetAtlas.Tests.Services
                 "test value"
             );
 
-            // Act
-            Func<Task> act = async () => await _service.ExtractRowFromSearchResultAsync(searchResult);
-
-            // Assert
-            await act.Should().ThrowAsync<ComparisonException>()
+            // Act & Assert
+            _service.Invoking(s => s.ExtractRowFromSearchResult(searchResult))
+                .Should().Throw<ComparisonException>()
                 .Where(ex => ex.UserMessage.Contains("NonExistentSheet"))
                 .Where(ex => ex.UserMessage.Contains("non è presente"));
         }
 
         [Fact]
-        public async Task ExtractRowFromSearchResultAsync_NullSearchResult_ThrowsArgumentNullException()
+        public void ExtractRowFromSearchResult_NullSearchResult_ThrowsArgumentNullException()
         {
-            // Act
-            Func<Task> act = async () => await _service.ExtractRowFromSearchResultAsync(null!);
-
-            // Assert
-            await act.Should().ThrowAsync<ArgumentNullException>();
+            // Act & Assert
+            _service.Invoking(s => s.ExtractRowFromSearchResult(null!))
+                .Should().Throw<ArgumentNullException>();
         }
 
         [Fact]
-        public async Task ExtractRowFromSearchResultAsync_InvalidCellCoordinates_ThrowsArgumentException()
+        public void ExtractRowFromSearchResult_InvalidCellCoordinates_ThrowsArgumentException()
         {
             // Arrange
             var excelFile = CreateExcelFileWithSheet("Sheet1");
@@ -68,46 +64,40 @@ namespace SheetAtlas.Tests.Services
                 "test value"
             );
 
-            // Act
-            Func<Task> act = async () => await _service.ExtractRowFromSearchResultAsync(searchResult);
-
-            // Assert
-            await act.Should().ThrowAsync<ArgumentException>()
+            // Act & Assert
+            _service.Invoking(s => s.ExtractRowFromSearchResult(searchResult))
+                .Should().Throw<ArgumentException>()
                 .WithMessage("*does not represent a valid cell*");
         }
 
         [Fact]
-        public async Task GetColumnHeadersAsync_SheetNotFound_ThrowsComparisonException()
+        public void GetColumnHeaders_SheetNotFound_ThrowsComparisonException()
         {
             // Arrange
             var excelFile = CreateExcelFileWithSheet("ExistingSheet");
 
-            // Act
-            Func<Task> act = async () => await _service.GetColumnHeadersAsync(excelFile, "NonExistentSheet");
-
-            // Assert
-            await act.Should().ThrowAsync<ComparisonException>()
+            // Act & Assert
+            _service.Invoking(s => s.GetColumnHeaders(excelFile, "NonExistentSheet"))
+                .Should().Throw<ComparisonException>()
                 .Where(ex => ex.UserMessage.Contains("NonExistentSheet"));
         }
 
         [Fact]
-        public async Task GetColumnHeadersAsync_NullFile_ThrowsArgumentNullException()
+        public void GetColumnHeaders_NullFile_ThrowsArgumentNullException()
         {
-            // Act
-            Func<Task> act = async () => await _service.GetColumnHeadersAsync(null!, "Sheet1");
-
-            // Assert
-            await act.Should().ThrowAsync<ArgumentNullException>();
+            // Act & Assert
+            _service.Invoking(s => s.GetColumnHeaders(null!, "Sheet1"))
+                .Should().Throw<ArgumentNullException>();
         }
 
         [Fact]
-        public async Task GetColumnHeadersAsync_ValidSheet_ReturnsColumnHeaders()
+        public void GetColumnHeaders_ValidSheet_ReturnsColumnHeaders()
         {
             // Arrange
             var excelFile = CreateExcelFileWithSheet("Sheet1", new[] { "Name", "Age", "City" });
 
             // Act
-            var headers = await _service.GetColumnHeadersAsync(excelFile, "Sheet1");
+            var headers = _service.GetColumnHeaders(excelFile, "Sheet1");
 
             // Assert
             headers.Should().NotBeNull();
@@ -118,7 +108,7 @@ namespace SheetAtlas.Tests.Services
         }
 
         [Fact]
-        public async Task CreateRowComparisonAsync_LessThanTwoResults_ThrowsArgumentException()
+        public void CreateRowComparison_LessThanTwoResults_ThrowsArgumentException()
         {
             // Arrange
             var excelFile = CreateExcelFileWithSheet("Sheet1");
@@ -135,18 +125,16 @@ namespace SheetAtlas.Tests.Services
                 "Comparison1"
             );
 
-            // Act
-            Func<Task> act = async () => await _service.CreateRowComparisonAsync(request);
-
-            // Assert
-            await act.Should().ThrowAsync<ArgumentException>()
+            // Act & Assert
+            _service.Invoking(s => s.CreateRowComparison(request))
+                .Should().Throw<ArgumentException>()
                 .WithMessage("*At least two search results*");
         }
 
         #region Integration Tests with Real Files
 
         [Fact]
-        public async Task GetColumnHeadersAsync_RealSimpleFile_ReturnsCorrectHeaders()
+        public async Task GetColumnHeaders_RealSimpleFile_ReturnsCorrectHeaders()
         {
             // Arrange
             var excelReaderService = CreateRealExcelReaderService();
@@ -154,7 +142,7 @@ namespace SheetAtlas.Tests.Services
             var excelFile = await excelReaderService.LoadFileAsync(filePath);
 
             // Act
-            var headers = await _service.GetColumnHeadersAsync(excelFile, "Sheet1");
+            var headers = _service.GetColumnHeaders(excelFile, "Sheet1");
 
             // Assert
             headers.Should().NotBeNull();
@@ -165,7 +153,7 @@ namespace SheetAtlas.Tests.Services
         }
 
         [Fact]
-        public async Task GetColumnHeadersAsync_RealMultiSheetFile_ReturnsCorrectHeadersForEachSheet()
+        public async Task GetColumnHeaders_RealMultiSheetFile_ReturnsCorrectHeadersForEachSheet()
         {
             // Arrange
             var excelReaderService = CreateRealExcelReaderService();
@@ -173,7 +161,7 @@ namespace SheetAtlas.Tests.Services
             var excelFile = await excelReaderService.LoadFileAsync(filePath);
 
             // Act - Test Employees sheet
-            var employeeHeaders = await _service.GetColumnHeadersAsync(excelFile, "Employees");
+            var employeeHeaders = _service.GetColumnHeaders(excelFile, "Employees");
 
             // Assert
             employeeHeaders.Should().HaveCount(2);
@@ -181,7 +169,7 @@ namespace SheetAtlas.Tests.Services
             employeeHeaders.Should().Contain("Department");
 
             // Act - Test Departments sheet
-            var departmentHeaders = await _service.GetColumnHeadersAsync(excelFile, "Departments");
+            var departmentHeaders = _service.GetColumnHeaders(excelFile, "Departments");
 
             // Assert
             departmentHeaders.Should().HaveCount(2);
@@ -190,7 +178,7 @@ namespace SheetAtlas.Tests.Services
         }
 
         [Fact]
-        public async Task ExtractRowFromSearchResultAsync_RealSimpleFile_ExtractsCorrectRow()
+        public async Task ExtractRowFromSearchResult_RealSimpleFile_ExtractsCorrectRow()
         {
             // Arrange
             var excelReaderService = CreateRealExcelReaderService();
@@ -208,7 +196,7 @@ namespace SheetAtlas.Tests.Services
             );
 
             // Act
-            var extractedRow = await _service.ExtractRowFromSearchResultAsync(searchResult);
+            var extractedRow = _service.ExtractRowFromSearchResult(searchResult);
 
             // Assert
             extractedRow.Should().NotBeNull();
@@ -219,7 +207,7 @@ namespace SheetAtlas.Tests.Services
         }
 
         [Fact]
-        public async Task CreateRowComparisonAsync_RealFiles_CreatesValidComparison()
+        public async Task CreateRowComparison_RealFiles_CreatesValidComparison()
         {
             // Arrange
             var excelReaderService = CreateRealExcelReaderService();
@@ -237,7 +225,7 @@ namespace SheetAtlas.Tests.Services
             );
 
             // Act
-            var comparison = await _service.CreateRowComparisonAsync(request);
+            var comparison = _service.CreateRowComparison(request);
 
             // Assert
             comparison.Should().NotBeNull();

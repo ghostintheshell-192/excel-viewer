@@ -15,7 +15,7 @@ namespace SheetAtlas.Core.Application.Services
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<RowComparison> CreateRowComparisonAsync(RowComparisonRequest request)
+        public RowComparison CreateRowComparison(RowComparisonRequest request)
         {
             if (request?.SelectedMatches == null || request.SelectedMatches.Count < 2)
                 throw new ArgumentException("At least two search results are required for comparison", nameof(request));
@@ -28,7 +28,7 @@ namespace SheetAtlas.Core.Application.Services
             {
                 try
                 {
-                    var excelRow = await ExtractRowFromSearchResultAsync(searchResult);
+                    var excelRow = ExtractRowFromSearchResult(searchResult);
                     excelRows.Add(excelRow);
                 }
                 catch (Exception ex)
@@ -42,7 +42,7 @@ namespace SheetAtlas.Core.Application.Services
             return new RowComparison(excelRows.AsReadOnly(), request.Name);
         }
 
-        public async Task<ExcelRow> ExtractRowFromSearchResultAsync(SearchResult searchResult)
+        public ExcelRow ExtractRowFromSearchResult(SearchResult searchResult)
         {
             if (searchResult?.SourceFile == null)
                 throw new ArgumentNullException(nameof(searchResult));
@@ -64,17 +64,17 @@ namespace SheetAtlas.Core.Application.Services
             var cells = dataRow.ItemArray;
 
             // Get column headers
-            var columnHeaders = await GetColumnHeadersAsync(searchResult.SourceFile, searchResult.SheetName);
+            var columnHeaders = GetColumnHeaders(searchResult.SourceFile, searchResult.SheetName);
 
-            return await Task.FromResult(new ExcelRow(
+            return new ExcelRow(
                 searchResult.SourceFile,
                 searchResult.SheetName,
                 searchResult.Row,
                 cells,
-                columnHeaders));
+                columnHeaders);
         }
 
-        public async Task<IReadOnlyList<string>> GetColumnHeadersAsync(ExcelFile file, string sheetName)
+        public IReadOnlyList<string> GetColumnHeaders(ExcelFile file, string sheetName)
         {
             if (file == null)
                 throw new ArgumentNullException(nameof(file));
@@ -107,7 +107,7 @@ namespace SheetAtlas.Core.Application.Services
                 }
             }
 
-            return await Task.FromResult(headers.AsReadOnly());
+            return headers.AsReadOnly();
         }
     }
 }

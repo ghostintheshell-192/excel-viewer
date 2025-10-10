@@ -7,16 +7,16 @@ namespace SheetAtlas.Core.Application.Interfaces
         /// <summary>
         /// Create a row comparison from selected search results
         /// </summary>
-        Task<RowComparison> CreateRowComparisonAsync(RowComparisonRequest request);
+        RowComparison CreateRowComparison(RowComparisonRequest request);
 
         /// <summary>
         /// Extract complete row data from a search result
         /// </summary>
-        Task<ExcelRow> ExtractRowFromSearchResultAsync(SearchResult searchResult);
+        ExcelRow ExtractRowFromSearchResult(SearchResult searchResult);
 
         /// <summary>
         /// Get column headers for a specific sheet
         /// </summary>
-        Task<IReadOnlyList<string>> GetColumnHeadersAsync(ExcelFile file, string sheetName);
+        IReadOnlyList<string> GetColumnHeaders(ExcelFile file, string sheetName);
     }
 }

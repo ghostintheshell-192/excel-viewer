@@ -43,7 +43,7 @@ public class TreeSearchResultsViewModel : ViewModelBase
         _rowComparisonService = rowComparisonService ?? throw new ArgumentNullException(nameof(rowComparisonService));
 
         ClearHistoryCommand = new RelayCommand(() => { ClearHistory(); return Task.CompletedTask; });
-        CompareSelectedRowsCommand = new RelayCommand(async () => await CompareSelectedRowsAsync(), () => CanCompareRows);
+        CompareSelectedRowsCommand = new RelayCommand(() => { CompareSelectedRows(); return Task.CompletedTask; }, () => CanCompareRows);
         ClearSelectionCommand = new RelayCommand(() => { ClearSelection(); return Task.CompletedTask; });
     }
 
@@ -102,7 +102,7 @@ public class TreeSearchResultsViewModel : ViewModelBase
         _logger.LogInformation("Cleared row selection");
     }
 
-    private async Task CompareSelectedRowsAsync()
+    private void CompareSelectedRows()
     {
         try
         {
@@ -117,7 +117,7 @@ public class TreeSearchResultsViewModel : ViewModelBase
             var request = new RowComparisonRequest(selectedResults.AsReadOnly(),
                 $"Row Comparison {DateTime.Now:HH:mm:ss}");
 
-            var comparison = await _rowComparisonService.CreateRowComparisonAsync(request);
+            var comparison = _rowComparisonService.CreateRowComparison(request);
 
             RowComparisonCreated?.Invoke(this, comparison);
 
