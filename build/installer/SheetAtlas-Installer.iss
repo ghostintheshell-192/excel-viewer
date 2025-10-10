@@ -108,6 +108,31 @@ Type: filesandordirs; Name: "{app}"
 // Custom Pascal Script Functions
 // ============================================
 
+// Helper function to uninstall previous version
+function UninstallCurrentVersion(): Boolean;
+var
+  UninstallString: String;
+  ResultCode: Integer;
+begin
+  Result := False;
+
+  // Get uninstall string from registry
+  if RegQueryStringValue(HKEY_LOCAL_MACHINE,
+    'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{{8E5C9A3B-2F4D-4E8A-9B1C-7D6E5F3A2B1C}_is1',
+    'UninstallString', UninstallString) then
+  begin
+    // Remove quotes from uninstall string
+    UninstallString := RemoveQuotes(UninstallString);
+
+    // Run uninstaller silently
+    if Exec(UninstallString, '/VERYSILENT /NORESTART /SUPPRESSMSGBOXES', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+    begin
+      Result := (ResultCode = 0);
+    end;
+  end;
+end;
+
+// Setup initialization with upgrade detection
 function InitializeSetup(): Boolean;
 var
   ResultCode: Integer;
@@ -132,29 +157,6 @@ begin
         MsgBox('Failed to uninstall previous version. Please uninstall manually first.', mbError, MB_OK);
         Result := False;
       end;
-    end;
-  end;
-end;
-
-function UninstallCurrentVersion(): Boolean;
-var
-  UninstallString: String;
-  ResultCode: Integer;
-begin
-  Result := False;
-
-  // Get uninstall string from registry
-  if RegQueryStringValue(HKEY_LOCAL_MACHINE,
-    'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{{8E5C9A3B-2F4D-4E8A-9B1C-7D6E5F3A2B1C}_is1',
-    'UninstallString', UninstallString) then
-  begin
-    // Remove quotes from uninstall string
-    UninstallString := RemoveQuotes(UninstallString);
-
-    // Run uninstaller silently
-    if Exec(UninstallString, '/VERYSILENT /NORESTART /SUPPRESSMSGBOXES', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
-    begin
-      Result := (ResultCode = 0);
     end;
   end;
 end;
