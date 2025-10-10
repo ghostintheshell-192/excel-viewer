@@ -60,7 +60,8 @@ namespace SheetAtlas.Core.Application.Services
 
             // Extract complete row data
             var dataRow = sheet.Rows[searchResult.Row];
-            var cells = dataRow.ItemArray.ToList().AsReadOnly();
+            // ItemArray is already object[] which implements IReadOnlyList<object?> - no copy needed
+            var cells = dataRow.ItemArray;
 
             // Get column headers
             var columnHeaders = await GetColumnHeadersAsync(searchResult.SourceFile, searchResult.SheetName);
