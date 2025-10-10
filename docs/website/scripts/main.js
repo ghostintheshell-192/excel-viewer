@@ -1,5 +1,5 @@
 /* =============================================
-   ExcelViewer Website JavaScript
+   SheetAtlas Website JavaScript
    Smooth interactions and enhanced UX
    ============================================= */
 
