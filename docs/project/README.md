@@ -16,7 +16,7 @@ Complete documentation for SheetAtlas, a cross-platform desktop application for 
 ```bash
 # Clone and setup
 git clone <repository-url>
-cd excel-viewer
+cd sheet-atlas
 dotnet restore && dotnet build
 
 # Run the application

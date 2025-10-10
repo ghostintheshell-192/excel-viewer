@@ -17,13 +17,13 @@ jobs:
         include:
           - os: windows-latest
             rid: win-x64
-            artifact: excel-viewer-windows-x64.zip
+            artifact: SheetAtlas-windows-x64.zip
           - os: ubuntu-latest
             rid: linux-x64
-            artifact: excel-viewer-linux-x64.tar.gz
+            artifact: SheetAtlas-linux-x64.tar.gz
           - os: macos-latest
             rid: osx-x64
-            artifact: excel-viewer-macos-x64.tar.gz
+            artifact: SheetAtlas-macos-x64.tar.gz
 
     steps:
       - name: Checkout code
