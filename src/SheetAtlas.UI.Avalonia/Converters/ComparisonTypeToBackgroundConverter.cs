@@ -104,7 +104,7 @@ namespace SheetAtlas.UI.Avalonia.Converters
 
         private static object GetResource(string key)
         {
-            if (Application.Current?.Resources.TryGetResource(key, null, out var resource) == true)
+            if (Application.Current?.Resources.TryGetResource(key, null, out var resource) == true && resource != null)
             {
                 return resource;
             }

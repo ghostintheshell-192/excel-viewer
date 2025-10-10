@@ -6,8 +6,8 @@ namespace SheetAtlas.Core.Application.Services
 {
     public interface ISearchService
     {
-        List<SearchResult> Search(ExcelFile file, string query, SearchOptions options = null);
-        List<SearchResult> SearchInSheet(ExcelFile file, string sheetName, string query, SearchOptions options = null);
+        List<SearchResult> Search(ExcelFile file, string query, SearchOptions? options = null);
+        List<SearchResult> SearchInSheet(ExcelFile file, string sheetName, string query, SearchOptions? options = null);
     }
 
     //public class SearchOptions
@@ -26,7 +26,7 @@ namespace SheetAtlas.Core.Application.Services
             _logger = logger;
         }
 
-        public List<SearchResult> Search(ExcelFile file, string query, SearchOptions options = null)
+        public List<SearchResult> Search(ExcelFile file, string query, SearchOptions? options = null)
         {
             var results = new List<SearchResult>();
 
@@ -62,7 +62,7 @@ namespace SheetAtlas.Core.Application.Services
             return results;
         }
 
-        public List<SearchResult> SearchInSheet(ExcelFile file, string sheetName, string query, SearchOptions options = null)
+        public List<SearchResult> SearchInSheet(ExcelFile file, string sheetName, string query, SearchOptions? options = null)
         {
             var results = new List<SearchResult>();
             var sheet = file.GetSheet(sheetName);
@@ -99,7 +99,7 @@ namespace SheetAtlas.Core.Application.Services
             return results;
         }
 
-        private bool IsMatch(string text, string query, SearchOptions options)
+        private bool IsMatch(string text, string query, SearchOptions? options)
         {
             if (string.IsNullOrEmpty(text)) return false;
 

@@ -24,9 +24,13 @@ namespace SheetAtlas.Core.Domain.Entities
         public string FileName => SourceFile?.FileName ?? string.Empty;
         public string CellAddress => $"{GetColumnName(Column)}{Row + 1}";
 
-        public SearchResult()
+        private SearchResult()
         {
             Context = new Dictionary<string, string>();
+            // Non-nullable properties will be initialized by public constructor
+            SourceFile = null!;
+            SheetName = null!;
+            Value = null!;
         }
 
         public SearchResult(ExcelFile sourceFile, string sheetName, int row, int column, string value)

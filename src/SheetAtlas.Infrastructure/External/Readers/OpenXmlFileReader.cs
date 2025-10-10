@@ -73,7 +73,14 @@ namespace SheetAtlas.Infrastructure.External.Readers
 
                         try
                         {
-                            var worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id);
+                            var sheetId = sheet.Id?.Value;
+                            if (sheetId == null)
+                            {
+                                errors.Add(ExcelError.SheetError(sheetName, "Sheet ID is null, skipping sheet"));
+                                continue;
+                            }
+
+                            var worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheetId);
 
                             if (worksheetPart is null)
                             {
@@ -191,9 +198,10 @@ namespace SheetAtlas.Infrastructure.External.Readers
             var headerValues = new Dictionary<int, string>();
             foreach (var cell in firstRow.Elements<Cell>())
             {
-                if (cell.CellReference == null) continue;
+                var cellRef = cell.CellReference?.Value;
+                if (cellRef == null) continue;
 
-                int columnIndex = _cellParser.GetColumnIndex(cell.CellReference.Value);
+                int columnIndex = _cellParser.GetColumnIndex(cellRef);
                 string cellValue = GetCellValueWithMerge(cell, sharedStringTable, mergedCells);
                 headerValues[columnIndex] = cellValue;
             }
@@ -260,9 +268,10 @@ namespace SheetAtlas.Infrastructure.External.Readers
 
             foreach (var cell in row.Elements<Cell>())
             {
-                if (cell.CellReference == null) continue;
+                var cellRef = cell.CellReference?.Value;
+                if (cellRef == null) continue;
 
-                int columnIndex = _cellParser.GetColumnIndex(cell.CellReference.Value) - firstCol;
+                int columnIndex = _cellParser.GetColumnIndex(cellRef) - firstCol;
                 if (columnIndex < 0 || columnIndex >= dataTable.Columns.Count)
                     continue;
 
@@ -276,7 +285,8 @@ namespace SheetAtlas.Infrastructure.External.Readers
 
         private string GetCellValueWithMerge(Cell cell, SharedStringTable? sharedStringTable, Dictionary<string, string> mergedCells)
         {
-            if (cell.CellReference?.Value != null && mergedCells.TryGetValue(cell.CellReference.Value, out string mergedValue))
+            var cellRef = cell.CellReference?.Value;
+            if (cellRef != null && mergedCells.TryGetValue(cellRef, out string? mergedValue))
             {
                 return mergedValue;
             }
