@@ -771,6 +771,18 @@ a:hover {
     box-shadow: 0 20px 40px -10px rgba(30, 58, 95, 0.3);
 }
 
+.download-btn.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: var(--gray-100);
+}
+
+.download-btn.disabled:hover {
+    transform: none;
+    border-color: var(--gray-200);
+    box-shadow: var(--shadow-md);
+}
+
 .download-info {
     text-align: center;
 }
