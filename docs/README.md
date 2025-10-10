@@ -5,7 +5,7 @@ This directory contains all documentation for the SheetAtlas project, organized 
 ## 📁 Structure
 
 ### `website/`
-**GitHub Pages website** - Public-facing project website hosted at https://ghostintheshell-192.github.io/excel-viewer/
+**GitHub Pages website** - Public-facing project website hosted at https://ghostintheshell-192.github.io/sheet-atlas/
 
 **Contents:**
 - `index.html` - Main landing page
@@ -59,7 +59,7 @@ The following directories exist locally but are excluded from git (see `.gitigno
 1. Edit files in `docs/website/`
 2. Commit and push to `main` branch
 3. GitHub Actions automatically deploys changes
-4. Website live at https://ghostintheshell-192.github.io/excel-viewer/
+4. Website live at https://ghostintheshell-192.github.io/sheet-atlas/
 
 ### Updating documentation
 1. Edit files in `docs/project/` or `docs/development/`

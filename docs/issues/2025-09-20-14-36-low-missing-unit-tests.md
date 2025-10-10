@@ -10,7 +10,7 @@ status: open
 # Issue: Complete Absence of Unit Tests
 
 ## Location
-**Project**: `/data/repos/apps-desktop/excel-viewer/`
+**Project**: `/data/repos/sheet-atlas/`
 **Missing**: Test project and test files
 
 ## Violation

@@ -13,7 +13,7 @@
 #define MyAppPublisher "SheetAtlas"
 #define MyAppURL "https://github.com/ghostintheshell-192/sheet-atlas"
 #define MyAppExeName "SheetAtlas.UI.Avalonia.exe"
-#define MyAppDescription "Cross-platform Excel file comparison and analysis tool"
+#define MyAppDescription "Cross-file Excel search and row comparison tool"
 
 [Setup]
 ; Basic Information
@@ -213,5 +213,5 @@ end;
 
 [Messages]
 ; Custom messages
-WelcomeLabel2=This will install [name/ver] on your computer.%n%nSheetAtlas is a cross-platform desktop application for viewing, searching, and comparing Excel files with complete data privacy through 100%% local processing.%n%nIt is recommended that you close all other applications before continuing.
+WelcomeLabel2=This will install [name/ver] on your computer.%n%nSheetAtlas searches across multiple Excel files and compares rows between them, with 100% local processing for complete data privacy.%n%nIt is recommended that you close all other applications before continuing.
 FinishedLabel=Setup has finished installing [name] on your computer.%n%nThe application may be launched by selecting the installed shortcuts.
