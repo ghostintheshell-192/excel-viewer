@@ -86,6 +86,7 @@ public class MainWindowViewModel : ViewModelBase
     public IThemeManager ThemeManager { get; }
     public ICommand LoadFileCommand { get; }
     public ICommand ToggleThemeCommand { get; }
+    public ICommand ForceGCCommand { get; } // TEMPORARY: for memory leak testing
 
     // Delegated commands from SearchViewModel
     public ICommand ShowAllFilesCommand => SearchViewModel?.ShowAllFilesCommand ?? new RelayCommand(() => Task.CompletedTask);
@@ -116,6 +117,17 @@ public class MainWindowViewModel : ViewModelBase
         ToggleThemeCommand = new RelayCommand(() =>
         {
             ThemeManager.ToggleTheme();
+            return Task.CompletedTask;
+        });
+
+        // TEMPORARY: for memory leak testing
+        ForceGCCommand = new RelayCommand(() =>
+        {
+            _logger.LogInformation("Force GC requested by user");
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+            _activityLog.LogInfo("Garbage collection forzata completata", "Memory");
             return Task.CompletedTask;
         });
 
@@ -242,9 +254,30 @@ public class MainWindowViewModel : ViewModelBase
 
     private void OnCleanAllDataRequested(IFileLoadResultViewModel? file)
     {
-        // TODO: Implement search results cleanup for this file
-        _logger.LogInformation("Clean all data requested for: {FileName}", file?.FileName);
+        if (file == null)
+        {
+            _logger.LogWarning("Clean all data requested with null file");
+            return;
+        }
+
+        _logger.LogInformation("Clean all data requested for: {FileName}", file.FileName);
+
+        // Clear selection if this file is currently selected (prevent memory leak)
+        if (SelectedFile == file)
+        {
+            SelectedFile = null;
+        }
+
+        // Remove search results that reference this file
+        TreeSearchResultsViewModel?.RemoveSearchResultsForFile(file.File);
+
+        // Remove row comparisons that reference this file
+        _comparisonCoordinator.RemoveComparisonsForFile(file.File);
+
+        // Finally, remove the file from the loaded files list
         _filesManager.RemoveFile(file);
+
+        _logger.LogInformation("Cleaned all data for file: {FileName}", file.FileName);
     }
 
     private void OnRemoveNotificationRequested(IFileLoadResultViewModel? file) => _filesManager.RemoveFile(file);

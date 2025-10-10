@@ -103,6 +103,25 @@ public class RowComparisonCoordinator : IRowComparisonCoordinator
         ComparisonRemoved?.Invoke(this, new ComparisonRemovedEventArgs(comparison));
     }
 
+    public void RemoveComparisonsForFile(ExcelFile file)
+    {
+        if (file == null)
+            return;
+
+        // Find all comparisons that reference this file
+        var comparisonsToRemove = _rowComparisons
+            .Where(c => c.Comparison?.Rows.Any(row => row.SourceFile == file) == true)
+            .ToList();
+
+        foreach (var comparison in comparisonsToRemove)
+        {
+            RemoveComparison(comparison);
+        }
+
+        _logger.LogInformation("Removed {Count} comparisons for file: {FilePath}",
+            comparisonsToRemove.Count, file.FilePath);
+    }
+
     private void OnComparisonCloseRequested(object? sender, EventArgs e)
     {
         if (sender is RowComparisonViewModel comparisonViewModel)

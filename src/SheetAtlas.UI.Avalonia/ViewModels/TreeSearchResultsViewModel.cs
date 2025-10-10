@@ -92,6 +92,24 @@ public class TreeSearchResultsViewModel : ViewModelBase
         _logger.LogInformation("Cleared search history");
     }
 
+    public void RemoveSearchResultsForFile(ExcelFile file)
+    {
+        if (file == null)
+            return;
+
+        // Remove all search history items that reference this file
+        var itemsToRemove = SearchHistory
+            .Where(item => item.FileGroups.Any(fg => fg.File == file))
+            .ToList();
+
+        foreach (var item in itemsToRemove)
+        {
+            SearchHistory.Remove(item);
+        }
+
+        _logger.LogInformation("Removed search results for file: {FilePath}", file.FilePath);
+    }
+
     public void ClearSelection()
     {
         foreach (var item in SelectedItems.ToList())

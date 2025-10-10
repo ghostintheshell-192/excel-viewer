@@ -38,6 +38,13 @@ public interface IRowComparisonCoordinator : INotifyPropertyChanged
     void RemoveComparison(RowComparisonViewModel comparison);
 
     /// <summary>
+    /// Removes all row comparisons that reference the specified Excel file.
+    /// Used for memory cleanup when files are removed from the application.
+    /// </summary>
+    /// <param name="file">The Excel file whose comparisons should be removed</param>
+    void RemoveComparisonsForFile(ExcelFile file);
+
+    /// <summary>
     /// Raised when a comparison is added to the collection.
     /// </summary>
     event EventHandler<ComparisonAddedEventArgs>? ComparisonAdded;
