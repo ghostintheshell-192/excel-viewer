@@ -180,6 +180,9 @@ namespace SheetAtlas.Infrastructure.External.Readers
             // Populate rows
             PopulateSheetRows(sheetData, worksheetPart, sharedStringTable, mergedCells, headerColumns);
 
+            // Trim excess capacity to save memory
+            sheetData.TrimExcess();
+
             return sheetData;
         }
 

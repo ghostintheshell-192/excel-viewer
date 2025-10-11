@@ -193,6 +193,9 @@ namespace SheetAtlas.Infrastructure.External.Readers
                 }
             }
 
+            // Trim excess capacity to save memory
+            sheetData.TrimExcess();
+
             return sheetData;
         }
 

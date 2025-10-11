@@ -219,6 +219,11 @@ namespace SheetAtlas.Infrastructure.External.Readers
             _logger.LogDebug("String interning: {UniqueStrings} unique from {TotalStrings} total (~{MemorySavedKB} KB saved)",
                 stringPool.Count, totalStrings, memorySaved / 1024);
 
+            // Trim excess capacity to save memory
+            sheetData.TrimExcess();
+            _logger.LogDebug("Sheet trimmed to exact size: {RowCount} rows × {ColumnCount} cols = {CellCount} cells",
+                sheetData.RowCount, sheetData.ColumnCount, sheetData.CellCount);
+
             return sheetData;
         }
 

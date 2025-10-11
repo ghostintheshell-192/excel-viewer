@@ -36,7 +36,7 @@ namespace SheetAtlas.Core.Domain.Entities
         /// <summary>
         /// Initial capacity (rows) when not known upfront.
         /// </summary>
-        private const int DefaultInitialCapacity = 1000;
+        private const int DefaultInitialCapacity = 100;
 
         // Optional metadata (lazy-loaded, not allocated until needed)
         private Dictionary<string, MergedRange>? _mergedCells;
