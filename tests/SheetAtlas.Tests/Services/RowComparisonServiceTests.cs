@@ -1,4 +1,3 @@
-using System.Data;
 using SheetAtlas.Core.Application.Interfaces;
 using SheetAtlas.Core.Application.Services;
 using SheetAtlas.Core.Domain.Entities;
@@ -247,32 +246,20 @@ namespace SheetAtlas.Tests.Services
 
         private ExcelFile CreateExcelFileWithSheet(string sheetName, string[]? columnNames = null)
         {
-            var dataTable = new DataTable(sheetName);
+            var columns = columnNames ?? new[] { "Column1" };
+            var sheetData = new SASheetData(sheetName, columns);
 
-            if (columnNames != null)
+            // Add a sample row
+            var rowData = new SACellData[columns.Length];
+            for (int i = 0; i < columns.Length; i++)
             {
-                foreach (var colName in columnNames)
-                {
-                    dataTable.Columns.Add(colName);
-                }
-
-                // Add a sample row
-                var row = dataTable.NewRow();
-                for (int i = 0; i < columnNames.Length; i++)
-                {
-                    row[i] = $"Value{i}";
-                }
-                dataTable.Rows.Add(row);
+                rowData[i] = new SACellData(SACellValue.FromText($"Value{i}"));
             }
-            else
-            {
-                dataTable.Columns.Add("Column1");
-                dataTable.Rows.Add("Value1");
-            }
+            sheetData.AddRow(rowData);
 
-            var sheets = new Dictionary<string, DataTable>
+            var sheets = new Dictionary<string, SASheetData>
             {
-                { sheetName, dataTable }
+                { sheetName, sheetData }
             };
 
             return new ExcelFile(

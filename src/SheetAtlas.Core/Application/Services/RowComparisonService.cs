@@ -1,4 +1,3 @@
-using System.Data;
 using SheetAtlas.Core.Domain.Entities;
 using SheetAtlas.Core.Domain.Exceptions;
 using SheetAtlas.Core.Application.Interfaces;
@@ -55,13 +54,13 @@ namespace SheetAtlas.Core.Application.Services
             if (sheet == null)
                 throw ComparisonException.MissingSheet(searchResult.SheetName, searchResult.FileName);
 
-            if (searchResult.Row >= sheet.Rows.Count)
+            if (searchResult.Row >= sheet.RowCount)
                 throw new ArgumentOutOfRangeException(nameof(searchResult), $"Row index {searchResult.Row} is out of range for sheet '{searchResult.SheetName}'");
 
             // Extract complete row data
-            var dataRow = sheet.Rows[searchResult.Row];
-            // ItemArray is already object[] which implements IReadOnlyList<object?> - no copy needed
-            var cells = dataRow.ItemArray;
+            var rowCells = sheet.GetRow(searchResult.Row);
+            // Convert SACellData[] to object[] for compatibility with ExcelRow
+            var cells = rowCells.Select(cell => (object?)cell.Value.ToString()).ToArray();
 
             // Get column headers
             var columnHeaders = GetColumnHeaders(searchResult.SourceFile, searchResult.SheetName);
@@ -83,31 +82,8 @@ namespace SheetAtlas.Core.Application.Services
             if (sheet == null)
                 throw ComparisonException.MissingSheet(sheetName, file.FilePath);
 
-            var headers = new List<string>();
-
-            // Use column names from DataTable if available
-            foreach (DataColumn column in sheet.Columns)
-            {
-                headers.Add(column.ColumnName);
-            }
-
-            // If no columns or generic column names, try to get headers from first row
-            if (headers.Count == 0 || headers.All(h => h.StartsWith("Column")))
-            {
-                if (sheet.Rows.Count > 0)
-                {
-                    var firstRow = sheet.Rows[0];
-                    headers.Clear();
-
-                    for (int i = 0; i < firstRow.ItemArray.Length; i++)
-                    {
-                        var headerValue = firstRow[i]?.ToString();
-                        headers.Add(string.IsNullOrWhiteSpace(headerValue) ? $"Column {i + 1}" : headerValue);
-                    }
-                }
-            }
-
-            return headers.AsReadOnly();
+            // SASheetData already has ColumnNames array
+            return sheet.ColumnNames;
         }
     }
 }

@@ -94,8 +94,8 @@ public class FileDetailsViewModel : ViewModelBase
 
             Properties.Add(new FileDetailProperty("Sheets", $"{SelectedFile.File.Sheets.Count} ({sheetNames})"));
 
-            var totalRows = SelectedFile.File.Sheets.Values.Sum(sheet => sheet.Rows.Count);
-            var totalCols = SelectedFile.File.Sheets.Values.Max(sheet => sheet.Columns.Count);
+            var totalRows = SelectedFile.File.Sheets.Values.Sum(sheet => sheet.RowCount);
+            var totalCols = SelectedFile.File.Sheets.Values.Max(sheet => sheet.ColumnCount);
 
             Properties.Add(new FileDetailProperty("Total Rows", totalRows.ToString()));
             Properties.Add(new FileDetailProperty("Total Cols", totalCols.ToString()));

@@ -1,4 +1,3 @@
-using System.Data;
 using SheetAtlas.Core.Domain.ValueObjects;
 
 namespace SheetAtlas.Core.Domain.Entities
@@ -11,10 +10,10 @@ namespace SheetAtlas.Core.Domain.Entities
         public string FileName => Path.GetFileName(FilePath);
         public LoadStatus Status { get; }
         public DateTime LoadedAt { get; }
-        public IReadOnlyDictionary<string, DataTable> Sheets { get; }
+        public IReadOnlyDictionary<string, SASheetData> Sheets { get; }
         public IReadOnlyList<ExcelError> Errors { get; }
 
-        public ExcelFile(string filePath, LoadStatus status, Dictionary<string, DataTable> sheets, List<ExcelError> errors)
+        public ExcelFile(string filePath, LoadStatus status, Dictionary<string, SASheetData> sheets, List<ExcelError> errors)
         {
             FilePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
             Status = status;
@@ -23,7 +22,7 @@ namespace SheetAtlas.Core.Domain.Entities
             LoadedAt = DateTime.UtcNow;
         }
 
-        public DataTable? GetSheet(string sheetName)
+        public SASheetData? GetSheet(string sheetName)
         {
             return Sheets.TryGetValue(sheetName, out var sheet) ? sheet : null;
         }
@@ -69,9 +68,8 @@ namespace SheetAtlas.Core.Domain.Entities
 
             if (disposing)
             {
-                // Dispose all DataTable instances to free memory
-                // DataTable has significant memory footprint (10-14x data size)
-                // Must be disposed to release internal buffers
+                // Dispose all SASheetData instances to free memory
+                // SASheetData contains large SACellData arrays that should be cleared promptly
                 foreach (var sheet in Sheets.Values)
                 {
                     sheet?.Dispose();

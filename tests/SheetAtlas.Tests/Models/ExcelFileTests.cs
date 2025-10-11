@@ -1,7 +1,6 @@
 using SheetAtlas.Core.Domain.Entities;
 using SheetAtlas.Core.Domain.ValueObjects;
 using FluentAssertions;
-using System.Data;
 
 namespace SheetAtlas.Tests.Models
 {
@@ -13,9 +12,9 @@ namespace SheetAtlas.Tests.Models
             // Arrange
             var filePath = "/test/file.xlsx";
             var status = LoadStatus.Success;
-            var sheets = new Dictionary<string, DataTable>
+            var sheets = new Dictionary<string, SASheetData>
             {
-                ["Sheet1"] = new DataTable("Sheet1")
+                ["Sheet1"] = new SASheetData("Sheet1", new[] { "Column1" })
             };
             var errors = new List<ExcelError>();
 
@@ -32,11 +31,11 @@ namespace SheetAtlas.Tests.Models
         }
 
         [Fact]
-        public void GetSheet_WithExistingSheet_ReturnsDataTable()
+        public void GetSheet_WithExistingSheet_ReturnsSASheetData()
         {
             // Arrange
-            var sheet = new DataTable("TestSheet");
-            var sheets = new Dictionary<string, DataTable> { ["TestSheet"] = sheet };
+            var sheet = new SASheetData("TestSheet", new[] { "Column1" });
+            var sheets = new Dictionary<string, SASheetData> { ["TestSheet"] = sheet };
             var excelFile = new ExcelFile("/test/file.xlsx", LoadStatus.Success, sheets, new List<ExcelError>());
 
             // Act
@@ -50,7 +49,7 @@ namespace SheetAtlas.Tests.Models
         public void GetSheet_WithNonExistentSheet_ReturnsNull()
         {
             // Arrange
-            var excelFile = new ExcelFile("/test/file.xlsx", LoadStatus.Success, new Dictionary<string, DataTable>(), new List<ExcelError>());
+            var excelFile = new ExcelFile("/test/file.xlsx", LoadStatus.Success, new Dictionary<string, SASheetData>(), new List<ExcelError>());
 
             // Act
             var result = excelFile.GetSheet("NonExistent");
@@ -64,7 +63,7 @@ namespace SheetAtlas.Tests.Models
         {
             // Arrange
             var errors = new List<ExcelError> { ExcelError.FileError("Test error") };
-            var excelFile = new ExcelFile("/test/file.xlsx", LoadStatus.Failed, new Dictionary<string, DataTable>(), errors);
+            var excelFile = new ExcelFile("/test/file.xlsx", LoadStatus.Failed, new Dictionary<string, SASheetData>(), errors);
 
             // Act & Assert
             excelFile.HasErrors.Should().BeTrue();
@@ -75,7 +74,7 @@ namespace SheetAtlas.Tests.Models
         {
             // Arrange
             var errors = new List<ExcelError> { ExcelError.Warning("File", "Test warning") };
-            var excelFile = new ExcelFile("/test/file.xlsx", LoadStatus.Success, new Dictionary<string, DataTable>(), errors);
+            var excelFile = new ExcelFile("/test/file.xlsx", LoadStatus.Success, new Dictionary<string, SASheetData>(), errors);
 
             // Act & Assert
             excelFile.HasErrors.Should().BeFalse();

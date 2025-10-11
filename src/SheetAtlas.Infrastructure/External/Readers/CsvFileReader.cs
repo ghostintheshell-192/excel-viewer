@@ -3,7 +3,6 @@ using SheetAtlas.Core.Domain.ValueObjects;
 using SheetAtlas.Core.Application.Interfaces;
 using SheetAtlas.Core.Application.DTOs;
 using Microsoft.Extensions.Logging;
-using System.Data;
 using System.Globalization;
 using System.Text;
 using CsvHelper;
@@ -49,7 +48,7 @@ namespace SheetAtlas.Infrastructure.External.Readers
         public async Task<ExcelFile> ReadAsync(string filePath, CancellationToken cancellationToken = default)
         {
             var errors = new List<ExcelError>();
-            var sheets = new Dictionary<string, DataTable>();
+            var sheets = new Dictionary<string, SASheetData>();
 
             // Validation: Fail fast for invalid input
             if (string.IsNullOrWhiteSpace(filePath))
@@ -81,12 +80,11 @@ namespace SheetAtlas.Infrastructure.External.Readers
                     using var reader = new StreamReader(filePath, _options.Encoding);
                     using var csv = new CsvReader(reader, config);
 
-                    // Read all records as dynamic objects
-                    var records = new List<dynamic>();
-
+                    // Stream records directly without materializing entire dataset
+                    SASheetData sheetData;
                     try
                     {
-                        records = csv.GetRecords<dynamic>().ToList();
+                        sheetData = ConvertToSASheetDataStreaming(Path.GetFileNameWithoutExtension(filePath), csv);
                     }
                     catch (Exception ex)
                     {
@@ -95,18 +93,16 @@ namespace SheetAtlas.Infrastructure.External.Readers
                         return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
                     }
 
-                    if (records.Count == 0)
+                    if (sheetData.RowCount == 0)
                     {
                         _logger.LogWarning("CSV file {FilePath} contains no data", filePath);
                         errors.Add(ExcelError.Warning("File", "CSV file contains no data rows"));
                     }
 
-                    // Convert to DataTable
-                    var dataTable = ConvertToDataTable(Path.GetFileNameWithoutExtension(filePath), records);
-                    sheets["Data"] = dataTable;
+                    sheets["Data"] = sheetData;
 
                     _logger.LogInformation("Read CSV file with {RowCount} rows and {ColumnCount} columns",
-                        dataTable.Rows.Count, dataTable.Columns.Count);
+                        sheetData.RowCount, sheetData.ColumnCount);
 
                     var status = DetermineLoadStatus(sheets, errors);
                     return new ExcelFile(filePath, status, sheets, errors);
@@ -142,61 +138,88 @@ namespace SheetAtlas.Infrastructure.External.Readers
             }
         }
 
-        private DataTable ConvertToDataTable(string fileName, List<dynamic> records)
+        private SASheetData ConvertToSASheetDataStreaming(string fileName, CsvReader csv)
         {
-            var tableName = $"{fileName.Replace(' ', '_').Replace('-', '_')}_Data";
-            var dataTable = new DataTable(tableName);
+            var sheetName = "Data";
 
-            if (records.Count == 0)
-            {
-                return dataTable;
-            }
+            // String pool for deduplicating text values (categories, repeated strings, etc.)
+            var stringPool = new StringPool(initialCapacity: 2048);
 
-            // Get column names from first record
-            var firstRecord = records[0] as IDictionary<string, object>;
-            if (firstRecord == null)
-            {
-                _logger.LogWarning("Unable to extract column names from CSV record");
-                return dataTable;
-            }
+            // Read records lazily - no ToList()!
+            var records = csv.GetRecords<dynamic>();
 
+            SASheetData? sheetData = null;
             var columnNameCounts = new Dictionary<string, int>();
+            List<string>? columnNames = null;
+            int rowCount = 0;
+            int totalStrings = 0;
 
-            // Create columns
-            foreach (var kvp in firstRecord)
-            {
-                string columnName = kvp.Key;
-                if (string.IsNullOrWhiteSpace(columnName))
-                {
-                    columnName = $"Column_{dataTable.Columns.Count}";
-                }
-
-                string uniqueColumnName = EnsureUniqueColumnName(columnName, columnNameCounts);
-                dataTable.Columns.Add(uniqueColumnName, typeof(string));
-            }
-
-            // Add data rows
             foreach (var record in records)
             {
-                var recordDict = record as IDictionary<string, object>;
-                if (recordDict == null) continue;
+                rowCount++;
 
-                var row = dataTable.NewRow();
+                var recordDict = record as IDictionary<string, object>;
+                if (recordDict == null)
+                {
+                    _logger.LogWarning("Skipping non-dictionary record at row {RowNumber}", rowCount);
+                    continue;
+                }
+
+                // Initialize column names from first record
+                if (columnNames == null)
+                {
+                    columnNames = new List<string>();
+                    int colIndex = 0;
+
+                    foreach (var kvp in recordDict)
+                    {
+                        string columnName = kvp.Key;
+                        if (string.IsNullOrWhiteSpace(columnName))
+                        {
+                            columnName = $"Column_{colIndex}";
+                        }
+
+                        string uniqueColumnName = EnsureUniqueColumnName(columnName, columnNameCounts);
+                        // Intern column names (often repeated across sheets)
+                        columnNames.Add(stringPool.Intern(uniqueColumnName));
+                        colIndex++;
+                    }
+
+                    sheetData = new SASheetData(sheetName, columnNames.ToArray());
+                }
+
+                // Process row data
+                var rowData = new SACellData[columnNames.Count];
                 int columnIndex = 0;
 
                 foreach (var kvp in recordDict)
                 {
-                    if (columnIndex < dataTable.Columns.Count)
+                    if (columnIndex < columnNames.Count)
                     {
-                        row[columnIndex] = kvp.Value?.ToString() ?? string.Empty;
+                        // Use FromString for auto-type detection with string interning
+                        string cellText = kvp.Value?.ToString() ?? string.Empty;
+                        totalStrings++;
+                        rowData[columnIndex] = new SACellData(SACellValue.FromString(cellText, stringPool));
                         columnIndex++;
                     }
                 }
 
-                dataTable.Rows.Add(row);
+                sheetData!.AddRow(rowData);
             }
 
-            return dataTable;
+            // Handle empty file
+            if (sheetData == null)
+            {
+                _logger.LogWarning("CSV file contains no valid records");
+                return new SASheetData(sheetName, Array.Empty<string>());
+            }
+
+            // Log interning statistics
+            var memorySaved = stringPool.EstimatedMemorySaved(totalStrings);
+            _logger.LogDebug("String interning: {UniqueStrings} unique from {TotalStrings} total (~{MemorySavedKB} KB saved)",
+                stringPool.Count, totalStrings, memorySaved / 1024);
+
+            return sheetData;
         }
 
         private char DetectDelimiter(string filePath)
@@ -268,7 +291,7 @@ namespace SheetAtlas.Infrastructure.External.Readers
             return $"{baseName}_{columnNameCounts[baseName]}";
         }
 
-        private LoadStatus DetermineLoadStatus(Dictionary<string, DataTable> sheets, List<ExcelError> errors)
+        private LoadStatus DetermineLoadStatus(Dictionary<string, SASheetData> sheets, List<ExcelError> errors)
         {
             var hasErrors = errors.Any(e => e.Level == ErrorLevel.Error || e.Level == ErrorLevel.Critical);
 

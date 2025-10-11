@@ -69,23 +69,23 @@ namespace SheetAtlas.Core.Application.Services
 
             if (sheet == null) return results;
 
-            for (int rowIndex = 0; rowIndex < sheet.Rows.Count; rowIndex++)
+            for (int rowIndex = 0; rowIndex < sheet.RowCount; rowIndex++)
             {
-                var row = sheet.Rows[rowIndex];
-                for (int colIndex = 0; colIndex < sheet.Columns.Count; colIndex++)
+                var row = sheet.GetRow(rowIndex);
+                for (int colIndex = 0; colIndex < sheet.ColumnCount; colIndex++)
                 {
-                    var cellValue = row[colIndex]?.ToString();
+                    var cellValue = row[colIndex].Value.ToString();
                     if (!string.IsNullOrEmpty(cellValue) && IsMatch(cellValue, query, options))
                     {
                         var result = new SearchResult(file, sheetName, rowIndex, colIndex, cellValue);
 
                         // Aggiungi header di colonna come contesto
-                        result.Context["ColumnHeader"] = sheet.Columns[colIndex].ColumnName;
+                        result.Context["ColumnHeader"] = sheet.ColumnNames[colIndex];
 
                         // Aggiungi header di riga (prima colonna) come contesto
-                        if (colIndex > 0 && row[0] != null)
+                        if (colIndex > 0)
                         {
-                            result.Context["RowHeader"] = row[0]?.ToString() ?? string.Empty;
+                            result.Context["RowHeader"] = row[0].Value.ToString();
                         }
 
                         // Aggiungi coordinate della cella

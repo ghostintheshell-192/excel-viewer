@@ -2,7 +2,7 @@ using SheetAtlas.Core.Domain.Entities;
 using SheetAtlas.Core.Domain.ValueObjects;
 using SheetAtlas.Core.Application.Interfaces;
 using Microsoft.Extensions.Logging;
-using System.Data;
+
 using ExcelDataReader;
 
 namespace SheetAtlas.Infrastructure.External.Readers
@@ -32,7 +32,7 @@ namespace SheetAtlas.Infrastructure.External.Readers
         public async Task<ExcelFile> ReadAsync(string filePath, CancellationToken cancellationToken = default)
         {
             var errors = new List<ExcelError>();
-            var sheets = new Dictionary<string, DataTable>();
+            var sheets = new Dictionary<string, SASheetData>();
 
             // Validation: Fail fast for invalid input
             if (string.IsNullOrWhiteSpace(filePath))
@@ -73,7 +73,7 @@ namespace SheetAtlas.Infrastructure.External.Readers
                     _logger.LogInformation("Reading .xls file with {SheetCount} sheets", dataSet.Tables.Count);
 
                     // Convert each DataTable to our format
-                    foreach (DataTable table in dataSet.Tables)
+                    foreach (System.Data.DataTable table in dataSet.Tables)
                     {
                         // Check cancellation before processing each sheet
                         cancellationToken.ThrowIfCancellationRequested();
@@ -87,10 +87,10 @@ namespace SheetAtlas.Infrastructure.External.Readers
 
                         try
                         {
-                            var processedTable = ProcessSheet(Path.GetFileNameWithoutExtension(filePath), table);
-                            sheets[sheetName] = processedTable;
+                            var processedSheet = ProcessSheet(Path.GetFileNameWithoutExtension(filePath), table);
+                            sheets[sheetName] = processedSheet;
                             _logger.LogDebug("Sheet {SheetName} read successfully with {RowCount} rows",
-                                sheetName, processedTable.Rows.Count);
+                                sheetName, processedSheet.RowCount);
                         }
                         catch (Exception ex)
                         {
@@ -134,22 +134,22 @@ namespace SheetAtlas.Infrastructure.External.Readers
             }
         }
 
-        private DataTable ProcessSheet(string fileName, DataTable sourceTable)
+        private SASheetData ProcessSheet(string fileName, System.Data.DataTable sourceTable)
         {
-            var tableName = CreateTableName(fileName, sourceTable.TableName);
-            var resultTable = new DataTable(tableName);
+            var sheetName = sourceTable.TableName;
 
             if (sourceTable.Rows.Count == 0)
             {
-                _logger.LogWarning("Sheet {SheetName} is empty", sourceTable.TableName);
-                return resultTable;
+                _logger.LogWarning("Sheet {SheetName} is empty", sheetName);
+                return new SASheetData(sheetName, Array.Empty<string>());
             }
 
             // First row is treated as header (matching OpenXML behavior)
             var headerRow = sourceTable.Rows[0];
             var columnNameCounts = new Dictionary<string, int>();
+            var columnNames = new List<string>();
 
-            // Create columns from first row
+            // Create column names from first row
             for (int i = 0; i < sourceTable.Columns.Count; i++)
             {
                 string headerValue = headerRow[i]?.ToString()?.Trim() ?? string.Empty;
@@ -161,22 +161,26 @@ namespace SheetAtlas.Infrastructure.External.Readers
                 }
 
                 string uniqueColumnName = EnsureUniqueColumnName(headerValue, columnNameCounts);
-                resultTable.Columns.Add(uniqueColumnName, typeof(string));
+                columnNames.Add(uniqueColumnName);
             }
+
+            var sheetData = new SASheetData(sheetName, columnNames.ToArray());
 
             // Add data rows (skip first row which is header)
             for (int rowIndex = 1; rowIndex < sourceTable.Rows.Count; rowIndex++)
             {
                 var sourceRow = sourceTable.Rows[rowIndex];
-                var newRow = resultTable.NewRow();
+                var rowData = new SACellData[columnNames.Count];
                 bool hasData = false;
 
-                for (int colIndex = 0; colIndex < resultTable.Columns.Count && colIndex < sourceTable.Columns.Count; colIndex++)
+                for (int colIndex = 0; colIndex < columnNames.Count && colIndex < sourceTable.Columns.Count; colIndex++)
                 {
-                    var cellValue = sourceRow[colIndex]?.ToString() ?? string.Empty;
-                    newRow[colIndex] = cellValue;
+                    string cellText = sourceRow[colIndex]?.ToString() ?? string.Empty;
 
-                    if (!string.IsNullOrWhiteSpace(cellValue))
+                    // Use FromString for auto-type detection!
+                    rowData[colIndex] = new SACellData(SACellValue.FromString(cellText));
+
+                    if (!string.IsNullOrWhiteSpace(cellText))
                     {
                         hasData = true;
                     }
@@ -185,18 +189,11 @@ namespace SheetAtlas.Infrastructure.External.Readers
                 // Only add row if it contains at least some data
                 if (hasData)
                 {
-                    resultTable.Rows.Add(newRow);
+                    sheetData.AddRow(rowData);
                 }
             }
 
-            return resultTable;
-        }
-
-        private string CreateTableName(string fileName, string sheetName)
-        {
-            var safeFileName = fileName.Replace(' ', '_').Replace('-', '_');
-            var safeSheetName = sheetName.Replace(' ', '_').Replace('-', '_');
-            return $"{safeFileName}_{safeSheetName}";
+            return sheetData;
         }
 
         private string EnsureUniqueColumnName(string baseName, Dictionary<string, int> columnNameCounts)
@@ -211,7 +208,7 @@ namespace SheetAtlas.Infrastructure.External.Readers
             return $"{baseName}_{columnNameCounts[baseName]}";
         }
 
-        private LoadStatus DetermineLoadStatus(Dictionary<string, DataTable> sheets, List<ExcelError> errors)
+        private LoadStatus DetermineLoadStatus(Dictionary<string, SASheetData> sheets, List<ExcelError> errors)
         {
             var hasErrors = errors.Any(e => e.Level == ErrorLevel.Error || e.Level == ErrorLevel.Critical);
 

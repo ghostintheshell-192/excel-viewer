@@ -2,7 +2,6 @@ using SheetAtlas.Core.Domain.Entities;
 using SheetAtlas.Core.Domain.ValueObjects;
 using SheetAtlas.Core.Application.Interfaces;
 using Microsoft.Extensions.Logging;
-using System.Data;
 
 namespace SheetAtlas.Infrastructure.External
 {
@@ -70,7 +69,7 @@ namespace SheetAtlas.Infrastructure.External
                 };
 
                 return new ExcelFile(filePath, LoadStatus.Failed,
-                    new Dictionary<string, DataTable>(), errors);
+                    new Dictionary<string, SASheetData>(), errors);
             }
 
             _logger.LogDebug("Using {ReaderType} for {Extension}",

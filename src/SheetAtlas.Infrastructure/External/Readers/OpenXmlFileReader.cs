@@ -2,7 +2,6 @@ using SheetAtlas.Core.Domain.Entities;
 using SheetAtlas.Core.Domain.ValueObjects;
 using SheetAtlas.Core.Application.Interfaces;
 using Microsoft.Extensions.Logging;
-using System.Data;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
@@ -37,7 +36,7 @@ namespace SheetAtlas.Infrastructure.External.Readers
         public async Task<ExcelFile> ReadAsync(string filePath, CancellationToken cancellationToken = default)
         {
             var errors = new List<ExcelError>();
-            var sheets = new Dictionary<string, DataTable>();
+            var sheets = new Dictionary<string, SASheetData>();
 
             // Validation: Fail fast for invalid input
             if (string.IsNullOrWhiteSpace(filePath))
@@ -88,8 +87,8 @@ namespace SheetAtlas.Infrastructure.External.Readers
                                 continue;
                             }
 
-                            var dataTable = ProcessSheet(Path.GetFileNameWithoutExtension(filePath), sheetName, workbookPart, worksheetPart);
-                            sheets[sheetName] = dataTable;
+                            var sheetData = ProcessSheet(Path.GetFileNameWithoutExtension(filePath), sheetName, workbookPart, worksheetPart);
+                            sheets[sheetName] = sheetData;
                             _logger.LogDebug("Sheet {SheetName} read successfully", sheetName);
                         }
                         catch (InvalidCastException ex)
@@ -161,10 +160,8 @@ namespace SheetAtlas.Infrastructure.External.Readers
             return workbookPart.Workbook.Descendants<Sheet>();
         }
 
-        private DataTable ProcessSheet(string fileName, string sheetName, WorkbookPart workbookPart, WorksheetPart worksheetPart)
+        private SASheetData ProcessSheet(string fileName, string sheetName, WorkbookPart workbookPart, WorksheetPart worksheetPart)
         {
-            var tableName = CreateTableName(fileName, sheetName);
-            var dataTable = new DataTable(tableName);
             var sharedStringTable = workbookPart.SharedStringTablePart?.SharedStringTable;
 
             var mergedCells = _mergedCellProcessor.ProcessMergedCells(worksheetPart, sharedStringTable);
@@ -173,23 +170,20 @@ namespace SheetAtlas.Infrastructure.External.Readers
             if (!headerColumns.Any())
             {
                 _logger.LogWarning("Sheet {SheetName} has no header row", sheetName);
-                return dataTable;
+                return new SASheetData(sheetName, Array.Empty<string>());
             }
 
-            CreateDataTableColumns(dataTable, headerColumns);
-            PopulateDataRows(dataTable, worksheetPart, sharedStringTable, mergedCells, headerColumns);
+            // Create SASheetData with column names
+            var columnNames = CreateColumnNamesArray(headerColumns);
+            var sheetData = new SASheetData(sheetName, columnNames);
 
-            return dataTable;
+            // Populate rows
+            PopulateSheetRows(sheetData, worksheetPart, sharedStringTable, mergedCells, headerColumns);
+
+            return sheetData;
         }
 
-        private string CreateTableName(string fileName, string sheetName)
-        {
-            var safeFileName = fileName.Replace(' ', '_').Replace('-', '_');
-            var safeSheetName = sheetName.Replace(' ', '_').Replace('-', '_');
-            return $"{safeFileName}_{safeSheetName}";
-        }
-
-        private Dictionary<int, string> ProcessHeaderRow(WorksheetPart worksheetPart, SharedStringTable? sharedStringTable, Dictionary<string, string> mergedCells)
+        private Dictionary<int, string> ProcessHeaderRow(WorksheetPart worksheetPart, SharedStringTable? sharedStringTable, Dictionary<string, SACellValue> mergedCells)
         {
             var firstRow = worksheetPart.Worksheet.Descendants<Row>().FirstOrDefault();
             if (firstRow == null)
@@ -202,19 +196,23 @@ namespace SheetAtlas.Infrastructure.External.Readers
                 if (cellRef == null) continue;
 
                 int columnIndex = _cellParser.GetColumnIndex(cellRef);
-                string cellValue = GetCellValueWithMerge(cell, sharedStringTable, mergedCells);
+                string cellValue = GetCellValueWithMerge(cell, sharedStringTable, mergedCells).ToString();
                 headerValues[columnIndex] = cellValue;
             }
 
             return headerValues;
         }
 
-        private void CreateDataTableColumns(DataTable dataTable, Dictionary<int, string> headerColumns)
+        private string[] CreateColumnNamesArray(Dictionary<int, string> headerColumns)
         {
-            if (!headerColumns.Any()) return;
+            if (!headerColumns.Any())
+                return Array.Empty<string>();
 
             int firstCol = headerColumns.Keys.Min();
             int lastCol = headerColumns.Keys.Max();
+            int columnCount = lastCol - firstCol + 1;
+
+            var columnNames = new string[columnCount];
             var columnNameCounts = new Dictionary<string, int>();
 
             for (int i = firstCol; i <= lastCol; i++)
@@ -224,8 +222,10 @@ namespace SheetAtlas.Infrastructure.External.Readers
                     : $"Column_{i}";
 
                 string uniqueColumnName = EnsureUniqueColumnName(headerValue, columnNameCounts);
-                dataTable.Columns.Add(uniqueColumnName);
+                columnNames[i - firstCol] = uniqueColumnName;
             }
+
+            return columnNames;
         }
 
         private string EnsureUniqueColumnName(string baseName, Dictionary<string, int> columnNameCounts)
@@ -240,7 +240,7 @@ namespace SheetAtlas.Infrastructure.External.Readers
             return $"{baseName}_{columnNameCounts[baseName]}";
         }
 
-        private void PopulateDataRows(DataTable dataTable, WorksheetPart worksheetPart, SharedStringTable? sharedStringTable, Dictionary<string, string> mergedCells, Dictionary<int, string> headerColumns)
+        private void PopulateSheetRows(SASheetData sheetData, WorksheetPart worksheetPart, SharedStringTable? sharedStringTable, Dictionary<string, SACellValue> mergedCells, Dictionary<int, string> headerColumns)
         {
             int firstCol = headerColumns.Keys.Min();
             bool isFirstRow = true;
@@ -253,18 +253,24 @@ namespace SheetAtlas.Infrastructure.External.Readers
                     continue; // Skip header row
                 }
 
-                var dataRow = CreateDataRow(dataTable, row, sharedStringTable, mergedCells, firstCol);
-                if (dataRow != null)
+                var rowData = CreateRowData(sheetData.ColumnCount, row, sharedStringTable, mergedCells, firstCol);
+                if (rowData != null)
                 {
-                    dataTable.Rows.Add(dataRow);
+                    sheetData.AddRow(rowData);
                 }
             }
         }
 
-        private DataRow? CreateDataRow(DataTable dataTable, Row row, SharedStringTable? sharedStringTable, Dictionary<string, string> mergedCells, int firstCol)
+        private SACellData[]? CreateRowData(int columnCount, Row row, SharedStringTable? sharedStringTable, Dictionary<string, SACellValue> mergedCells, int firstCol)
         {
-            var dataRow = dataTable.NewRow();
+            var rowData = new SACellData[columnCount];
             bool hasData = false;
+
+            // Initialize all cells with Empty
+            for (int i = 0; i < columnCount; i++)
+            {
+                rowData[i] = new SACellData(SACellValue.Empty);
+            }
 
             foreach (var cell in row.Elements<Cell>())
             {
@@ -272,21 +278,21 @@ namespace SheetAtlas.Infrastructure.External.Readers
                 if (cellRef == null) continue;
 
                 int columnIndex = _cellParser.GetColumnIndex(cellRef) - firstCol;
-                if (columnIndex < 0 || columnIndex >= dataTable.Columns.Count)
+                if (columnIndex < 0 || columnIndex >= columnCount)
                     continue;
 
-                string cellValue = GetCellValueWithMerge(cell, sharedStringTable, mergedCells);
-                dataRow[columnIndex] = cellValue;
+                SACellValue cellValue = GetCellValueWithMerge(cell, sharedStringTable, mergedCells);
+                rowData[columnIndex] = new SACellData(cellValue);
                 hasData = true;
             }
 
-            return hasData ? dataRow : null;
+            return hasData ? rowData : null;
         }
 
-        private string GetCellValueWithMerge(Cell cell, SharedStringTable? sharedStringTable, Dictionary<string, string> mergedCells)
+        private SACellValue GetCellValueWithMerge(Cell cell, SharedStringTable? sharedStringTable, Dictionary<string, SACellValue> mergedCells)
         {
             var cellRef = cell.CellReference?.Value;
-            if (cellRef != null && mergedCells.TryGetValue(cellRef, out string? mergedValue))
+            if (cellRef != null && mergedCells.TryGetValue(cellRef, out SACellValue mergedValue))
             {
                 return mergedValue;
             }
@@ -294,7 +300,7 @@ namespace SheetAtlas.Infrastructure.External.Readers
             return GetCellValue(cell, sharedStringTable);
         }
 
-        private LoadStatus DetermineLoadStatus(Dictionary<string, DataTable> sheets, List<ExcelError> errors)
+        private LoadStatus DetermineLoadStatus(Dictionary<string, SASheetData> sheets, List<ExcelError> errors)
         {
             var hasErrors = errors.Any(e => e.Level == ErrorLevel.Error || e.Level == ErrorLevel.Critical);
 
@@ -304,7 +310,7 @@ namespace SheetAtlas.Infrastructure.External.Readers
             return sheets.Any() ? LoadStatus.PartialSuccess : LoadStatus.Failed;
         }
 
-        private string GetCellValue(Cell cell, SharedStringTable? sharedStringTable)
+        private SACellValue GetCellValue(Cell cell, SharedStringTable? sharedStringTable)
         {
             return _cellValueReader.GetCellValue(cell, sharedStringTable);
         }

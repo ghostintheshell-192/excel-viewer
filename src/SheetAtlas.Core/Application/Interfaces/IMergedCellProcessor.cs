@@ -1,10 +1,11 @@
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using SheetAtlas.Core.Domain.ValueObjects;
 
 namespace SheetAtlas.Core.Application.Interfaces
 {
     public interface IMergedCellProcessor
     {
-        Dictionary<string, string> ProcessMergedCells(WorksheetPart worksheetPart, SharedStringTable? sharedStringTable);
+        Dictionary<string, SACellValue> ProcessMergedCells(WorksheetPart worksheetPart, SharedStringTable? sharedStringTable);
     }
 }

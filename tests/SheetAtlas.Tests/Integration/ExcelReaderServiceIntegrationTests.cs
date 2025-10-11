@@ -1,5 +1,6 @@
 using SheetAtlas.Core.Application.Interfaces;
 using SheetAtlas.Core.Application.Services;
+using SheetAtlas.Core.Domain.Entities;
 using SheetAtlas.Core.Domain.ValueObjects;
 using SheetAtlas.Infrastructure.External;
 using SheetAtlas.Infrastructure.External.Readers;
@@ -48,6 +49,22 @@ namespace SheetAtlas.Tests.Integration
             // Cleanup if needed
         }
 
+        #region Helper Methods for SASheetData Access
+
+        private static int GetColumnIndex(SASheetData sheet, string columnName)
+        {
+            return Array.IndexOf(sheet.ColumnNames, columnName);
+        }
+
+        private static string GetCellValueAsString(SASheetData sheet, int rowIndex, string columnName)
+        {
+            int colIndex = GetColumnIndex(sheet, columnName);
+            if (colIndex == -1) throw new ArgumentException($"Column '{columnName}' not found");
+            return sheet.GetCellValue(rowIndex, colIndex).ToString();
+        }
+
+        #endregion
+
         #region Valid Files Tests
 
         [Fact]
@@ -65,23 +82,23 @@ namespace SheetAtlas.Tests.Integration
             result.Sheets.Should().ContainKey("Sheet1");
 
             var sheet = result.Sheets["Sheet1"];
-            sheet.Columns.Count.Should().Be(3);
-            sheet.Rows.Count.Should().Be(2);
+            sheet.ColumnCount.Should().Be(3);
+            sheet.RowCount.Should().Be(2);
 
             // Verify headers
-            sheet.Columns[0].ColumnName.Should().Be("Name");
-            sheet.Columns[1].ColumnName.Should().Be("Age");
-            sheet.Columns[2].ColumnName.Should().Be("City");
+            sheet.ColumnNames[0].Should().Be("Name");
+            sheet.ColumnNames[1].Should().Be("Age");
+            sheet.ColumnNames[2].Should().Be("City");
 
             // Verify first row data
-            sheet.Rows[0]["Name"].Should().Be("Alice");
-            sheet.Rows[0]["Age"].Should().Be("30");
-            sheet.Rows[0]["City"].Should().Be("Rome");
+            GetCellValueAsString(sheet, 0, "Name").Should().Be("Alice");
+            GetCellValueAsString(sheet, 0, "Age").Should().Be("30");
+            GetCellValueAsString(sheet, 0, "City").Should().Be("Rome");
 
             // Verify second row data
-            sheet.Rows[1]["Name"].Should().Be("Bob");
-            sheet.Rows[1]["Age"].Should().Be("25");
-            sheet.Rows[1]["City"].Should().Be("Milan");
+            GetCellValueAsString(sheet, 1, "Name").Should().Be("Bob");
+            GetCellValueAsString(sheet, 1, "Age").Should().Be("25");
+            GetCellValueAsString(sheet, 1, "City").Should().Be("Milan");
         }
 
         [Fact]
@@ -99,23 +116,23 @@ namespace SheetAtlas.Tests.Integration
             result.Sheets.Should().ContainKey("Data");
 
             var sheet = result.Sheets["Data"];
-            sheet.Columns.Count.Should().Be(5);
-            sheet.Rows.Count.Should().Be(100);
+            sheet.ColumnCount.Should().Be(5);
+            sheet.RowCount.Should().Be(100);
 
             // Verify headers
-            sheet.Columns[0].ColumnName.Should().Be("ID");
-            sheet.Columns[1].ColumnName.Should().Be("Product");
-            sheet.Columns[2].ColumnName.Should().Be("Quantity");
-            sheet.Columns[3].ColumnName.Should().Be("Price");
-            sheet.Columns[4].ColumnName.Should().Be("Total");
+            sheet.ColumnNames[0].Should().Be("ID");
+            sheet.ColumnNames[1].Should().Be("Product");
+            sheet.ColumnNames[2].Should().Be("Quantity");
+            sheet.ColumnNames[3].Should().Be("Price");
+            sheet.ColumnNames[4].Should().Be("Total");
 
             // Verify first row
-            sheet.Rows[0]["ID"].Should().Be("1");
-            sheet.Rows[0]["Product"].Should().Be("Product 1");
+            GetCellValueAsString(sheet, 0, "ID").Should().Be("1");
+            GetCellValueAsString(sheet, 0, "Product").Should().Be("Product 1");
 
             // Verify last row
-            sheet.Rows[99]["ID"].Should().Be("100");
-            sheet.Rows[99]["Product"].Should().Be("Product 100");
+            GetCellValueAsString(sheet, 99, "ID").Should().Be("100");
+            GetCellValueAsString(sheet, 99, "Product").Should().Be("Product 100");
         }
 
         [Fact]
@@ -139,21 +156,21 @@ namespace SheetAtlas.Tests.Integration
 
             // Verify Employees sheet
             var employeesSheet = result.Sheets["Employees"];
-            employeesSheet.Columns.Count.Should().Be(2);
-            employeesSheet.Columns[0].ColumnName.Should().Be("Employee");
-            employeesSheet.Columns[1].ColumnName.Should().Be("Department");
+            employeesSheet.ColumnCount.Should().Be(2);
+            employeesSheet.ColumnNames[0].Should().Be("Employee");
+            employeesSheet.ColumnNames[1].Should().Be("Department");
 
             // Verify Departments sheet
             var departmentsSheet = result.Sheets["Departments"];
-            departmentsSheet.Columns.Count.Should().Be(2);
-            departmentsSheet.Columns[0].ColumnName.Should().Be("Department");
-            departmentsSheet.Columns[1].ColumnName.Should().Be("Budget");
+            departmentsSheet.ColumnCount.Should().Be(2);
+            departmentsSheet.ColumnNames[0].Should().Be("Department");
+            departmentsSheet.ColumnNames[1].Should().Be("Budget");
 
             // Verify Summary sheet
             var summarySheet = result.Sheets["Summary"];
-            summarySheet.Columns.Count.Should().Be(2);
-            summarySheet.Columns[0].ColumnName.Should().Be("Total Employees");
-            summarySheet.Columns[1].ColumnName.Should().Be("Total Budget");
+            summarySheet.ColumnCount.Should().Be(2);
+            summarySheet.ColumnNames[0].Should().Be("Total Employees");
+            summarySheet.ColumnNames[1].Should().Be("Total Budget");
         }
 
         #endregion
@@ -176,7 +193,7 @@ namespace SheetAtlas.Tests.Integration
             result.Sheets.Should().ContainKey("Sheet1");
 
             var sheet = result.Sheets["Sheet1"];
-            sheet.Rows.Count.Should().Be(0);
+            sheet.RowCount.Should().Be(0);
         }
 
         [Fact]
@@ -267,12 +284,11 @@ namespace SheetAtlas.Tests.Integration
             result.Sheets.Should().ContainKey("Special Chars");
 
             var sheet = result.Sheets["Special Chars"];
-            sheet.Rows.Count.Should().BeGreaterThan(0);
+            sheet.RowCount.Should().BeGreaterThan(0);
 
             // Verify special characters are preserved
-            var firstRow = sheet.Rows[0];
-            firstRow["Name"].ToString().Should().Contain("Café");
-            firstRow["Symbols"].ToString().Should().Contain("€");
+            GetCellValueAsString(sheet, 0, "Name").Should().Contain("Café");
+            GetCellValueAsString(sheet, 0, "Symbols").Should().Contain("€");
         }
 
         [Fact]
@@ -290,14 +306,14 @@ namespace SheetAtlas.Tests.Integration
             result.Sheets.Should().ContainKey("Formulas");
 
             var sheet = result.Sheets["Formulas"];
-            sheet.Columns.Count.Should().Be(3);
-            sheet.Rows.Count.Should().BeGreaterThan(0);
+            sheet.ColumnCount.Should().Be(3);
+            sheet.RowCount.Should().BeGreaterThan(0);
 
             // Note: OpenXml reads formula results, not the formulas themselves
             // Verify the structure is correct
-            sheet.Columns[0].ColumnName.Should().Be("Value1");
-            sheet.Columns[1].ColumnName.Should().Be("Value2");
-            sheet.Columns[2].ColumnName.Should().Be("Sum");
+            sheet.ColumnNames[0].Should().Be("Value1");
+            sheet.ColumnNames[1].Should().Be("Value2");
+            sheet.ColumnNames[2].Should().Be("Sum");
         }
 
         [Fact]
@@ -315,10 +331,10 @@ namespace SheetAtlas.Tests.Integration
             result.Sheets.Should().ContainKey("Merged");
 
             var sheet = result.Sheets["Merged"];
-            sheet.Rows.Count.Should().BeGreaterThan(0);
+            sheet.RowCount.Should().BeGreaterThan(0);
 
             // Verify merged cell header is read
-            sheet.Columns[0].ColumnName.Should().Be("Merged Title");
+            sheet.ColumnNames[0].Should().Be("Merged Title");
         }
 
         #endregion

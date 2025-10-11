@@ -1,49 +1,108 @@
 using System.Collections.Concurrent;
+using System.Globalization;
+using System.Reflection.Metadata;
 using DocumentFormat.OpenXml.Spreadsheet;
 using SheetAtlas.Core.Application.Interfaces;
+using SACellValue = SheetAtlas.Core.Domain.ValueObjects.SACellValue;
 
 namespace SheetAtlas.Core.Application.Services
 {
     /// <summary>
-    /// Reads and parses cell values from Excel worksheets.
-    /// Handles different cell data types: shared strings, booleans, numbers, and formulas.
-    /// Uses string interning to reduce memory footprint for duplicate values.
+    /// Reads and parses cell values from Excel worksheets with type preservation.
+    /// Handles different cell data types: shared strings, booleans, numbers, dates.
+    /// Returns CellValue struct with native types (double, long, bool) instead of all-string.
+    /// Uses string interning for text values to reduce memory footprint.
     /// </summary>
     public class CellValueReader : ICellValueReader
     {
         private readonly ConcurrentDictionary<string, string> _stringPool = new();
-        private const int MaxPoolSize = 50000; // Limit pool size to prevent unbounded growth
-        private const int MaxInternLength = 100; // Only intern short strings (likely to be duplicates)
+        private const int MaxPoolSize = 50000;
+        private const int MaxInternLength = 100;
 
-        public string GetCellValue(Cell cell, SharedStringTable? sharedStringTable)
+        public SACellValue GetCellValue(Cell cell, SharedStringTable? sharedStringTable)
         {
             if (cell == null)
-                return string.Empty;
+                return SACellValue.Empty;
 
-            string value = cell.InnerText;
+            string rawValue = cell.InnerText;
 
-            if (cell.DataType != null && cell.DataType.Value == CellValues.SharedString && sharedStringTable != null)
+            // Handle empty cells
+            if (string.IsNullOrWhiteSpace(rawValue))
+                return SACellValue.Empty;
+
+            // Handle different cell types based on DataType attribute
+            if (cell.DataType != null)
             {
-                if (int.TryParse(value, out int index))
+                var cellType = cell.DataType.Value;
+
+                // SharedString: lookup in string table
+                if (cellType == CellValues.SharedString)
                 {
-                    value = sharedStringTable.ElementAt(index).InnerText;
+                    if (int.TryParse(rawValue, out int index) && sharedStringTable != null)
+                    {
+                        rawValue = sharedStringTable.ElementAt(index).InnerText;
+                    }
+                    return CellValueFromText(rawValue);
+                }
+
+                // Boolean: "1" = true, "0" = false
+                if (cellType == CellValues.Boolean)
+                {
+                    return SACellValue.FromBoolean(rawValue == "1");
+                }
+
+                // Explicit string types
+                if (cellType == CellValues.InlineString || cellType == CellValues.String)
+                {
+                    return CellValueFromText(rawValue);
+                }
+
+                // Error values (like #DIV/0!, #REF!)
+                if (cellType == CellValues.Error)
+                {
+                    return SACellValue.FromText($"#ERROR: {rawValue}");
+                }
+
+                // Explicit date type (rare, usually handled as number)
+                if (cellType == CellValues.Date)
+                {
+                    if (DateTime.TryParse(rawValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dateValue))
+                        return SACellValue.FromDateTime(dateValue);
+                    return CellValueFromText(rawValue);
                 }
             }
-            else if (cell.DataType != null && cell.DataType.Value == CellValues.Boolean)
+
+            // No DataType attribute = numeric or formula
+            // Try parse as number (most common for numeric cells)
+            if (double.TryParse(rawValue, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out double numericValue))
             {
-                value = value == "1" ? "TRUE" : "FALSE";
+                // Check if it's an integer
+                if (numericValue == Math.Floor(numericValue) && numericValue >= long.MinValue && numericValue <= long.MaxValue)
+                {
+                    return SACellValue.FromInteger((long)numericValue);
+                }
+                return SACellValue.FromNumber(numericValue);
             }
 
-            value = value ?? string.Empty;
+            // Fallback: treat as text
+            return CellValueFromText(rawValue);
+        }
+
+        /// <summary>
+        /// Create CellValue from text with string interning for memory efficiency.
+        /// </summary>
+        private SACellValue CellValueFromText(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return SACellValue.Empty;
 
             // Intern short strings to reduce memory duplication
-            // Only intern if pool hasn't exceeded max size to prevent unbounded growth
-            if (value.Length > 0 && value.Length <= MaxInternLength && _stringPool.Count < MaxPoolSize)
+            if (text.Length <= MaxInternLength && _stringPool.Count < MaxPoolSize)
             {
-                value = _stringPool.GetOrAdd(value, value);
+                text = _stringPool.GetOrAdd(text, text);
             }
 
-            return value;
+            return SACellValue.FromText(text);
         }
     }
 }

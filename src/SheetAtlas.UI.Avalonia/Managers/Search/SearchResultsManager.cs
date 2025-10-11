@@ -168,12 +168,12 @@ public class SearchResultsManager : ISearchResultsManager
 
                 // Search cells in sheet data
                 var sheet = fileViewModel.File.Sheets[sheetName];
-                for (int rowIndex = 0; rowIndex < sheet.Rows.Count; rowIndex++)
+                for (int rowIndex = 0; rowIndex < sheet.RowCount; rowIndex++)
                 {
-                    var row = sheet.Rows[rowIndex];
-                    for (int colIndex = 0; colIndex < row.ItemArray.Length; colIndex++)
+                    var row = sheet.GetRow(rowIndex);
+                    for (int colIndex = 0; colIndex < row.Length; colIndex++)
                     {
-                        var cellValue = row[colIndex]?.ToString();
+                        var cellValue = row[colIndex].EffectiveValue.ToString();
                         if (!string.IsNullOrEmpty(cellValue) &&
                             cellValue.Contains(query, StringComparison.OrdinalIgnoreCase))
                         {

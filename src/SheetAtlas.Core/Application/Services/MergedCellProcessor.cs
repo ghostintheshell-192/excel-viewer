@@ -1,6 +1,7 @@
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using SheetAtlas.Core.Application.Interfaces;
+using SheetAtlas.Core.Domain.ValueObjects;
 
 namespace SheetAtlas.Core.Application.Services
 {
@@ -15,9 +16,9 @@ namespace SheetAtlas.Core.Application.Services
             _cellValueReader = cellValueReader ?? throw new ArgumentNullException(nameof(cellValueReader));
         }
 
-        public Dictionary<string, string> ProcessMergedCells(WorksheetPart worksheetPart, SharedStringTable? sharedStringTable)
+        public Dictionary<string, SACellValue> ProcessMergedCells(WorksheetPart worksheetPart, SharedStringTable? sharedStringTable)
         {
-            var mergedCells = new Dictionary<string, string>();
+            var mergedCells = new Dictionary<string, SACellValue>();
             var cellsInSheet = worksheetPart.Worksheet.Descendants<Cell>();
 
             var mergeCellsElement = worksheetPart.Worksheet.Elements<MergeCells>().FirstOrDefault();
@@ -46,7 +47,7 @@ namespace SheetAtlas.Core.Application.Services
             return mergedCells;
         }
 
-        private void PopulateMergedRange(Dictionary<string, string> mergedCells, string startCellRef, string endCellRef, string value)
+        private void PopulateMergedRange(Dictionary<string, SACellValue> mergedCells, string startCellRef, string endCellRef, SACellValue value)
         {
             var startColIndex = _cellParser.GetColumnIndex(startCellRef);
             var endColIndex = _cellParser.GetColumnIndex(endCellRef);
