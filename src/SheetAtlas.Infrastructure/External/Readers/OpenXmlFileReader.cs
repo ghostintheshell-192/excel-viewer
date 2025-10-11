@@ -88,6 +88,15 @@ namespace SheetAtlas.Infrastructure.External.Readers
                             }
 
                             var sheetData = ProcessSheet(Path.GetFileNameWithoutExtension(filePath), sheetName, workbookPart, worksheetPart);
+
+                            // Skip empty sheets (no columns means no meaningful data)
+                            if (sheetData == null)
+                            {
+                                errors.Add(ExcelError.Warning(sheetName, "Sheet is empty (no columns), skipping"));
+                                _logger.LogWarning("Sheet {SheetName} is empty, skipping", sheetName);
+                                continue;
+                            }
+
                             sheets[sheetName] = sheetData;
                             _logger.LogDebug("Sheet {SheetName} read successfully", sheetName);
                         }
@@ -160,17 +169,18 @@ namespace SheetAtlas.Infrastructure.External.Readers
             return workbookPart.Workbook.Descendants<Sheet>();
         }
 
-        private SASheetData ProcessSheet(string fileName, string sheetName, WorkbookPart workbookPart, WorksheetPart worksheetPart)
+        private SASheetData? ProcessSheet(string fileName, string sheetName, WorkbookPart workbookPart, WorksheetPart worksheetPart)
         {
             var sharedStringTable = workbookPart.SharedStringTablePart?.SharedStringTable;
 
             var mergedCells = _mergedCellProcessor.ProcessMergedCells(worksheetPart, sharedStringTable);
             var headerColumns = ProcessHeaderRow(worksheetPart, sharedStringTable, mergedCells);
 
+            // If no headers found, return null - caller will handle as empty sheet
             if (!headerColumns.Any())
             {
                 _logger.LogWarning("Sheet {SheetName} has no header row", sheetName);
-                return new SASheetData(sheetName, Array.Empty<string>());
+                return null;
             }
 
             // Create SASheetData with column names

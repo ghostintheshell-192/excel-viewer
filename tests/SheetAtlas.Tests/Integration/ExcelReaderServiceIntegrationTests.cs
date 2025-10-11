@@ -178,7 +178,7 @@ namespace SheetAtlas.Tests.Integration
         #region Invalid Files Tests
 
         [Fact]
-        public async Task LoadFileAsync_EmptyFile_ReturnsSuccessWithEmptySheet()
+        public async Task LoadFileAsync_EmptyFile_ReturnsSuccessWithWarning()
         {
             // Arrange
             var filePath = GetTestFilePath("Invalid", "empty.xlsx");
@@ -188,12 +188,12 @@ namespace SheetAtlas.Tests.Integration
 
             // Assert
             result.Should().NotBeNull();
-            // An empty file with valid structure should load successfully
+            // Empty files load successfully but sheets with no columns are skipped
             result.Status.Should().Be(LoadStatus.Success);
-            result.Sheets.Should().ContainKey("Sheet1");
-
-            var sheet = result.Sheets["Sheet1"];
-            sheet.RowCount.Should().Be(0);
+            result.Sheets.Should().BeEmpty(); // No sheets because empty sheet is skipped
+            result.Errors.Should().Contain(e =>
+                e.Level == ErrorLevel.Warning &&
+                e.Message.Contains("empty"));
         }
 
         [Fact]
