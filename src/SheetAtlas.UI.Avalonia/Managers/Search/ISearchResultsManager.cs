@@ -21,6 +21,9 @@ public interface ISearchResultsManager
     // Method to set the files to search in
     void SetSearchableFiles(IReadOnlyCollection<IFileLoadResultViewModel> files);
 
+    // Cleanup method to remove results referencing a removed file
+    void RemoveResultsForFile(ExcelFile file);
+
     // Events for change notifications
     event EventHandler<EventArgs> ResultsChanged;
     event EventHandler<EventArgs> SuggestionsChanged;

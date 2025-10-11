@@ -3,7 +3,7 @@ using SheetAtlas.Core.Domain.ValueObjects;
 
 namespace SheetAtlas.UI.Avalonia.ViewModels;
 
-public interface IFileLoadResultViewModel
+public interface IFileLoadResultViewModel : IDisposable
 {
     string FilePath { get; }
     string FileName { get; }
@@ -12,7 +12,7 @@ public interface IFileLoadResultViewModel
     bool HasWarnings { get; }
     bool HasCriticalErrors { get; }
     IReadOnlyList<ExcelError> Errors { get; }
-    ExcelFile File { get; }
+    ExcelFile? File { get; }
 }
 
 public interface IExcelErrorViewModel

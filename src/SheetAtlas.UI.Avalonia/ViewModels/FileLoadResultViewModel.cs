@@ -3,23 +3,37 @@ using SheetAtlas.Core.Domain.ValueObjects;
 
 namespace SheetAtlas.UI.Avalonia.ViewModels;
 
-public class FileLoadResultViewModel : ViewModelBase, IFileLoadResultViewModel
+public class FileLoadResultViewModel : ViewModelBase, IFileLoadResultViewModel, IDisposable
 {
-    private readonly ExcelFile _file;
+    private ExcelFile? _file;
+    private bool _disposed = false;
 
-    public string FilePath => _file.FilePath;
-    public string FileName => _file.FileName;
-    public LoadStatus Status => _file.Status;
-    public ExcelFile File => _file;
-    public bool HasErrors => _file.HasErrors;
-    public bool HasWarnings => _file.HasWarnings;
-    public bool HasCriticalErrors => _file.HasCriticalErrors;
+    public string FilePath => _file?.FilePath ?? string.Empty;
+    public string FileName => _file?.FileName ?? string.Empty;
+    public LoadStatus Status => _file?.Status ?? LoadStatus.Failed;
+    public ExcelFile? File => _file;
+    public bool HasErrors => _file?.HasErrors ?? false;
+    public bool HasWarnings => _file?.HasWarnings ?? false;
+    public bool HasCriticalErrors => _file?.HasCriticalErrors ?? false;
 
-    public IReadOnlyList<ExcelError> Errors => _file.Errors;
+    public IReadOnlyList<ExcelError> Errors => _file?.Errors ?? Array.Empty<ExcelError>();
 
     public FileLoadResultViewModel(ExcelFile file)
     {
         _file = file ?? throw new ArgumentNullException(nameof(file));
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+
+        // Dispose the ExcelFile (which disposes DataTables)
+        _file?.Dispose();
+
+        // Null the reference to allow GC
+        _file = null;
+
+        _disposed = true;
     }
 }
 

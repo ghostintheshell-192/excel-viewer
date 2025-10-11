@@ -48,6 +48,27 @@ public class SearchResultsManager : ISearchResultsManager
         _searchableFiles = files ?? throw new ArgumentNullException(nameof(files));
     }
 
+    public void RemoveResultsForFile(ExcelFile file)
+    {
+        if (file == null) return;
+
+        // Remove all search results that reference this file
+        var removedCount = _results.RemoveAll(r => r.FileName == file.FileName);
+
+        if (removedCount > 0)
+        {
+            // Rebuild grouped results without the removed file's results
+            GroupSearchResults(_results);
+
+            // Notify UI of changes
+            ResultsChanged?.Invoke(this, EventArgs.Empty);
+            GroupedResultsUpdated?.Invoke(this, new GroupedResultsEventArgs(_groupedResults));
+
+            _logger.LogInformation("Removed {count} search results for file: {fileName}",
+                removedCount, file.FileName);
+        }
+    }
+
     public async Task PerformSearchAsync(string query, SearchOptions? options = null)
     {
         if (string.IsNullOrWhiteSpace(query))

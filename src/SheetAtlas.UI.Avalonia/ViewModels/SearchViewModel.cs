@@ -162,6 +162,11 @@ public class SearchViewModel : ViewModelBase
         _searchResultsManager.SetSearchableFiles(loadedFiles);
     }
 
+    public void RemoveResultsForFile(ExcelFile file)
+    {
+        _searchResultsManager.RemoveResultsForFile(file);
+    }
+
     private async Task PerformSearchAsync(string query)
     {
         // SearchResultsManager handles all error cases internally

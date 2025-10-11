@@ -86,7 +86,6 @@ public class MainWindowViewModel : ViewModelBase
     public IThemeManager ThemeManager { get; }
     public ICommand LoadFileCommand { get; }
     public ICommand ToggleThemeCommand { get; }
-    public ICommand ForceGCCommand { get; } // TEMPORARY: for memory leak testing
 
     // Delegated commands from SearchViewModel
     public ICommand ShowAllFilesCommand => SearchViewModel?.ShowAllFilesCommand ?? new RelayCommand(() => Task.CompletedTask);
@@ -117,17 +116,6 @@ public class MainWindowViewModel : ViewModelBase
         ToggleThemeCommand = new RelayCommand(() =>
         {
             ThemeManager.ToggleTheme();
-            return Task.CompletedTask;
-        });
-
-        // TEMPORARY: for memory leak testing
-        ForceGCCommand = new RelayCommand(() =>
-        {
-            _logger.LogInformation("Force GC requested by user");
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
-            _activityLog.LogInfo("Garbage collection forzata completata", "Memory");
             return Task.CompletedTask;
         });
 
@@ -268,16 +256,39 @@ public class MainWindowViewModel : ViewModelBase
             SelectedFile = null;
         }
 
-        // Remove search results that reference this file
+        // Remove search results that reference this file (TreeView history)
         TreeSearchResultsViewModel?.RemoveSearchResultsForFile(file.File);
+
+        // Remove current search results that reference this file (SearchViewModel)
+        SearchViewModel?.RemoveResultsForFile(file.File);
 
         // Remove row comparisons that reference this file
         _comparisonCoordinator.RemoveComparisonsForFile(file.File);
+
+        // Dispose ViewModel (which disposes ExcelFile and DataTables, then nulls the reference)
+        file.Dispose();
 
         // Finally, remove the file from the loaded files list
         _filesManager.RemoveFile(file);
 
         _logger.LogInformation("Cleaned all data for file: {FileName}", file.FileName);
+
+        // AGGRESSIVE CLEANUP: Force garbage collection after file removal
+        // REASON: DataTable objects (100-500 MB each) end up in Large Object Heap (LOH)
+        // ISSUE: .NET GC is lazy for Gen 2/LOH - can wait minutes before collection
+        // IMPACT: Without this, memory stays high even after Dispose() until GC decides to run
+        // TODO: When DataTable is replaced with lightweight structures, this can be removed
+        //       or changed to standard GC.Collect() without aggressive mode
+        Task.Run(() =>
+        {
+            // Enable LOH compaction for this collection cycle
+            System.Runtime.GCSettings.LargeObjectHeapCompactionMode = System.Runtime.GCLargeObjectHeapCompactionMode.CompactOnce;
+
+            // Force Gen 2 + LOH collection with compaction (blocking in background thread)
+            GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
+            GC.WaitForPendingFinalizers();
+            GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
+        });
     }
 
     private void OnRemoveNotificationRequested(IFileLoadResultViewModel? file) => _filesManager.RemoveFile(file);
