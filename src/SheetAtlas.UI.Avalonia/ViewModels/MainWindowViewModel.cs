@@ -169,6 +169,9 @@ public class MainWindowViewModel : ViewModelBase
                     if (!string.IsNullOrWhiteSpace(query) && results?.Any() == true)
                     {
                         TreeSearchResultsViewModel.AddSearchResults(query, results.ToList());
+
+                        // Switch to Search Results tab to show results
+                        SelectedTabIndex = 1;
                     }
                 }
             };
