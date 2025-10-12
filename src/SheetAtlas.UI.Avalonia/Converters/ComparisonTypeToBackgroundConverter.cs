@@ -27,35 +27,99 @@ namespace SheetAtlas.UI.Avalonia.Converters
 
         private static object GetBrushForComparisonResult(CellComparisonResult result)
         {
+            // All background colors are now theme-aware
+            bool isDarkMode = IsDarkMode();
+
             return result.Type switch
             {
-                ComparisonType.Match => GetResource("ComparisonMatchBackground"),
+                ComparisonType.Match => GetMatchBackground(isDarkMode),
                 ComparisonType.Different => CreateGradientBrush(result.Intensity),
-                ComparisonType.New => GetResource("ComparisonNewBackground"),
-                ComparisonType.Missing => GetResource("ComparisonMissingBackground"),
-                _ => GetResource("ComparisonMatchBackground")
+                ComparisonType.New => GetNewBackground(isDarkMode),
+                ComparisonType.Missing => GetMissingBackground(isDarkMode),
+                _ => GetMatchBackground(isDarkMode)
             };
+        }
+
+        private static SolidColorBrush GetMatchBackground(bool isDarkMode)
+        {
+            // Match: neutral background (same as main background)
+            return isDarkMode
+                ? new SolidColorBrush(Color.Parse("#0D1117"))  // Dark theme
+                : new SolidColorBrush(Color.Parse("#FFFFFF")); // Light theme
+        }
+
+        private static SolidColorBrush GetNewBackground(bool isDarkMode)
+        {
+            // New: subtle green tint
+            return isDarkMode
+                ? new SolidColorBrush(Color.Parse("#0F1A14"))  // Dark green tint
+                : new SolidColorBrush(Color.Parse("#F8FDF9")); // Light green tint
+        }
+
+        private static SolidColorBrush GetMissingBackground(bool isDarkMode)
+        {
+            // Missing: subtle red tint
+            return isDarkMode
+                ? new SolidColorBrush(Color.Parse("#1A1214"))  // Dark red tint
+                : new SolidColorBrush(Color.Parse("#FEF8F8")); // Light red tint
         }
 
 
         /// <summary>
         /// Creates a gradient brush from light pink to dark red based on intensity
+        /// Theme-aware: adapts lightness range for dark mode
         /// </summary>
         private static SolidColorBrush CreateGradientBrush(double intensity)
         {
             // Clamp intensity to valid range
             intensity = Math.Clamp(intensity, 0.0, 1.0);
 
+            // Detect if we're in dark mode by checking MainBackground lightness
+            bool isDarkMode = IsDarkMode();
+
             // HSL color model: H=340° (pink/red), S=70%, L=variable based on intensity
-            // intensity=0.0 → L=90% (light pink)
-            // intensity=1.0 → L=50% (dark red)
-            var lightness = 90 - (intensity * 40); // 90% to 50%
-            var saturation = 70 + (intensity * 20); // 70% to 90%
+            double lightness, saturation;
+
+            if (isDarkMode)
+            {
+                // Dark mode: darker range to maintain text readability
+                // intensity=0.0 → L=20% (very dark pink)
+                // intensity=1.0 → L=50% (medium red)
+                lightness = 20 + (intensity * 30); // 20% to 50%
+                saturation = 60 + (intensity * 20); // 60% to 80%
+            }
+            else
+            {
+                // Light mode: lighter range (original behavior)
+                // intensity=0.0 → L=90% (light pink)
+                // intensity=1.0 → L=50% (dark red)
+                lightness = 90 - (intensity * 40); // 90% to 50%
+                saturation = 70 + (intensity * 20); // 70% to 90%
+            }
 
             // Convert HSL to RGB
             var color = HslToRgb(340, saturation / 100.0, lightness / 100.0);
 
             return new SolidColorBrush(color);
+        }
+
+        /// <summary>
+        /// Detects if the current theme is dark mode by checking MainBackground lightness
+        /// </summary>
+        private static bool IsDarkMode()
+        {
+            if (Application.Current?.Resources.TryGetResource("MainBackground", null, out var resource) == true
+                && resource is SolidColorBrush brush)
+            {
+                var color = brush.Color;
+                // Calculate perceived lightness (simple approximation)
+                var lightness = (0.299 * color.R + 0.587 * color.G + 0.114 * color.B) / 255.0;
+                // If lightness < 0.5, we're in dark mode
+                return lightness < 0.5;
+            }
+
+            // Default to light mode if we can't determine
+            return false;
         }
 
         /// <summary>

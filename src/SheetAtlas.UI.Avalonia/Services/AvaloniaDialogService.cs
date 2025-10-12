@@ -45,23 +45,44 @@ public class AvaloniaDialogService : IDialogService
             var messageBox = new Window
             {
                 Title = title,
-                Width = 400,
-                Height = 200,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner
+                Width = 450,
+                Height = 240,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                CanResize = false
             };
+
+            // Get theme-aware colors from resources
+            var primaryText = Application.Current?.FindResource("PrimaryText") as IBrush ?? Brushes.Black;
+            var mainBackground = Application.Current?.FindResource("MainBackground") as IBrush ?? Brushes.White;
+
+            messageBox.Background = mainBackground;
 
             var stackPanel = new StackPanel
             {
-                Margin = new Thickness(20)
+                Margin = new Thickness(20),
+                Spacing = 15
             };
 
-            stackPanel.Children.Add(new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap });
+            var textBlock = new TextBlock
+            {
+                Text = message,
+                TextWrapping = TextWrapping.Wrap,
+                Foreground = primaryText,
+                VerticalAlignment = VerticalAlignment.Top,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                FontSize = 13
+            };
+
+            stackPanel.Children.Add(textBlock);
 
             var button = new Button
             {
                 Content = "OK",
                 HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(0, 20, 0, 0)
+                MinWidth = 80,
+                HorizontalContentAlignment = HorizontalAlignment.Center,
+                VerticalContentAlignment = VerticalAlignment.Center,
+                Padding = new Thickness(0, 6)
             };
 
             button.Click += (_, _) => messageBox.Close();

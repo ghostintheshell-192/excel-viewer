@@ -86,6 +86,9 @@ public class MainWindowViewModel : ViewModelBase
     public IThemeManager ThemeManager { get; }
     public ICommand LoadFileCommand { get; }
     public ICommand ToggleThemeCommand { get; }
+    public ICommand ShowSearchResultsCommand { get; }
+    public ICommand ShowAboutCommand { get; }
+    public ICommand ShowDocumentationCommand { get; }
 
     // Delegated commands from SearchViewModel
     public ICommand ShowAllFilesCommand => SearchViewModel?.ShowAllFilesCommand ?? new RelayCommand(() => Task.CompletedTask);
@@ -119,6 +122,15 @@ public class MainWindowViewModel : ViewModelBase
             return Task.CompletedTask;
         });
 
+        ShowSearchResultsCommand = new RelayCommand(() =>
+        {
+            SelectedTabIndex = 1; // Switch to Search Results tab
+            return Task.CompletedTask;
+        });
+
+        ShowAboutCommand = new RelayCommand(async () => await ShowAboutDialogAsync());
+        ShowDocumentationCommand = new RelayCommand(async () => await OpenDocumentationAsync());
+
         // Subscribe to file manager events
         _filesManager.FileLoaded += OnFileLoaded;
         _filesManager.FileRemoved += OnFileRemoved;
@@ -126,6 +138,7 @@ public class MainWindowViewModel : ViewModelBase
 
         // Subscribe to comparison coordinator events
         _comparisonCoordinator.SelectionChanged += OnComparisonSelectionChanged;
+        _comparisonCoordinator.ComparisonRemoved += OnComparisonRemoved;
         _comparisonCoordinator.PropertyChanged += OnComparisonCoordinatorPropertyChanged;
     }
 
@@ -136,6 +149,17 @@ public class MainWindowViewModel : ViewModelBase
         {
             OnPropertyChanged(nameof(SelectedComparison));
         }
+    }
+
+    private void OnComparisonRemoved(object? sender, ComparisonRemovedEventArgs e)
+    {
+        // Clear all selections in TreeSearchResultsViewModel
+        TreeSearchResultsViewModel?.ClearSelection();
+
+        // Switch back to Search Results tab
+        SelectedTabIndex = 1;
+
+        _logger.LogInformation("Comparison removed and selections cleared");
     }
 
     public void SetSearchViewModel(SearchViewModel searchViewModel)
@@ -157,6 +181,9 @@ public class MainWindowViewModel : ViewModelBase
                     if (!string.IsNullOrWhiteSpace(query) && results?.Any() == true)
                     {
                         TreeSearchResultsViewModel.AddSearchResults(query, results.ToList());
+
+                        // Switch to Search Results tab to show results
+                        SelectedTabIndex = 1;
                     }
                 }
             };
@@ -193,9 +220,11 @@ public class MainWindowViewModel : ViewModelBase
 
     private void OnComparisonSelectionChanged(object? sender, ComparisonSelectionChangedEventArgs e)
     {
-        // Switch to comparison tab when a comparison is selected
-        if (e.NewSelection != null)
+        // Switch to comparison tab ONLY when user manually selects a comparison
+        // Do NOT switch if we're just updating an existing comparison (e.g., after file removal)
+        if (e.NewSelection != null && e.OldSelection == null)
         {
+            // User selected a comparison for the first time (not replacing existing)
             SelectedTabIndex = 2; // Comparison tab
         }
     }
@@ -354,6 +383,53 @@ public class MainWindowViewModel : ViewModelBase
             // TODO: Navigate to sheet view or show sheet details
             // This could open a new window or change the current view
         }
+    }
+
+    private async Task ShowAboutDialogAsync()
+    {
+        var version = typeof(MainWindowViewModel).Assembly.GetName().Version?.ToString() ?? "1.0.0";
+
+        var message = $"SheetAtlas - Excel Cross Reference Viewer\n" +
+                     $"Version: {version}\n\n" +
+                     $"Cross-platform Excel file comparison and analysis tool.\n\n" +
+                     $"License: MIT\n" +
+                     $"GitHub: github.com/ghostintheshell-192/sheet-atlas\n\n" +
+                     $"© 2025 - Built with .NET 8 and Avalonia UI";
+
+        await _dialogService.ShowInformationAsync(message, "About");
+        _logger.LogInformation("Displayed About dialog");
+    }
+
+    private async Task OpenDocumentationAsync()
+    {
+        const string documentationUrl = "https://github.com/ghostintheshell-192/sheet-atlas/blob/main/README.md";
+
+        try
+        {
+            // Open URL in default browser (cross-platform)
+            var psi = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = documentationUrl,
+                UseShellExecute = true
+            };
+            System.Diagnostics.Process.Start(psi);
+
+            _activityLog.LogInfo("Documentazione aperta nel browser", "Help");
+            _logger.LogInformation("Opened documentation URL: {Url}", documentationUrl);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to open documentation URL");
+            _activityLog.LogError("Impossibile aprire la documentazione", ex, "Help");
+
+            await _dialogService.ShowErrorAsync(
+                $"Impossibile aprire il browser.\n\n" +
+                $"Puoi accedere alla documentazione manualmente:\n{documentationUrl}",
+                "Errore Apertura Browser"
+            );
+        }
+
+        await Task.CompletedTask;
     }
 }
 

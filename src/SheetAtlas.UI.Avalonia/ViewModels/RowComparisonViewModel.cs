@@ -3,6 +3,7 @@ using System.Windows.Input;
 using SheetAtlas.Core.Domain.Entities;
 using SheetAtlas.UI.Avalonia.Commands;
 using SheetAtlas.UI.Avalonia.Models;
+using SheetAtlas.UI.Avalonia.Managers;
 using Microsoft.Extensions.Logging;
 
 namespace SheetAtlas.UI.Avalonia.ViewModels
@@ -10,6 +11,7 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
     public class RowComparisonViewModel : ViewModelBase
     {
         private readonly ILogger<RowComparisonViewModel> _logger;
+        private readonly IThemeManager? _themeManager;
         private RowComparison? _comparison;
         private ObservableCollection<RowComparisonColumnViewModel> _columns = new();
 
@@ -39,21 +41,55 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
 
         public event EventHandler? CloseRequested;
 
-        public RowComparisonViewModel(ILogger<RowComparisonViewModel> logger)
+        public RowComparisonViewModel(ILogger<RowComparisonViewModel> logger, IThemeManager? themeManager = null)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _themeManager = themeManager;
 
             CloseCommand = new RelayCommand(() =>
             {
                 CloseRequested?.Invoke(this, EventArgs.Empty);
                 return Task.CompletedTask;
             });
+
+            // Subscribe to theme changes to refresh cell colors
+            if (_themeManager != null)
+            {
+                _themeManager.ThemeChanged += OnThemeChanged;
+            }
         }
 
-        public RowComparisonViewModel(RowComparison comparison, ILogger<RowComparisonViewModel> logger)
-            : this(logger)
+        public RowComparisonViewModel(RowComparison comparison, ILogger<RowComparisonViewModel> logger, IThemeManager? themeManager = null)
+            : this(logger, themeManager)
         {
             Comparison = comparison;
+        }
+
+        private void OnThemeChanged(object? sender, Theme newTheme)
+        {
+            // Force re-evaluation of all cell background bindings
+            RefreshCellColors();
+            _logger.LogInformation("Refreshed cell colors for theme: {Theme}", newTheme);
+        }
+
+        private void RefreshCellColors()
+        {
+            foreach (var column in Columns)
+            {
+                foreach (var cell in column.Cells)
+                {
+                    cell.RefreshColors();
+                }
+            }
+        }
+
+        ~RowComparisonViewModel()
+        {
+            // Unsubscribe from theme changes
+            if (_themeManager != null)
+            {
+                _themeManager.ThemeChanged -= OnThemeChanged;
+            }
         }
 
         private void RefreshColumns()
@@ -177,5 +213,13 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
             RowInfo = $"{sourceRow.FileName} - {sourceRow.SheetName} - R{sourceRow.RowIndex + 1}";
         }
 
+        /// <summary>
+        /// Forces re-evaluation of the ComparisonResult binding to update cell background colors
+        /// Called when theme changes to refresh colors without recreating the entire comparison
+        /// </summary>
+        public void RefreshColors()
+        {
+            OnPropertyChanged(nameof(ComparisonResult));
+        }
     }
 }
