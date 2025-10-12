@@ -126,6 +126,7 @@ public class MainWindowViewModel : ViewModelBase
 
         // Subscribe to comparison coordinator events
         _comparisonCoordinator.SelectionChanged += OnComparisonSelectionChanged;
+        _comparisonCoordinator.ComparisonRemoved += OnComparisonRemoved;
         _comparisonCoordinator.PropertyChanged += OnComparisonCoordinatorPropertyChanged;
     }
 
@@ -136,6 +137,17 @@ public class MainWindowViewModel : ViewModelBase
         {
             OnPropertyChanged(nameof(SelectedComparison));
         }
+    }
+
+    private void OnComparisonRemoved(object? sender, ComparisonRemovedEventArgs e)
+    {
+        // Clear all selections in TreeSearchResultsViewModel
+        TreeSearchResultsViewModel?.ClearSelection();
+
+        // Switch back to Search Results tab
+        SelectedTabIndex = 1;
+
+        _logger.LogInformation("Comparison removed and selections cleared");
     }
 
     public void SetSearchViewModel(SearchViewModel searchViewModel)

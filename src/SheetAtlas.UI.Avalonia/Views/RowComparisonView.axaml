@@ -19,7 +19,8 @@
 
     <Grid>
         <!-- Comparison Content with Header -->
-        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                     IsVisible="{Binding RowCount}">
             <Grid Grid.IsSharedSizeScope="True">
                 <Grid.ColumnDefinitions>
                     <!-- Row Info Column -->
