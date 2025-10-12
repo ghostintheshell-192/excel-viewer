@@ -38,7 +38,7 @@ jobs:
         run: dotnet restore
 
       - name: Build and publish
-        run: dotnet publish src/ExcelViewer.UI.Avalonia/ExcelViewer.UI.Avalonia.csproj --configuration Release --runtime ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=false -p:PublishTrimmed=false --output ./publish/${{ matrix.rid }}
+        run: dotnet publish src/SheetAtlas.UI.Avalonia/SheetAtlas.UI.Avalonia.csproj --configuration Release --runtime ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=false -p:PublishTrimmed=false --output ./publish/${{ matrix.rid }}
 
       - name: Package Windows
         if: matrix.os == 'windows-latest'
