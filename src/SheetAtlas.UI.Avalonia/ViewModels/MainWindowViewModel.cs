@@ -193,9 +193,11 @@ public class MainWindowViewModel : ViewModelBase
 
     private void OnComparisonSelectionChanged(object? sender, ComparisonSelectionChangedEventArgs e)
     {
-        // Switch to comparison tab when a comparison is selected
-        if (e.NewSelection != null)
+        // Switch to comparison tab ONLY when user manually selects a comparison
+        // Do NOT switch if we're just updating an existing comparison (e.g., after file removal)
+        if (e.NewSelection != null && e.OldSelection == null)
         {
+            // User selected a comparison for the first time (not replacing existing)
             SelectedTabIndex = 2; // Comparison tab
         }
     }

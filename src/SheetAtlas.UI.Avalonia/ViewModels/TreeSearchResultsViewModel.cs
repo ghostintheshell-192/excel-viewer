@@ -52,25 +52,85 @@ public class TreeSearchResultsViewModel : ViewModelBase
         if (string.IsNullOrWhiteSpace(query) || !results.Any())
             return;
 
-        // Remove existing search with same query
+        // Check if we already have this search in history
         var existing = SearchHistory.FirstOrDefault(s => s.Query.Equals(query, StringComparison.OrdinalIgnoreCase));
+
+        // Build selection state and expansion state maps from existing item BEFORE removing it
+        var selectionStateMap = new Dictionary<SearchResult, bool>();
+        var fileExpansionMap = new Dictionary<string, bool>();
+        var sheetExpansionMap = new Dictionary<string, bool>();
+        bool wasSearchExpanded = true; // Default to expanded for new searches
+
         if (existing != null)
         {
+            wasSearchExpanded = existing.IsExpanded;
+            foreach (var fileGroup in existing.FileGroups)
+            {
+                // Save file expansion state
+                fileExpansionMap[fileGroup.FileName] = fileGroup.IsExpanded;
+
+                foreach (var sheetGroup in fileGroup.SheetGroups)
+                {
+                    // Save sheet expansion state (use fileName_sheetName as key for uniqueness)
+                    var sheetKey = $"{fileGroup.FileName}_{sheetGroup.SheetName}";
+                    sheetExpansionMap[sheetKey] = sheetGroup.IsExpanded;
+
+                    foreach (var item in sheetGroup.Results)
+                    {
+                        selectionStateMap[item.Result] = item.IsSelected;
+                    }
+                }
+            }
             SearchHistory.Remove(existing);
         }
 
         // Create new search history item
         var searchItem = new SearchHistoryItem(query, results);
 
-        // Setup selection change events for the search item itself (to update global counters)
-        searchItem.SelectionChanged += (s, e) => NotifySelectionChanged();
+        // Restore expansion state from previous version
+        searchItem.IsExpanded = wasSearchExpanded;
 
-        // Setup selection change events for individual sheet groups (existing logic)
+        // Setup selection change events BEFORE restoring selection state
+        searchItem.SelectionChanged += (s, e) => NotifySelectionChanged();
         foreach (var fileGroup in searchItem.FileGroups)
         {
             foreach (var sheetGroup in fileGroup.SheetGroups)
             {
                 sheetGroup.SetupSelectionEvents(NotifySelectionChanged);
+            }
+        }
+
+        // Restore expansion and selection state from previous version
+        bool hasRestoredSelections = false;
+        if (selectionStateMap.Count > 0 || fileExpansionMap.Count > 0 || sheetExpansionMap.Count > 0)
+        {
+            foreach (var fileGroup in searchItem.FileGroups)
+            {
+                // Restore file expansion state
+                if (fileExpansionMap.TryGetValue(fileGroup.FileName, out var fileExpanded))
+                {
+                    fileGroup.IsExpanded = fileExpanded;
+                }
+
+                foreach (var sheetGroup in fileGroup.SheetGroups)
+                {
+                    // Restore sheet expansion state
+                    var sheetKey = $"{fileGroup.FileName}_{sheetGroup.SheetName}";
+                    if (sheetExpansionMap.TryGetValue(sheetKey, out var sheetExpanded))
+                    {
+                        sheetGroup.IsExpanded = sheetExpanded;
+                    }
+
+                    // Restore selection state
+                    foreach (var item in sheetGroup.Results)
+                    {
+                        if (selectionStateMap.TryGetValue(item.Result, out var wasSelected) && wasSelected)
+                        {
+                            item.IsSelected = true;
+                            hasRestoredSelections = true;
+                        }
+                    }
+                }
             }
         }
 
@@ -81,6 +141,12 @@ public class TreeSearchResultsViewModel : ViewModelBase
         while (SearchHistory.Count > 5)
         {
             SearchHistory.RemoveAt(SearchHistory.Count - 1);
+        }
+
+        // If we restored selections, notify the UI to update counters and button states
+        if (hasRestoredSelections)
+        {
+            NotifySelectionChanged();
         }
 
         _logger.LogInformation("Added search '{Query}' with {ResultCount} results to history", query, results.Count);
@@ -97,15 +163,42 @@ public class TreeSearchResultsViewModel : ViewModelBase
         if (file == null)
             return;
 
-        // Remove all search history items that reference this file
-        var itemsToRemove = SearchHistory
-            .Where(item => item.FileGroups.Any(fg => fg.File == file))
-            .ToList();
+        // Strategy: Modify existing SearchHistoryItems in place by removing FileResultGroups
+        // This preserves UI bindings and selection state for items that remain
 
-        foreach (var item in itemsToRemove)
+        var searchItemsToRemove = new List<SearchHistoryItem>();
+
+        foreach (var searchItem in SearchHistory.ToList())
+        {
+            // Find file groups that reference the removed file
+            var fileGroupsToRemove = searchItem.FileGroups
+                .Where(fg => fg.File == file)
+                .ToList();
+
+            if (!fileGroupsToRemove.Any())
+                continue;
+
+            // Remove those file groups from the search item (modifies in place)
+            foreach (var fileGroup in fileGroupsToRemove)
+            {
+                searchItem.FileGroups.Remove(fileGroup);
+            }
+
+            // If search item has no more file groups, mark it for complete removal
+            if (searchItem.FileGroups.Count == 0)
+            {
+                searchItemsToRemove.Add(searchItem);
+            }
+        }
+
+        // Remove empty search items from history
+        foreach (var item in searchItemsToRemove)
         {
             SearchHistory.Remove(item);
         }
+
+        // Notify UI that selection state may have changed (counters, button enable state)
+        NotifySelectionChanged();
 
         _logger.LogInformation("Removed search results for file: {FilePath}", file.FilePath);
     }
