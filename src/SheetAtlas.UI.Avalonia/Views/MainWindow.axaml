@@ -104,28 +104,30 @@
                          InputGesture="Ctrl+O"/>
                 <Separator/>
                 <MenuItem Header="Recent Files" IsEnabled="False"/>
-                <Separator/>
-                <MenuItem Header="E_xit"
-                         InputGesture="Alt+F4"/>
             </MenuItem>
 
             <!-- View Menu -->
             <MenuItem Header="_View">
-                <MenuItem Header="Show _Status Bar"/>
-                <MenuItem Header="Show _Search Panel"/>
+                <MenuItem Header="Show _Status Bar" IsEnabled="False"/>
+                <MenuItem Header="Show Search _Results"
+                         Command="{Binding ShowSearchResultsCommand}"
+                         InputGesture="Ctrl+R"/>
             </MenuItem>
 
             <!-- Tools Menu -->
             <MenuItem Header="_Tools">
                 <MenuItem Header="_Export Results" IsEnabled="False"/>
                 <Separator/>
-                <MenuItem Header="_Settings"/>
+                <MenuItem Header="_Settings" IsEnabled="False"/>
             </MenuItem>
 
             <!-- Help Menu -->
             <MenuItem Header="_Help">
-                <MenuItem Header="_About SheetAtlas"/>
-                <MenuItem Header="_Documentation"/>
+                <MenuItem Header="_About SheetAtlas"
+                         Command="{Binding ShowAboutCommand}"/>
+                <MenuItem Header="_Documentation"
+                         Command="{Binding ShowDocumentationCommand}"
+                         InputGesture="F1"/>
             </MenuItem>
 
             <!-- Temporary theme toggle (will move to Settings) -->
