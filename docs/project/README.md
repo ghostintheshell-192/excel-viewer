@@ -1,26 +1,26 @@
-# ExcelViewer - Documentation Hub
+# SheetAtlas - Documentation Hub
 
 ## 📁 **Documentation Overview**
 
-Complete documentation for ExcelViewer, a cross-platform desktop application for Excel file comparison built with Avalonia UI.
+Complete documentation for SheetAtlas, a cross-platform desktop application for Excel file comparison built with Avalonia UI.
 
 ## 🚀 **Quick Start**
 
 ### **For Users**
 1. **Download** the latest release
 2. **Install** .NET 8 Runtime if not present
-3. **Run** `ExcelViewer` executable
+3. **Run** `SheetAtlas` executable
 4. **Load** Excel files (.xlsx, .xls) to compare
 
 ### **For Developers**
 ```bash
 # Clone and setup
 git clone <repository-url>
-cd excel-viewer
+cd sheet-atlas
 dotnet restore && dotnet build
 
 # Run the application
-dotnet run --project src/ExcelViewer.UI.Avalonia/ExcelViewer.UI.Avalonia.csproj
+dotnet run --project src/SheetAtlas.UI.Avalonia/SheetAtlas.UI.Avalonia.csproj
 
 # Run tests
 dotnet test
@@ -51,21 +51,21 @@ dotnet test
 ## 📋 **Project Structure**
 
 ```
-ExcelViewer/
+SheetAtlas/
 ├── src/
-│   ├── ExcelViewer.Core/                    # Core business logic (Clean Architecture)
+│   ├── SheetAtlas.Core/                    # Core business logic (Clean Architecture)
 │   │   ├── Application/                     # Application services & DTOs
 │   │   ├── Domain/                          # Domain entities & value objects
 │   │   └── Shared/                          # Shared utilities & extensions
-│   ├── ExcelViewer.Infrastructure/          # Infrastructure layer (separated)
+│   ├── SheetAtlas.Infrastructure/          # Infrastructure layer (separated)
 │   │   └── External/                        # External services (Excel file processing)
-│   ├── ExcelViewer.UI.Avalonia/             # Avalonia UI layer (MVVM)
+│   ├── SheetAtlas.UI.Avalonia/             # Avalonia UI layer (MVVM)
 │   │   ├── ViewModels/                      # MVVM ViewModels
 │   │   ├── Views/                           # XAML Views
 │   │   ├── Services/                        # UI-specific services
 │   │   └── Converters/                      # XAML converters
 ├── tests/
-│   └── ExcelViewer.Tests/                   # Unit tests
+│   └── SheetAtlas.Tests/                   # Unit tests
 ├── docs/                                    # Documentation
 ├── assets/                                  # Images, icons, resources
 ├── build/                                   # Build scripts
@@ -130,6 +130,6 @@ ExcelViewer/
 
 ---
 
-*This documentation hub provides complete guidance for ExcelViewer development and usage. For development standards and conventions, see [CLAUDE.md](../CLAUDE.md).*
+*This documentation hub provides complete guidance for SheetAtlas development and usage. For development standards and conventions, see [CLAUDE.md](../CLAUDE.md).*
 
 **Last Updated**: September 2025 | **Version**: 2.0

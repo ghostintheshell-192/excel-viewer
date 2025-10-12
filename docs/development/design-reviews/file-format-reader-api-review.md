@@ -1,7 +1,7 @@
 # API Design Review: IFileFormatReader Interface
 **Date**: 2025-10-07
 **Reviewer**: Claude Code (API Design Agent)
-**Project**: ExcelViewer - Multi-Format File Reader Architecture
+**Project**: SheetAtlas - Multi-Format File Reader Architecture
 **Status**: APPROVED WITH MODIFICATIONS
 
 ---
@@ -21,7 +21,7 @@ The proposed `IFileFormatReader` interface with Strategy Pattern shows solid arc
 ### Current Proposed Interface
 
 ```csharp
-namespace ExcelViewer.Core.Application.Interfaces
+namespace SheetAtlas.Core.Application.Interfaces
 {
     public interface IFileFormatReader
     {
@@ -696,7 +696,7 @@ var readers = Assembly.GetExecutingAssembly()
 ## 6. Recommended Interface (Final Version)
 
 ```csharp
-namespace ExcelViewer.Core.Application.Interfaces
+namespace SheetAtlas.Core.Application.Interfaces
 {
     /// <summary>
     /// Represents a reader capable of loading specific Excel file formats
@@ -832,7 +832,7 @@ public class ExcelReaderService : IExcelReaderService
 ### Recommended Orchestrator Implementation
 
 ```csharp
-namespace ExcelViewer.Infrastructure.External
+namespace SheetAtlas.Infrastructure.External
 {
     public class ExcelReaderService : IExcelReaderService
     {
@@ -929,16 +929,16 @@ namespace ExcelViewer.Infrastructure.External
 ### Phase 1: Interface Definition (Week 1)
 
 **Tasks**:
-1. Create `IFileFormatReader` interface in `ExcelViewer.Core/Application/Interfaces/`
+1. Create `IFileFormatReader` interface in `SheetAtlas.Core/Application/Interfaces/`
 2. Add XML documentation with error handling contract
 3. Create `IStreamableFileReader` and `IConfigurableFileReader` extensions
 4. Define `IReaderOptions` and `CsvReaderOptions` in Core layer
 5. Update unit tests for interface contracts
 
 **Deliverables**:
-- `/src/ExcelViewer.Core/Application/Interfaces/IFileFormatReader.cs`
-- `/src/ExcelViewer.Core/Application/Interfaces/IReaderOptions.cs`
-- `/tests/ExcelViewer.Tests/Interfaces/IFileFormatReaderContractTests.cs`
+- `/src/SheetAtlas.Core/Application/Interfaces/IFileFormatReader.cs`
+- `/src/SheetAtlas.Core/Application/Interfaces/IReaderOptions.cs`
+- `/tests/SheetAtlas.Tests/Interfaces/IFileFormatReaderContractTests.cs`
 
 ---
 
@@ -1680,7 +1680,7 @@ public async Task LoadXlsxFile_10MB()
 ### A.1 Recommended Interface (Final)
 
 ```csharp
-namespace ExcelViewer.Core.Application.Interfaces
+namespace SheetAtlas.Core.Application.Interfaces
 {
     /// <summary>
     /// Represents a reader capable of loading specific Excel file formats
@@ -1731,7 +1731,7 @@ namespace ExcelViewer.Core.Application.Interfaces
 ### A.2 CSV Configuration Options
 
 ```csharp
-namespace ExcelViewer.Core.Application.DTOs
+namespace SheetAtlas.Core.Application.DTOs
 {
     public class CsvReaderOptions : IReaderOptions
     {

@@ -1,17 +1,17 @@
-# ExcelViewer
+# SheetAtlas
 
-A powerful cross-platform desktop application for viewing, searching, and comparing Excel files. Built with .NET 8 and Avalonia UI for native performance on Windows, Linux, and macOS.
+A powerful cross-platform desktop application for searching across multiple Excel files and comparing rows between them. Built with .NET 8 and Avalonia UI for native performance on Windows, Linux, and macOS.
 
-🌐 **[Visit the official website](https://ghostintheshell-192.github.io/excel-viewer/)** | 📥 **[Download Latest Release](https://github.com/ghostintheshell-192/excel-viewer/releases/latest)**
+🌐 **[Visit the official website](https://ghostintheshell-192.github.io/sheet-atlas/)** | 📥 **[Download Latest Release](https://github.com/ghostintheshell-192/sheet-atlas/releases/latest)**
 
 ## Features
 
 ### **Excel File Support**
 
 - Load multiple Excel files (.xlsx, .xls, .csv)
-- View all sheets and data in a clean interface
+- Extract data from all sheets for searching
 - Handle errors gracefully with detailed error reporting
-- Support for merged cells and complex layouts
+- Support for merged cells and complex Excel structures
 
 ### **Advanced Search**
 
@@ -25,7 +25,6 @@ A powerful cross-platform desktop application for viewing, searching, and compar
 - Compare rows from different Excel files
 - Intelligent column header mapping
 - Visual highlighting of differences
-- Export comparison results
 
 ### **User Experience**
 
@@ -52,11 +51,11 @@ A powerful cross-platform desktop application for viewing, searching, and compar
 
 ### Download Pre-built Binaries
 
-Visit the **[Releases page](https://github.com/ghostintheshell-192/excel-viewer/releases/latest)** to download the latest version for your platform:
+Visit the **[Releases page](https://github.com/ghostintheshell-192/sheet-atlas/releases/latest)** to download the latest version for your platform:
 
-- **Windows**: `excel-viewer-windows-x64.zip`
-- **Linux**: `excel-viewer-linux-x64.tar.gz`
-- **macOS**: `excel-viewer-macos-x64.tar.gz`
+- **Windows**: `SheetAtlas-Setup-1.1.0-win-x64.exe` (Installer)
+- **Linux**: `SheetAtlas-linux-x64.tar.gz`
+- **macOS**: `SheetAtlas-macos-x64.tar.gz`
 
 Extract the archive and run the executable. No installation required - all dependencies are included.
 
@@ -64,14 +63,14 @@ Extract the archive and run the executable. No installation required - all depen
 
 ```bash
 # Clone the repository
-git clone https://github.com/ghostintheshell-192/excel-viewer.git
-cd excel-viewer
+git clone https://github.com/ghostintheshell-192/sheet-atlas.git
+cd sheet-atlas
 
 # Build the application
 dotnet build --configuration Release
 
 # Run the application
-dotnet run --project src/ExcelViewer.UI.Avalonia
+dotnet run --project src/SheetAtlas.UI.Avalonia
 ```
 
 ## Quick Start
@@ -87,7 +86,7 @@ dotnet run --project src/ExcelViewer.UI.Avalonia
 1. Enter search terms in the search box
 2. Choose search options (case-sensitive, regex, exact match)
 3. View results organized by file → sheet → cell
-4. Click any result to navigate to that location
+4. Click any result to highlight it in the results tree
 
 ### Comparing Rows
 
@@ -104,7 +103,7 @@ dotnet run --project src/ExcelViewer.UI.Avalonia
 1. Load multiple Excel files containing sales data
 2. Search for "Q4 2024" across all files
 3. Compare quarterly results between different regions
-4. Export comparison for reporting
+4. Identify differences with visual highlighting
 ```
 
 ### Data Analysis Workflow
@@ -113,12 +112,12 @@ dotnet run --project src/ExcelViewer.UI.Avalonia
 1. Load budget files from different departments
 2. Search for specific cost categories
 3. Create row comparisons to identify discrepancies
-4. Generate variance reports
+4. Review differences in the comparison view
 ```
 
 ## Architecture
 
-ExcelViewer follows Clean Architecture principles:
+SheetAtlas follows Clean Architecture principles:
 
 - **Core Layer**: Business logic, domain entities, and interfaces
 - **Infrastructure Layer**: Excel file processing using OpenXML
@@ -152,13 +151,13 @@ dotnet publish --configuration Release --self-contained
 ### Project Structure
 
 ```text
-ExcelViewer/
+SheetAtlas/
 ├── src/
-│   ├── ExcelViewer.Core/           # Business logic
-│   ├── ExcelViewer.Infrastructure/ # File processing
-│   └── ExcelViewer.UI.Avalonia/   # User interface
+│   ├── SheetAtlas.Core/           # Business logic
+│   ├── SheetAtlas.Infrastructure/ # File processing
+│   └── SheetAtlas.UI.Avalonia/   # User interface
 ├── tests/
-│   └── ExcelViewer.Tests/         # Unit and integration tests
+│   └── SheetAtlas.Tests/         # Unit and integration tests
 ├── docs/                          # Documentation
 └── build/                         # Build scripts
 ```
@@ -186,8 +185,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### Getting Help
 
 - Check the [Documentation](docs/)
-- Report bugs via [Issues](https://github.com/ghostintheshell-192/excel-viewer/issues)
-- Ask questions in [Discussions](https://github.com/ghostintheshell-192/excel-viewer/discussions)
+- Report bugs via [Issues](https://github.com/ghostintheshell-192/sheet-atlas/issues)
+- Ask questions in [Discussions](https://github.com/ghostintheshell-192/sheet-atlas/discussions)
 - View release notes in [CHANGELOG.md](CHANGELOG.md)
 
 ## Roadmap
@@ -195,7 +194,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### Version 1.0.0 (Released)
 
 - ✅ Support for .xlsx, .xls, .csv files
-- ✅ Multi-file loading and comparison
+- ✅ Multi-file loading and cross-file search
 - ✅ Advanced search with regex support
 - ✅ Row comparison with visual highlighting
 - ✅ Cross-platform support (Windows, Linux, macOS)
@@ -203,6 +202,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### Upcoming Features
 
 - [ ] Export search results to Excel
+- [ ] Export comparison results
 - [ ] Advanced filtering and sorting
 - [ ] Chart and graph visualization
 - [ ] Batch processing operations
@@ -219,4 +219,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Made with ❤️ using .NET 8 and Avalonia UI**
 
-*ExcelViewer is designed for professionals who need powerful Excel analysis tools with complete data privacy and offline processing.*
+*SheetAtlas is designed for professionals who need powerful Excel analysis tools with complete data privacy and offline processing.*

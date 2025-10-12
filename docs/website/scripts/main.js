@@ -1,5 +1,5 @@
 /* =============================================
-   ExcelViewer Website JavaScript
+   SheetAtlas Website JavaScript
    Smooth interactions and enhanced UX
    ============================================= */
 
@@ -18,6 +18,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Enhanced download tracking
     initDownloadTracking();
+
+    // Mobile hamburger menu
+    initMobileMenu();
 });
 
 // Smooth scrolling for internal links
@@ -215,26 +218,38 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-// Mobile menu toggle (if needed in future)
+// Mobile menu toggle
 function initMobileMenu() {
-    const menuToggle = document.querySelector('.menu-toggle');
+    const menuToggle = document.querySelector('.mobile-menu-toggle');
     const navLinks = document.querySelector('.nav-links');
 
     if (!menuToggle || !navLinks) return;
 
-    menuToggle.addEventListener('click', function() {
-        navLinks.classList.toggle('mobile-open');
+    // Toggle menu on button click
+    menuToggle.addEventListener('click', function(e) {
+        e.stopPropagation();
+        navLinks.classList.toggle('active');
         this.classList.toggle('active');
 
         // Update aria-expanded
-        const isExpanded = navLinks.classList.contains('mobile-open');
+        const isExpanded = navLinks.classList.contains('active');
         this.setAttribute('aria-expanded', isExpanded);
+    });
+
+    // Close menu when clicking on a link
+    const navLinksItems = navLinks.querySelectorAll('a');
+    navLinksItems.forEach(link => {
+        link.addEventListener('click', function() {
+            navLinks.classList.remove('active');
+            menuToggle.classList.remove('active');
+            menuToggle.setAttribute('aria-expanded', 'false');
+        });
     });
 
     // Close menu when clicking outside
     document.addEventListener('click', function(e) {
         if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
-            navLinks.classList.remove('mobile-open');
+            navLinks.classList.remove('active');
             menuToggle.classList.remove('active');
             menuToggle.setAttribute('aria-expanded', 'false');
         }

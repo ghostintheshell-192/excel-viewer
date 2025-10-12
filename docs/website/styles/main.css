@@ -1,5 +1,5 @@
 /* =============================================
-   ExcelViewer Website Styles
+   SheetAtlas Website Styles
    Modern, professional, and responsive design
    ============================================= */
 
@@ -249,6 +249,41 @@ a:hover {
 .github-link:hover {
     background-color: var(--gray-200);
     transform: translateY(-1px);
+}
+
+/* Mobile Menu Toggle */
+.mobile-menu-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 28px;
+    height: 24px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 1001;
+}
+
+.hamburger-line {
+    width: 100%;
+    height: 3px;
+    background-color: var(--text-primary);
+    border-radius: 2px;
+    transition: all var(--transition-medium);
+}
+
+/* Hamburger animation when menu is open */
+.mobile-menu-toggle.active .hamburger-line:nth-child(1) {
+    transform: translateY(8px) rotate(45deg);
+}
+
+.mobile-menu-toggle.active .hamburger-line:nth-child(2) {
+    opacity: 0;
+}
+
+.mobile-menu-toggle.active .hamburger-line:nth-child(3) {
+    transform: translateY(-8px) rotate(-45deg);
 }
 
 /* Hero Section */
@@ -642,12 +677,54 @@ a:hover {
     }
 
     .navbar .container {
-        flex-direction: column;
-        gap: var(--space-lg);
+        flex-direction: row;
+        justify-content: space-between;
     }
 
+    /* Show hamburger button on mobile */
+    .mobile-menu-toggle {
+        display: flex;
+    }
+
+    /* Hide nav links by default on mobile */
     .nav-links {
+        position: fixed;
+        top: 68px;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        background-color: var(--bg-primary);
+        border-bottom: 1px solid var(--gray-200);
+        box-shadow: var(--shadow-lg);
+        padding: var(--space-lg);
         gap: var(--space-lg);
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        transition: all var(--transition-medium);
+    }
+
+    /* Show nav links when menu is active */
+    .nav-links.active {
+        max-height: 400px;
+        opacity: 1;
+        padding: var(--space-xl) var(--space-lg);
+    }
+
+    /* Style links for mobile */
+    .nav-links a {
+        text-align: center;
+        padding: var(--space-sm);
+        border-radius: var(--radius-md);
+        transition: background-color var(--transition-fast);
+    }
+
+    .nav-links a:hover {
+        background-color: var(--gray-100);
+    }
+
+    .github-link {
+        justify-content: center;
     }
 
     .hero {
@@ -769,6 +846,18 @@ a:hover {
     border-color: var(--primary-color);
     transform: translateY(-8px);
     box-shadow: 0 20px 40px -10px rgba(30, 58, 95, 0.3);
+}
+
+.download-btn.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: var(--gray-100);
+}
+
+.download-btn.disabled:hover {
+    transform: none;
+    border-color: var(--gray-200);
+    box-shadow: var(--shadow-md);
 }
 
 .download-info {

@@ -1,12 +1,12 @@
-# ExcelViewer - Project Overview
+# SheetAtlas - Project Overview
 
 ## What It Does
 
-ExcelViewer is a desktop application for comparing and analyzing Excel files. It's built with .NET 8 and Avalonia UI to work on Windows, Linux, and macOS. The application processes everything locally—no cloud uploads, no external dependencies.
+SheetAtlas is a desktop application for comparing and analyzing Excel files. It's built with .NET 8 and Avalonia UI to work on Windows, Linux, and macOS. The application processes everything locally—no cloud uploads, no external dependencies.
 
 ## Why It Exists
 
-Many professionals in finance, healthcare, and government work with sensitive data that cannot be sent to online services. Existing Excel comparison tools are either too basic, cloud-based, or expensive enterprise solutions. ExcelViewer fills the gap by providing professional-grade comparison features while keeping all data processing on your machine.
+Many professionals in finance, healthcare, and government work with sensitive data that cannot be sent to online services. Existing Excel comparison tools are either too basic, cloud-based, or expensive enterprise solutions. SheetAtlas fills the gap by providing professional-grade comparison features while keeping all data processing on your machine.
 
 ## Target Users
 

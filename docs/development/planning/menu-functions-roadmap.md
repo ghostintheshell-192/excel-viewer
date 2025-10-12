@@ -1,8 +1,8 @@
-# Menu Functions Roadmap - ExcelViewer
+# Menu Functions Roadmap - SheetAtlas
 
 ## 📋 Overview
 
-Questo documento pianifica l'implementazione delle funzioni menu per ExcelViewer, organizzando le voci per priorità e dettagli implementativi.
+Questo documento pianifica l'implementazione delle funzioni menu per SheetAtlas, organizzando le voci per priorità e dettagli implementativi.
 
 ## 🎯 UI Cleanup Completato (Branch: feature/ui-improvements)
 
@@ -30,7 +30,7 @@ Tools
 └── Settings (placeholder)
 
 Help
-├── About ExcelViewer (placeholder)
+├── About SheetAtlas (placeholder)
 └── Documentation (placeholder)
 
 🎨 Theme (TEMPORANEO)

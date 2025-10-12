@@ -1,4 +1,4 @@
-# ExcelViewer - Technical Specifications
+# SheetAtlas - Technical Specifications
 
 ## Architecture Overview
 
@@ -31,21 +31,21 @@
 
 ### Project Structure
 ```
-ExcelViewer/
+SheetAtlas/
 ├── src/
-│   ├── ExcelViewer.Core/           # Business logic layer
+│   ├── SheetAtlas.Core/           # Business logic layer
 │   │   ├── Models/                 # Domain entities
 │   │   ├── Services/              # Business services
 │   │   └── Interfaces/            # Abstractions
 │   │
-│   ├── ExcelViewer.UI.Avalonia/   # Presentation layer
+│   ├── SheetAtlas.UI.Avalonia/   # Presentation layer
 │   │   ├── Views/                 # XAML views
 │   │   ├── ViewModels/            # View models
 │   │   ├── Services/              # UI services
 │   │   ├── Converters/            # Value converters
 │   │   └── Controls/              # Custom controls
 │   │
-│   └── ExcelViewer.Tests/          # Test projects
+│   └── SheetAtlas.Tests/          # Test projects
 │       ├── Core.Tests/            # Core layer tests
 │       └── UI.Tests/              # UI layer tests
 │
@@ -233,7 +233,7 @@ dotnet publish -r osx-x64 --configuration Release
   "Logging": {
     "LogLevel": {
       "Default": "Information",
-      "ExcelViewer": "Debug"
+      "SheetAtlas": "Debug"
     }
   },
   "Comparison": {

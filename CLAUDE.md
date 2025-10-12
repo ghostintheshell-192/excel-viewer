@@ -1,8 +1,8 @@
-# ExcelViewer - Claude Code Project Configuration
+# SheetAtlas - Claude Code Project Configuration
 
 ## Project Overview
 
-**ExcelViewer** is a cross-platform desktop application for comparing and analyzing Excel files, targeting data-sensitive industries that require on-premise processing.
+**SheetAtlas** is a cross-platform desktop application for comparing and analyzing Excel files, targeting data-sensitive industries that require on-premise processing.
 
 - **Type**: Commercial desktop application
 - **Platform**: Cross-platform (.NET 8 + Avalonia UI)
@@ -66,11 +66,11 @@
 ### Solution Organization
 
 ```text
-ExcelViewer/
+SheetAtlas/
 ├── src/
-│   ├── ExcelViewer.Core/           # Business logic (platform agnostic)
-│   ├── ExcelViewer.UI.Avalonia/   # Avalonia UI layer
-│   └── ExcelViewer.Tests/         # Test projects
+│   ├── SheetAtlas.Core/           # Business logic (platform agnostic)
+│   ├── SheetAtlas.UI.Avalonia/   # Avalonia UI layer
+│   └── SheetAtlas.Tests/         # Test projects
 ├── docs/                          # Project documentation
 ├── assets/                        # Images, icons, resources
 └── build/                         # Build scripts and configurations
@@ -78,12 +78,12 @@ ExcelViewer/
 
 ### Namespace Conventions
 
-- **ExcelViewer.Core**: Business entities, services, interfaces
-- **ExcelViewer.Core.Models**: Domain models and DTOs
-- **ExcelViewer.Core.Services**: Business logic and file processing
-- **ExcelViewer.UI.Avalonia**: UI layer components
-- **ExcelViewer.UI.Avalonia.ViewModels**: MVVM view models
-- **ExcelViewer.UI.Avalonia.Views**: XAML views and code-behind
+- **SheetAtlas.Core**: Business entities, services, interfaces
+- **SheetAtlas.Core.Models**: Domain models and DTOs
+- **SheetAtlas.Core.Services**: Business logic and file processing
+- **SheetAtlas.UI.Avalonia**: UI layer components
+- **SheetAtlas.UI.Avalonia.ViewModels**: MVVM view models
+- **SheetAtlas.UI.Avalonia.Views**: XAML views and code-behind
 
 ## Coding Standards
 
@@ -276,7 +276,7 @@ git push origin main --tags
 
 ```bash
 # Build and run development version
-dotnet build && dotnet run --project src/ExcelViewer.UI.Avalonia
+dotnet build && dotnet run --project src/SheetAtlas.UI.Avalonia
 
 # Run tests
 dotnet test
@@ -290,7 +290,7 @@ dotnet format --verify-no-changes
 
 ---
 
-*This document defines the development standards and guidelines for the ExcelViewer project. All team members should follow these conventions to ensure consistent, maintainable, and professional code quality.*
+*This document defines the development standards and guidelines for the SheetAtlas project. All team members should follow these conventions to ensure consistent, maintainable, and professional code quality.*
 
 **Last Updated**: September 2025
 **Version**: 1.0

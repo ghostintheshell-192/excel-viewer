@@ -1,0 +1,92 @@
+name: ✨ Feature Request
+description: Suggest a new feature or enhancement for ExcelViewer
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature! Please provide details below.
+
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: Feature Description
+      description: A clear and concise description of the feature you'd like to see
+      placeholder: "Example: Add ability to export comparison results to PDF"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem-solved
+    attributes:
+      label: Problem This Solves
+      description: What problem does this feature solve? What's the use case?
+      placeholder: "Currently, I can only view comparisons on screen but cannot share them with colleagues who don't have ExcelViewer"
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: How do you envision this feature working?
+      placeholder: "Add an 'Export to PDF' button in the comparison view that generates a PDF with highlighted differences"
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative Solutions
+      description: Have you considered any alternative solutions or workarounds?
+      placeholder: "Taking screenshots works but is tedious for large files"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature to you?
+      options:
+        - Nice to have
+        - Would be useful
+        - Important for my workflow
+        - Critical / blocking
+    validations:
+      required: false
+
+  - type: dropdown
+    id: willing-to-contribute
+    attributes:
+      label: Willing to Contribute
+      description: Would you be willing to help implement this feature?
+      options:
+        - "No"
+        - "Yes, with guidance"
+        - "Yes, I can implement it"
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context, mockups, or examples here
+      placeholder: "Screenshots, mockups, links to similar features in other apps"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission Checklist
+      description: Please confirm the following
+      options:
+        - label: I have searched existing issues to avoid duplicates
+          required: true
+        - label: This feature aligns with ExcelViewer's goals (local processing, cross-platform)
+          required: true

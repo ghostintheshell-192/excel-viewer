@@ -1,0 +1,352 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:SheetAtlas.UI.Avalonia.ViewModels"
+        xmlns:views="using:SheetAtlas.UI.Avalonia.Views"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+        x:Class="SheetAtlas.UI.Avalonia.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="Excel Cross Reference Viewer"
+        MinWidth="800" MinHeight="600"
+        Background="{DynamicResource MainBackground}">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Professional Menu Bar -->
+        <Menu Grid.Row="0"
+              Background="{DynamicResource SecondaryBackground}"
+              BorderBrush="{DynamicResource BorderColor}"
+              BorderThickness="0,0,0,1"
+              Padding="8,0"
+              Margin="0,0,0,8"
+              Foreground="{DynamicResource PrimaryText}">
+            <Menu.Styles>
+                <!-- Base MenuItem styling -->
+                <Style Selector="MenuItem">
+                    <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
+                    <Setter Property="Background" Value="Transparent"/>
+                </Style>
+
+                <!-- Top level menu items hover - force template override -->
+                <Style Selector="MenuItem:pointerover /template/ Border#PART_LayoutRoot">
+                    <Setter Property="Background" Value="#E0E0E0"/>
+                </Style>
+                <Style Selector="MenuItem:pointerover /template/ ContentPresenter#PART_HeaderPresenter">
+                    <Setter Property="TextBlock.Foreground" Value="#333333"/>
+                </Style>
+
+                <!-- Menu items when submenu is open (selected state) -->
+                <Style Selector="MenuItem:selected /template/ Border#PART_LayoutRoot">
+                    <Setter Property="Background" Value="#E0E0E0"/>
+                </Style>
+                <Style Selector="MenuItem:selected /template/ ContentPresenter#PART_HeaderPresenter">
+                    <Setter Property="TextBlock.Foreground" Value="#333333"/>
+                </Style>
+
+                <!-- Menu items when submenu popup is open -->
+                <Style Selector="MenuItem:open /template/ Border#PART_LayoutRoot">
+                    <Setter Property="Background" Value="#E0E0E0"/>
+                </Style>
+                <Style Selector="MenuItem:open /template/ ContentPresenter#PART_HeaderPresenter">
+                    <Setter Property="TextBlock.Foreground" Value="#333333"/>
+                </Style>
+
+                <!-- Top level menu items pressed -->
+                <Style Selector="MenuItem:pressed">
+                    <Setter Property="Background" Value="{DynamicResource AccentOrange}"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Style>
+
+                <!-- Submenu container - Remove hardcoded values, let MenuFlyout resources handle it -->
+                <!-- The MenuFlyoutPresenterBackground and related resources are now defined in ThemeResources.axaml -->
+
+                <!-- Submenu items base styling -->
+                <Style Selector="MenuItem MenuItem">
+                    <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="Padding" Value="8,6"/>
+                    <Setter Property="Margin" Value="2"/>
+                </Style>
+
+                <!-- Submenu items hover -->
+                <Style Selector="MenuItem MenuItem:pointerover">
+                    <Setter Property="Background" Value="#E0E0E0"/>
+                    <Setter Property="Foreground" Value="#333333"/>
+                </Style>
+
+                <!-- Submenu items pressed -->
+                <Style Selector="MenuItem MenuItem:pressed">
+                    <Setter Property="Background" Value="#D0D0D0"/>
+                    <Setter Property="Foreground" Value="#333333"/>
+                </Style>
+
+                <!-- Separator styling -->
+                <Style Selector="MenuItem Separator">
+                    <Setter Property="Background" Value="{DynamicResource BorderColor}"/>
+                    <Setter Property="Height" Value="1"/>
+                    <Setter Property="Margin" Value="8,4"/>
+                </Style>
+            </Menu.Styles>
+
+            <!-- File Menu -->
+            <MenuItem Header="_File">
+                <MenuItem Header="📁 _Load Files"
+                         Command="{Binding LoadFileCommand}"
+                         InputGesture="Ctrl+O"/>
+                <Separator/>
+                <MenuItem Header="Recent Files" IsEnabled="False"/>
+            </MenuItem>
+
+            <!-- View Menu -->
+            <MenuItem Header="_View">
+                <MenuItem Header="Show _Status Bar" IsEnabled="False"/>
+                <MenuItem Header="Show Search _Results"
+                         Command="{Binding ShowSearchResultsCommand}"
+                         InputGesture="Ctrl+R"/>
+            </MenuItem>
+
+            <!-- Tools Menu -->
+            <MenuItem Header="_Tools">
+                <MenuItem Header="_Export Results" IsEnabled="False"/>
+                <Separator/>
+                <MenuItem Header="_Settings" IsEnabled="False"/>
+            </MenuItem>
+
+            <!-- Help Menu -->
+            <MenuItem Header="_Help">
+                <MenuItem Header="_About SheetAtlas"
+                         Command="{Binding ShowAboutCommand}"/>
+                <MenuItem Header="_Documentation"
+                         Command="{Binding ShowDocumentationCommand}"
+                         InputGesture="F1"/>
+            </MenuItem>
+
+            <!-- Temporary theme toggle (will move to Settings) -->
+            <MenuItem Header="🎨 Theme"
+                     HorizontalAlignment="Right"
+                     Margin="0,0,20,0">
+                <MenuItem Header="{Binding ThemeManager.ThemeButtonText, StringFormat='Switch to {0} Theme'}"
+                         Command="{Binding ToggleThemeCommand}"
+                         InputGesture="Ctrl+T"/>
+            </MenuItem>
+
+            <!-- Status area on the right -->
+            <MenuItem Header="{Binding LoadedFiles.Count, StringFormat='{}{0} files loaded'}"
+                     HorizontalAlignment="Right"
+                     Foreground="{DynamicResource SecondaryText}"
+                     FontSize="12"
+                     IsEnabled="False"/>
+        </Menu>
+
+        <!-- Main Content -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Files Panel -->
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header with clear button -->
+                <Grid Grid.Row="0" Margin="0,0,0,8" Background="Transparent" Tapped="OnHeaderTapped">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="Loaded Files" FontWeight="SemiBold"
+                              FontSize="14" Background="Transparent"
+                              Foreground="{DynamicResource PrimaryText}"/>
+
+                    <Button Grid.Column="1" Content="✕"
+                            Width="20" Height="20" Padding="0"
+                            ToolTip.Tip="Clear selection"
+                            Click="OnClearSelectionClick"
+                            IsVisible="{Binding SelectedFile, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                </Grid>
+
+                <ListBox Grid.Row="1"
+                         ItemsSource="{Binding LoadedFiles}"
+                         SelectedItem="{Binding SelectedFile}"
+                         Margin="4"
+                         Background="{DynamicResource CardBackground}"
+                         BorderBrush="{DynamicResource BorderColor}"
+                         BorderThickness="1"
+                         CornerRadius="4">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Vertical" Margin="4">
+                                <TextBlock Text="{Binding FileName}" FontWeight="Medium"
+                                          Foreground="{DynamicResource PrimaryText}"/>
+                                <TextBlock Text="{Binding FilePath}" FontSize="10"
+                                          Foreground="{DynamicResource SecondaryText}" TextTrimming="CharacterEllipsis"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                    <TextBlock Text="Status: " FontSize="10"
+                                              Foreground="{DynamicResource SecondaryText}"/>
+                                    <TextBlock Text="{Binding Status}" FontSize="10" FontWeight="Medium"
+                                              Foreground="{DynamicResource PrimaryText}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+
+            <!-- Splitter -->
+            <GridSplitter Grid.Column="1" Background="{DynamicResource BorderColor}" ResizeDirection="Columns"/>
+
+            <!-- Search Panel -->
+            <Grid Grid.Column="2" Margin="12,0,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Search Box -->
+                <Grid Grid.Row="0" Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBox Grid.Column="0"
+                             Text="{Binding SearchViewModel.SearchQuery}"
+                             Watermark="Enter search term..."
+                             Margin="0,0,8,0"
+                             KeyDown="OnSearchTextBoxKeyDown"/>
+
+                    <Button Grid.Column="1" Content="🔍"
+                            Command="{Binding SearchViewModel.SearchCommand}"
+                            Margin="0,0,4,0" Padding="8,4"/>
+
+                    <Button Grid.Column="2" Content="✕"
+                            Command="{Binding SearchViewModel.ClearSearchCommand}"
+                            Padding="8,4"/>
+                </Grid>
+
+                <!-- Search Options and Row Comparison Controls -->
+                <Grid Grid.Row="1" Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Search Options -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                        <CheckBox Content="Case Sensitive"
+                                  IsChecked="{Binding SearchViewModel.CaseSensitive}"
+                                  Margin="0,0,12,0"/>
+                        <CheckBox Content="Exact Match"
+                                  IsChecked="{Binding SearchViewModel.ExactMatch}"
+                                  Margin="0,0,12,0"/>
+                        <CheckBox Content="Use Regex"
+                                  IsChecked="{Binding SearchViewModel.UseRegexSearch}"/>
+                    </StackPanel>
+
+                    <!-- Row Comparison Controls (aligned to the right) -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                        <!-- Selected rows counter -->
+                        <Border Background="#E3F2FD"
+                               CornerRadius="4"
+                               Padding="8,4"
+                               IsVisible="{Binding TreeSearchResultsViewModel.CanCompareRows}">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="{Binding TreeSearchResultsViewModel.SelectedCount}"
+                                          FontWeight="SemiBold"
+                                          Foreground="#1976D2"/>
+                                <TextBlock Text="selected rows"
+                                          Foreground="#666666"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Compare Rows Button -->
+                        <Button Content="Compare Rows"
+                                Background="#FF6B35"
+                                Foreground="White"
+                                FontWeight="SemiBold"
+                                BorderThickness="0"
+                                CornerRadius="4"
+                                Padding="12,6"
+                                Command="{Binding TreeSearchResultsViewModel.CompareSelectedRowsCommand}"
+                                IsEnabled="{Binding TreeSearchResultsViewModel.CanCompareRows}"/>
+
+                        <!-- Clear Selection Button -->
+                        <Button Content="Clear"
+                                Background="#263238"
+                                Foreground="White"
+                                BorderThickness="0"
+                                CornerRadius="4"
+                                Padding="12,6"
+                                FontSize="12"
+                                Command="{Binding TreeSearchResultsViewModel.ClearSelectionCommand}"/>
+
+                        <!-- Clear History Button -->
+                        <Button Content="Clear History"
+                                Background="#263238"
+                                Foreground="White"
+                                BorderThickness="0"
+                                CornerRadius="4"
+                                Padding="12,6"
+                                FontSize="12"
+                                Command="{Binding TreeSearchResultsViewModel.ClearHistoryCommand}"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Content Area: Tab Control -->
+                <TabControl Grid.Row="2" SelectedIndex="{Binding SelectedTabIndex}">
+                    <!-- File Details Tab -->
+                    <TabItem Header="File Details" IsEnabled="{Binding SelectedFile, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <ContentControl Content="{Binding FileDetailsViewModel}">
+                            <ContentControl.ContentTemplate>
+                                <DataTemplate>
+                                    <views:FileDetailsView/>
+                                </DataTemplate>
+                            </ContentControl.ContentTemplate>
+                        </ContentControl>
+                    </TabItem>
+
+                    <!-- Search Results Tab -->
+                    <TabItem Header="Search Results">
+                        <!-- Tree View Only -->
+                        <ContentControl Content="{Binding TreeSearchResultsViewModel}">
+                            <ContentControl.ContentTemplate>
+                                <DataTemplate>
+                                    <views:TreeSearchResultsView/>
+                                </DataTemplate>
+                            </ContentControl.ContentTemplate>
+                        </ContentControl>
+                    </TabItem>
+
+                    <!-- Row Comparison Tab -->
+                    <TabItem Header="Row Comparison" IsEnabled="{Binding SelectedComparison, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <ContentControl Content="{Binding SelectedComparison}">
+                            <ContentControl.ContentTemplate>
+                                <DataTemplate>
+                                    <views:RowComparisonView/>
+                                </DataTemplate>
+                            </ContentControl.ContentTemplate>
+                        </ContentControl>
+                    </TabItem>
+
+                </TabControl>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

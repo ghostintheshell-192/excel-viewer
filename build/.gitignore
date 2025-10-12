@@ -1,0 +1,18 @@
+# Build outputs
+publish/
+output/
+
+# Certificates (NEVER commit private keys!)
+certificates/*.key
+certificates/*.pfx
+
+# Temporary files
+*.tmp
+*.log
+
+# Inno Setup output
+*.exe~
+
+# Keep README files
+!certificates/README.md
+!README.md

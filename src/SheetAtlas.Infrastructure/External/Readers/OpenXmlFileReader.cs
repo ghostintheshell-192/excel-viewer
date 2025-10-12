@@ -1,0 +1,331 @@
+using SheetAtlas.Core.Domain.Entities;
+using SheetAtlas.Core.Domain.ValueObjects;
+using SheetAtlas.Core.Application.Interfaces;
+using Microsoft.Extensions.Logging;
+using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Spreadsheet;
+
+namespace SheetAtlas.Infrastructure.External.Readers
+{
+    /// <summary>
+    /// Reader for OpenXML Excel formats (.xlsx, .xlsm, .xltx, .xltm)
+    /// </summary>
+    public class OpenXmlFileReader : IFileFormatReader
+    {
+        private readonly ILogger<OpenXmlFileReader> _logger;
+        private readonly ICellReferenceParser _cellParser;
+        private readonly IMergedCellProcessor _mergedCellProcessor;
+        private readonly ICellValueReader _cellValueReader;
+
+        public OpenXmlFileReader(
+            ILogger<OpenXmlFileReader> logger,
+            ICellReferenceParser cellParser,
+            IMergedCellProcessor mergedCellProcessor,
+            ICellValueReader cellValueReader)
+        {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _cellParser = cellParser ?? throw new ArgumentNullException(nameof(cellParser));
+            _mergedCellProcessor = mergedCellProcessor ?? throw new ArgumentNullException(nameof(mergedCellProcessor));
+            _cellValueReader = cellValueReader ?? throw new ArgumentNullException(nameof(cellValueReader));
+        }
+
+        public IReadOnlyList<string> SupportedExtensions =>
+            new[] { ".xlsx", ".xlsm", ".xltx", ".xltm" }.AsReadOnly();
+
+        public async Task<ExcelFile> ReadAsync(string filePath, CancellationToken cancellationToken = default)
+        {
+            var errors = new List<ExcelError>();
+            var sheets = new Dictionary<string, SASheetData>();
+
+            // Validation: Fail fast for invalid input
+            if (string.IsNullOrWhiteSpace(filePath))
+                throw new ArgumentNullException(nameof(filePath));
+
+            try
+            {
+                return await Task.Run(() =>
+                {
+                    using var document = OpenDocument(filePath);
+                    var workbookPart = document.WorkbookPart;
+
+                    if (workbookPart == null)
+                    {
+                        errors.Add(ExcelError.Critical("File", "File corrotto: workbook part mancante"));
+                        return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
+                    }
+
+                    var sheetElements = GetSheets(workbookPart);
+                    _logger.LogInformation("Reading Excel file with {SheetCount} sheets", sheetElements.Count());
+
+                    foreach (var sheet in sheetElements)
+                    {
+                        // Check cancellation before processing each sheet
+                        cancellationToken.ThrowIfCancellationRequested();
+
+                        var sheetName = sheet.Name?.Value;
+                        if (string.IsNullOrEmpty(sheetName))
+                        {
+                            errors.Add(ExcelError.Warning("File", "Found sheet with empty name, skipping"));
+                            continue;
+                        }
+
+                        try
+                        {
+                            var sheetId = sheet.Id?.Value;
+                            if (sheetId == null)
+                            {
+                                errors.Add(ExcelError.SheetError(sheetName, "Sheet ID is null, skipping sheet"));
+                                continue;
+                            }
+
+                            var worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheetId);
+
+                            if (worksheetPart is null)
+                            {
+                                errors.Add(ExcelError.SheetError(sheetName, "Worksheet part not found, skipping sheet"));
+                                continue;
+                            }
+
+                            var sheetData = ProcessSheet(Path.GetFileNameWithoutExtension(filePath), sheetName, workbookPart, worksheetPart);
+
+                            // Skip empty sheets (no columns means no meaningful data)
+                            if (sheetData == null)
+                            {
+                                errors.Add(ExcelError.Warning(sheetName, "Sheet is empty (no columns), skipping"));
+                                _logger.LogWarning("Sheet {SheetName} is empty, skipping", sheetName);
+                                continue;
+                            }
+
+                            sheets[sheetName] = sheetData;
+                            _logger.LogDebug("Sheet {SheetName} read successfully", sheetName);
+                        }
+                        catch (InvalidCastException ex)
+                        {
+                            // GetPartById potrebbe ritornare un tipo diverso
+                            _logger.LogError(ex, "Invalid sheet part type for {SheetName}", sheetName);
+                            errors.Add(ExcelError.SheetError(sheetName, $"Invalid sheet structure", ex));
+                        }
+                        catch (OpenXmlPackageException ex)
+                        {
+                            // Errori specifici OpenXML per singoli sheet
+                            _logger.LogError(ex, "Corrupted sheet {SheetName}", sheetName);
+                            errors.Add(ExcelError.SheetError(sheetName, $"Sheet corrupted: {ex.Message}", ex));
+                        }
+                    }
+
+                    var status = DetermineLoadStatus(sheets, errors);
+                    return new ExcelFile(filePath, status, sheets, errors);
+                }, cancellationToken);
+            }
+            catch (ArgumentNullException ex)
+            {
+                // Questo NON dovrebbe mai succedere in produzione, ma catch per sicurezza
+                _logger.LogError(ex, "Null filepath passed to ReadAsync");
+                throw; // Rilancia - è un bug di programmazione
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogInformation("File read cancelled: {Path}", filePath);
+                throw; // Propagate cancellation
+            }
+            catch (FileFormatException ex)
+            {
+                // File format errors: .xls files, corrupted packages, unsupported formats
+                _logger.LogError(ex, "Unsupported or corrupted file format: {Path}", filePath);
+                errors.Add(ExcelError.Critical("File", $"Unsupported file format (.xls files are not supported, use .xlsx): {ex.Message}", ex));
+                return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
+            }
+            catch (IOException ex)
+            {
+                // File I/O errors: locked, permission denied, network issues
+                _logger.LogError(ex, "I/O error reading Excel file: {Path}", filePath);
+                errors.Add(ExcelError.Critical("File", $"Cannot access file: {ex.Message}", ex));
+                return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
+            }
+            catch (InvalidOperationException ex)
+            {
+                // OpenXml-specific errors: corrupted file structure
+                _logger.LogError(ex, "Invalid Excel file format: {Path}", filePath);
+                errors.Add(ExcelError.Critical("File", $"Invalid Excel file: {ex.Message}", ex));
+                return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
+            }
+            catch (OpenXmlPackageException ex)
+            {
+                // OpenXml package errors: file corrupted or not a valid Excel file
+                _logger.LogError(ex, "Excel file is corrupted or invalid: {Path}", filePath);
+                errors.Add(ExcelError.Critical("File", $"Corrupted Excel file: {ex.Message}", ex));
+                return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
+            }
+        }
+
+        private SpreadsheetDocument OpenDocument(string filePath)
+        {
+            return SpreadsheetDocument.Open(filePath, false);
+        }
+
+        private IEnumerable<Sheet> GetSheets(WorkbookPart workbookPart)
+        {
+            return workbookPart.Workbook.Descendants<Sheet>();
+        }
+
+        private SASheetData? ProcessSheet(string fileName, string sheetName, WorkbookPart workbookPart, WorksheetPart worksheetPart)
+        {
+            var sharedStringTable = workbookPart.SharedStringTablePart?.SharedStringTable;
+
+            var mergedCells = _mergedCellProcessor.ProcessMergedCells(worksheetPart, sharedStringTable);
+            var headerColumns = ProcessHeaderRow(worksheetPart, sharedStringTable, mergedCells);
+
+            // If no headers found, return null - caller will handle as empty sheet
+            if (!headerColumns.Any())
+            {
+                _logger.LogWarning("Sheet {SheetName} has no header row", sheetName);
+                return null;
+            }
+
+            // Create SASheetData with column names
+            var columnNames = CreateColumnNamesArray(headerColumns);
+            var sheetData = new SASheetData(sheetName, columnNames);
+
+            // Populate rows
+            PopulateSheetRows(sheetData, worksheetPart, sharedStringTable, mergedCells, headerColumns);
+
+            // Trim excess capacity to save memory
+            sheetData.TrimExcess();
+
+            return sheetData;
+        }
+
+        private Dictionary<int, string> ProcessHeaderRow(WorksheetPart worksheetPart, SharedStringTable? sharedStringTable, Dictionary<string, SACellValue> mergedCells)
+        {
+            var firstRow = worksheetPart.Worksheet.Descendants<Row>().FirstOrDefault();
+            if (firstRow == null)
+                return new Dictionary<int, string>();
+
+            var headerValues = new Dictionary<int, string>();
+            foreach (var cell in firstRow.Elements<Cell>())
+            {
+                var cellRef = cell.CellReference?.Value;
+                if (cellRef == null) continue;
+
+                int columnIndex = _cellParser.GetColumnIndex(cellRef);
+                string cellValue = GetCellValueWithMerge(cell, sharedStringTable, mergedCells).ToString();
+                headerValues[columnIndex] = cellValue;
+            }
+
+            return headerValues;
+        }
+
+        private string[] CreateColumnNamesArray(Dictionary<int, string> headerColumns)
+        {
+            if (!headerColumns.Any())
+                return Array.Empty<string>();
+
+            int firstCol = headerColumns.Keys.Min();
+            int lastCol = headerColumns.Keys.Max();
+            int columnCount = lastCol - firstCol + 1;
+
+            var columnNames = new string[columnCount];
+            var columnNameCounts = new Dictionary<string, int>();
+
+            for (int i = firstCol; i <= lastCol; i++)
+            {
+                string headerValue = headerColumns.TryGetValue(i, out var value) && !string.IsNullOrWhiteSpace(value)
+                    ? value
+                    : $"Column_{i}";
+
+                string uniqueColumnName = EnsureUniqueColumnName(headerValue, columnNameCounts);
+                columnNames[i - firstCol] = uniqueColumnName;
+            }
+
+            return columnNames;
+        }
+
+        private string EnsureUniqueColumnName(string baseName, Dictionary<string, int> columnNameCounts)
+        {
+            if (!columnNameCounts.ContainsKey(baseName))
+            {
+                columnNameCounts[baseName] = 1;
+                return baseName;
+            }
+
+            columnNameCounts[baseName]++;
+            return $"{baseName}_{columnNameCounts[baseName]}";
+        }
+
+        private void PopulateSheetRows(SASheetData sheetData, WorksheetPart worksheetPart, SharedStringTable? sharedStringTable, Dictionary<string, SACellValue> mergedCells, Dictionary<int, string> headerColumns)
+        {
+            int firstCol = headerColumns.Keys.Min();
+            bool isFirstRow = true;
+
+            foreach (var row in worksheetPart.Worksheet.Descendants<Row>())
+            {
+                if (isFirstRow)
+                {
+                    isFirstRow = false;
+                    continue; // Skip header row
+                }
+
+                var rowData = CreateRowData(sheetData.ColumnCount, row, sharedStringTable, mergedCells, firstCol);
+                if (rowData != null)
+                {
+                    sheetData.AddRow(rowData);
+                }
+            }
+        }
+
+        private SACellData[]? CreateRowData(int columnCount, Row row, SharedStringTable? sharedStringTable, Dictionary<string, SACellValue> mergedCells, int firstCol)
+        {
+            var rowData = new SACellData[columnCount];
+            bool hasData = false;
+
+            // Initialize all cells with Empty
+            for (int i = 0; i < columnCount; i++)
+            {
+                rowData[i] = new SACellData(SACellValue.Empty);
+            }
+
+            foreach (var cell in row.Elements<Cell>())
+            {
+                var cellRef = cell.CellReference?.Value;
+                if (cellRef == null) continue;
+
+                int columnIndex = _cellParser.GetColumnIndex(cellRef) - firstCol;
+                if (columnIndex < 0 || columnIndex >= columnCount)
+                    continue;
+
+                SACellValue cellValue = GetCellValueWithMerge(cell, sharedStringTable, mergedCells);
+                rowData[columnIndex] = new SACellData(cellValue);
+                hasData = true;
+            }
+
+            return hasData ? rowData : null;
+        }
+
+        private SACellValue GetCellValueWithMerge(Cell cell, SharedStringTable? sharedStringTable, Dictionary<string, SACellValue> mergedCells)
+        {
+            var cellRef = cell.CellReference?.Value;
+            if (cellRef != null && mergedCells.TryGetValue(cellRef, out SACellValue mergedValue))
+            {
+                return mergedValue;
+            }
+
+            return GetCellValue(cell, sharedStringTable);
+        }
+
+        private LoadStatus DetermineLoadStatus(Dictionary<string, SASheetData> sheets, List<ExcelError> errors)
+        {
+            var hasErrors = errors.Any(e => e.Level == ErrorLevel.Error || e.Level == ErrorLevel.Critical);
+
+            if (!hasErrors)
+                return LoadStatus.Success;
+
+            return sheets.Any() ? LoadStatus.PartialSuccess : LoadStatus.Failed;
+        }
+
+        private SACellValue GetCellValue(Cell cell, SharedStringTable? sharedStringTable)
+        {
+            return _cellValueReader.GetCellValue(cell, sharedStringTable);
+        }
+    }
+}
