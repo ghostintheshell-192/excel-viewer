@@ -15,6 +15,7 @@ public class RowComparisonCoordinator : IRowComparisonCoordinator
 {
     private readonly ILogger<RowComparisonCoordinator> _logger;
     private readonly ILogger<RowComparisonViewModel> _comparisonViewModelLogger;
+    private readonly IThemeManager _themeManager;
 
     private readonly ObservableCollection<RowComparisonViewModel> _rowComparisons = new();
     private RowComparisonViewModel? _selectedComparison;
@@ -44,10 +45,12 @@ public class RowComparisonCoordinator : IRowComparisonCoordinator
 
     public RowComparisonCoordinator(
         ILogger<RowComparisonCoordinator> logger,
-        ILogger<RowComparisonViewModel> comparisonViewModelLogger)
+        ILogger<RowComparisonViewModel> comparisonViewModelLogger,
+        IThemeManager themeManager)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _comparisonViewModelLogger = comparisonViewModelLogger ?? throw new ArgumentNullException(nameof(comparisonViewModelLogger));
+        _themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
 
         RowComparisons = new ReadOnlyObservableCollection<RowComparisonViewModel>(_rowComparisons);
     }
@@ -60,7 +63,7 @@ public class RowComparisonCoordinator : IRowComparisonCoordinator
             return;
         }
 
-        var comparisonViewModel = new RowComparisonViewModel(comparison, _comparisonViewModelLogger);
+        var comparisonViewModel = new RowComparisonViewModel(comparison, _comparisonViewModelLogger, _themeManager);
 
         // Wire up close event
         comparisonViewModel.CloseRequested += OnComparisonCloseRequested;
@@ -137,7 +140,7 @@ public class RowComparisonCoordinator : IRowComparisonCoordinator
                 );
 
                 // Create new ViewModel with updated comparison
-                var newViewModel = new RowComparisonViewModel(updatedComparison, _comparisonViewModelLogger);
+                var newViewModel = new RowComparisonViewModel(updatedComparison, _comparisonViewModelLogger, _themeManager);
                 newViewModel.CloseRequested += OnComparisonCloseRequested;
 
                 // Replace old with new
