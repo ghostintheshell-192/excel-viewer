@@ -37,9 +37,9 @@ A powerful cross-platform desktop application for searching across multiple Exce
 
 ### Supported Operating Systems
 
-- **Windows**: Windows 10 1903+ (x64, Arm64)
-- **Linux**: Most modern distributions (x64, Arm64)
-- **macOS**: macOS 10.15+ (x64, Apple Silicon)
+- **Windows**: Windows 10 1903+ (x64, Arm64) - **Installer Available**
+- **Linux**: Planned (x64, Arm64) - **Coming Soon**
+- **macOS**: Planned (x64, Apple Silicon) - **Coming Soon**
 
 ### Runtime Requirements
 
@@ -51,13 +51,13 @@ A powerful cross-platform desktop application for searching across multiple Exce
 
 ### Download Pre-built Binaries
 
-Visit the **[Releases page](https://github.com/ghostintheshell-192/sheet-atlas/releases/latest)** to download the latest version for your platform:
+Visit the **[Releases page](https://github.com/ghostintheshell-192/sheet-atlas/releases/latest)** to download the latest version:
 
-- **Windows**: `SheetAtlas-Setup-1.1.0-win-x64.exe` (Installer)
-- **Linux**: `SheetAtlas-linux-x64.tar.gz`
-- **macOS**: `SheetAtlas-macos-x64.tar.gz`
+- **Windows**: Installer available (`.exe`)
+- **Linux**: Coming soon
+- **macOS**: Coming soon
 
-Extract the archive and run the executable. No installation required - all dependencies are included.
+For Linux and macOS, you can currently [build from source](#build-from-source).
 
 ### Build from Source
 
@@ -191,13 +191,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Roadmap
 
-### Version 1.0.0 (Released)
+### Version 0.2.0 (Current Alpha)
 
 - ✅ Support for .xlsx, .xls, .csv files
 - ✅ Multi-file loading and cross-file search
 - ✅ Advanced search with regex support
 - ✅ Row comparison with visual highlighting
-- ✅ Cross-platform support (Windows, Linux, macOS)
+- ✅ Windows installer available
+- 🚧 Linux and macOS installers (in progress)
 
 ### Upcoming Features
 
