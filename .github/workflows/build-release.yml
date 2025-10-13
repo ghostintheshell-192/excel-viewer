@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build release for (e.g., v0.1.0)'
+        required: true
+        type: string
 
 permissions:
   contents: write
