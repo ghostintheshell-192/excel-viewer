@@ -5,7 +5,59 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2025-10-08
+## [Unreleased]
+
+---
+
+## [0.2.0] - 2025-10-12 (Alpha)
+
+> **Note**: This release was initially tagged as v1.1.0 but renumbered to v0.2.0 to reflect alpha status.
+> All tags are now GPG-signed for security and authenticity.
+
+### Added
+
+- Add prominent download section to GitHub Page
+- Reorganize project structure with branch protections and GitHub Actions
+- Add GitHub issue and PR templates
+- Add Windows installer infrastructure with Inno Setup
+- Implement custom SASheetData for memory optimization
+- Add final memory optimizations with TrimExcess
+- Add responsive hamburger menu for mobile navigation
+
+### Documentation
+
+- Update website branding from ExcelViewer to SheetAtlas
+- Update website downloads - Windows installer ready, Linux/macOS coming soon
+
+### Fixed
+
+- Remove explicit wizard image files from Inno Setup script
+- Reorder Pascal functions to declare before use
+- Correct project descriptions and update all references from excel-viewer to sheet-atlas
+- Implement memory leak cleanup infrastructure (partial)
+- Handle empty Excel sheets correctly in OpenXmlFileReader
+- Preserve UI state when removing files via Clean All Data
+- RowComparison UI cleanup on close (#8, #9)
+- Auto-switch to Search Results tab when search completes
+- RowComparison cells now adapt to dark mode theme (#7)
+- Menu items cleanup and implementation (#1-6)
+- Update website version numbers to v1.1.0
+
+### Performance
+
+- Remove unnecessary ItemArray.ToList() memory copy
+- Remove fake async methods from RowComparisonService
+- Add string interning for duplicate cell values
+
+### Refactored
+
+- Rename project from ExcelViewer to SheetAtlas
+- Fix all nullability warnings for cleaner build
+
+## [0.1.0] - 2025-10-08 (Alpha)
+
+> **Note**: This release was initially tagged as v1.0.0 but renumbered to v0.1.0 to reflect alpha status.
+> This is the initial public alpha release with core features.
 
 ### Added
 
@@ -41,11 +93,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add website images to version control
 - Synchronize column widths between headers and data cells
 - Align row comparison header width with column content
+- Use single-line command for PowerShell compatibility
 
 ### Miscellaneous
 
 - Remove accidentally committed sample files
 - Remove obsolete UI documentation files
+- Update CHANGELOG for v1.0.0
 
 ### Refactored
 

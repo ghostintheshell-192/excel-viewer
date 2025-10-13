@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build release for (e.g., v0.1.0)'
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -17,7 +23,7 @@ jobs:
         include:
           - os: windows-latest
             rid: win-x64
-            artifact: SheetAtlas-windows-x64.zip
+            artifact: SheetAtlas-windows-x64-installer.exe
           - os: ubuntu-latest
             rid: linux-x64
             artifact: SheetAtlas-linux-x64.tar.gz
@@ -40,11 +46,36 @@ jobs:
       - name: Build and publish
         run: dotnet publish src/SheetAtlas.UI.Avalonia/SheetAtlas.UI.Avalonia.csproj --configuration Release --runtime ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=false -p:PublishTrimmed=false --output ./publish/${{ matrix.rid }}
 
-      - name: Package Windows
+      - name: Setup Inno Setup (Windows only)
         if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
-          Compress-Archive -Path ./publish/${{ matrix.rid }}/* -DestinationPath ${{ matrix.artifact }}
+          $innoUrl = "https://jrsoftware.org/download.php/is.exe"
+          $innoInstaller = "$env:TEMP\innosetup.exe"
+          Write-Host "Downloading Inno Setup..."
+          Invoke-WebRequest -Uri $innoUrl -OutFile $innoInstaller
+          Write-Host "Installing Inno Setup..."
+          Start-Process -FilePath $innoInstaller -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-" -Wait
+          $innoPath = "C:\Program Files (x86)\Inno Setup 6"
+          echo "$innoPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          Write-Host "Inno Setup installed"
+
+      - name: Build Windows Installer
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          $isccPath = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          $issFile = "build\installer\SheetAtlas-Installer.iss"
+          $outputDir = "."
+          Write-Host "Compiling installer with Inno Setup..."
+          & $isccPath $issFile /O$outputDir /DConfiguration=Release /DNoSign=1
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Inno Setup compilation failed"
+            exit 1
+          }
+          # Rename artifact to match convention
+          Get-ChildItem -Filter "SheetAtlas-Setup-*.exe" | Rename-Item -NewName "SheetAtlas-windows-x64-installer.exe"
+          Write-Host "Installer compiled successfully"
 
       - name: Package Linux/macOS
         if: matrix.os != 'windows-latest'
