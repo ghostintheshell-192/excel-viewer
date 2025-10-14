@@ -1,6 +1,7 @@
 using SheetAtlas.Core.Application.Interfaces;
 using SheetAtlas.Core.Domain.ValueObjects;
 using SheetAtlas.Logging.Models;
+using SheetAtlas.Logging.Services;
 
 namespace SheetAtlas.UI.Avalonia.Services
 {
@@ -29,14 +30,17 @@ namespace SheetAtlas.UI.Avalonia.Services
     public class ErrorNotificationService : IErrorNotificationService
     {
         private readonly IDialogService _dialogService;
+        private readonly ILogService _logService;
         private readonly IExceptionHandler _exceptionHandler;
 
         public ErrorNotificationService(
             IDialogService dialogService,
-            IExceptionHandler exceptionHandler)
+            IExceptionHandler exceptionHandler,
+            ILogService logService)
         {
             _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
             _exceptionHandler = exceptionHandler ?? throw new ArgumentNullException(nameof(exceptionHandler));
+            _logService = logService ?? throw new ArgumentNullException(nameof(logService));
         }
 
         public async Task ShowExceptionAsync(Exception exception, string context)
@@ -57,6 +61,15 @@ namespace SheetAtlas.UI.Avalonia.Services
             };
 
             var message = FormatErrorMessage(error);
+
+            // Log the error to LogService (in addition to showing dialog)
+            _logService.AddLogMessage(new LogMessage(
+                error.Level,
+                title,
+                error.Message,
+                error.Context,
+                error.InnerException
+            ));
 
             if (error.Level == LogSeverity.Warning)
             {
