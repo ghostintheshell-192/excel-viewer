@@ -3,54 +3,45 @@ using SheetAtlas.Logging.Models;
 namespace SheetAtlas.Logging.Services
 {
     /// <summary>
-    /// Service for managing user notifications (toasts, notification center, etc.)
+    /// Service for managing application log messages
     /// </summary>
     public interface ILogService
     {
         /// <summary>
-        /// Displays a toast notification (auto-dismiss after duration)
+        /// Adds a log message to the in-memory log
         /// </summary>
-        /// <param name="level">Severity level</param>
-        /// <param name="title">Notification title</param>
-        /// <param name="message">Notification message</param>
-        /// <param name="durationMs">How long to show the toast (milliseconds)</param>
-        void ShowToast(LogSeverity level, string title, string message, int durationMs = 4000);
+        /// <param name="message">The log message to add</param>
+        void AddLogMessage(LogMessage message);
 
         /// <summary>
-        /// Adds a notification to the notification center
+        /// Removes a specific log message by ID
         /// </summary>
-        /// <param name="notification">The notification to add</param>
-        void AddNotification(LogMessage notification);
+        /// <param name="messageId">The ID of the message to remove</param>
+        void ClearMessage(Guid messageId);
 
         /// <summary>
-        /// Removes a specific notification by ID
+        /// Clears all log messages
         /// </summary>
-        /// <param name="notificationId">The ID of the notification to remove</param>
-        void ClearNotification(Guid notificationId);
+        void ClearAllMessages();
 
         /// <summary>
-        /// Clears all notifications from the notification center
+        /// Gets all log messages currently stored
         /// </summary>
-        void ClearAllNotifications();
+        IReadOnlyList<LogMessage> GetMessages();
 
         /// <summary>
-        /// Gets all notifications currently in the notification center
-        /// </summary>
-        IReadOnlyList<LogMessage> GetNotifications();
-
-        /// <summary>
-        /// Gets the count of unread notifications
+        /// Gets the count of stored messages
         /// </summary>
         int UnreadCount { get; }
 
         /// <summary>
-        /// Event raised when a new notification is added
+        /// Event raised when a new log message is added
         /// </summary>
-        event EventHandler<LogMessage>? NotificationAdded;
+        event EventHandler<LogMessage>? MessageAdded;
 
         /// <summary>
-        /// Event raised when all notifications are cleared
+        /// Event raised when all messages are cleared
         /// </summary>
-        event EventHandler? NotificationsCleared;
+        event EventHandler? MessagesCleared;
     }
 }
