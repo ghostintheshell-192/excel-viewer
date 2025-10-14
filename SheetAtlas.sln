@@ -1,4 +1,4 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.13.35818.85 d17.13
@@ -14,6 +14,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SheetAtlas.UI.Avalonia", "src\SheetAtlas.UI.Avalonia\SheetAtlas.UI.Avalonia.csproj", "{3C597667-3FF1-48E8-978D-57A81DA55212}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SheetAtlas.Tests", "tests\SheetAtlas.Tests\SheetAtlas.Tests.csproj", "{A9AC2A6B-DD8B-4F6C-B16A-C4AC9606F9C8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SheetAtlas.Logging", "src\SheetAtlas.Logging\SheetAtlas.Logging.csproj", "{37A1319A-2E7D-4EDA-9AEA-3C1C34C7BDE4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,6 +39,10 @@ Global
 		{A9AC2A6B-DD8B-4F6C-B16A-C4AC9606F9C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A9AC2A6B-DD8B-4F6C-B16A-C4AC9606F9C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A9AC2A6B-DD8B-4F6C-B16A-C4AC9606F9C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37A1319A-2E7D-4EDA-9AEA-3C1C34C7BDE4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37A1319A-2E7D-4EDA-9AEA-3C1C34C7BDE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37A1319A-2E7D-4EDA-9AEA-3C1C34C7BDE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37A1319A-2E7D-4EDA-9AEA-3C1C34C7BDE4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -49,5 +55,6 @@ Global
 		{2BB47D2E-117D-E182-E628-7F59D8BD8E42} = {B81F802E-605B-42D6-8BA5-3535F6117ACC}
 		{3C597667-3FF1-48E8-978D-57A81DA55212} = {B81F802E-605B-42D6-8BA5-3535F6117ACC}
 		{A9AC2A6B-DD8B-4F6C-B16A-C4AC9606F9C8} = {C1234567-8901-2345-6789-ABCDEFABCDEF}
+		{37A1319A-2E7D-4EDA-9AEA-3C1C34C7BDE4} = {B81F802E-605B-42D6-8BA5-3535F6117ACC}
 	EndGlobalSection
 EndGlobal
