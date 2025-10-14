@@ -1,5 +1,6 @@
 using SheetAtlas.Core.Application.Interfaces;
 using SheetAtlas.Core.Domain.ValueObjects;
+using SheetAtlas.Logging.Models;
 
 namespace SheetAtlas.UI.Avalonia.Services
 {
@@ -48,20 +49,20 @@ namespace SheetAtlas.UI.Avalonia.Services
         {
             var title = error.Level switch
             {
-                ErrorLevel.Critical => "Errore Critico",
-                ErrorLevel.Error => "Errore",
-                ErrorLevel.Warning => "Avviso",
-                ErrorLevel.Info => "Informazione",
-                _ => "Errore"
+                LogSeverity.Critical => "Fatal Error",
+                LogSeverity.Error => "Error",
+                LogSeverity.Warning => "Warning",
+                LogSeverity.Info => "Information",
+                _ => "Error"
             };
 
             var message = FormatErrorMessage(error);
 
-            if (error.Level == ErrorLevel.Warning)
+            if (error.Level == LogSeverity.Warning)
             {
                 await _dialogService.ShowWarningAsync(message, title);
             }
-            else if (error.Level == ErrorLevel.Info)
+            else if (error.Level == LogSeverity.Info)
             {
                 await _dialogService.ShowInformationAsync(message, title);
             }
@@ -78,9 +79,9 @@ namespace SheetAtlas.UI.Avalonia.Services
                 return;
 
             // Group by level
-            var criticalErrors = errorList.Where(e => e.Level == ErrorLevel.Critical).ToList();
-            var regularErrors = errorList.Where(e => e.Level == ErrorLevel.Error).ToList();
-            var warnings = errorList.Where(e => e.Level == ErrorLevel.Warning).ToList();
+            var criticalErrors = errorList.Where(e => e.Level == LogSeverity.Critical).ToList();
+            var regularErrors = errorList.Where(e => e.Level == LogSeverity.Error).ToList();
+            var warnings = errorList.Where(e => e.Level == LogSeverity.Warning).ToList();
 
             var message = BuildMultiErrorMessage(criticalErrors, regularErrors, warnings);
 

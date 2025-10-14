@@ -7,6 +7,7 @@ using SheetAtlas.Infrastructure.External.Readers;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
+using SheetAtlas.Logging.Models;
 
 namespace SheetAtlas.Tests.Services
 {
@@ -33,7 +34,7 @@ namespace SheetAtlas.Tests.Services
 
             // Assert
             result.Should().NotBeNull();
-            result.Level.Should().Be(ErrorLevel.Critical);
+            result.Level.Should().Be(LogSeverity.Critical);
             result.Message.Should().Contain("colonna");
         }
 
@@ -49,7 +50,7 @@ namespace SheetAtlas.Tests.Services
 
             // Assert
             result.Should().NotBeNull();
-            result.Level.Should().Be(ErrorLevel.Critical);
+            result.Level.Should().Be(LogSeverity.Critical);
             result.Message.Should().Contain("non trovato");
             result.Message.Should().Contain("test.xlsx");
         }
@@ -66,7 +67,7 @@ namespace SheetAtlas.Tests.Services
 
             // Assert
             result.Should().NotBeNull();
-            result.Level.Should().Be(ErrorLevel.Critical);
+            result.Level.Should().Be(LogSeverity.Critical);
             result.Message.Should().Contain("Accesso");
             result.Message.Should().Contain("negato");
         }
@@ -83,7 +84,7 @@ namespace SheetAtlas.Tests.Services
 
             // Assert
             result.Should().NotBeNull();
-            result.Level.Should().Be(ErrorLevel.Critical);
+            result.Level.Should().Be(LogSeverity.Critical);
             result.Message.Should().Contain("lettura file");
         }
 
@@ -99,7 +100,7 @@ namespace SheetAtlas.Tests.Services
 
             // Assert
             result.Should().NotBeNull();
-            result.Level.Should().Be(ErrorLevel.Critical);
+            result.Level.Should().Be(LogSeverity.Critical);
             result.Message.Should().NotBeNullOrEmpty();
         }
 
@@ -162,7 +163,7 @@ namespace SheetAtlas.Tests.Services
             result.Status.Should().Be(LoadStatus.Failed);
             result.Errors.Should().NotBeEmpty();
             firstError.Should().NotBeNull();
-            firstError!.Level.Should().Be(ErrorLevel.Critical);
+            firstError!.Level.Should().Be(LogSeverity.Critical);
         }
 
         [Fact]
@@ -178,14 +179,14 @@ namespace SheetAtlas.Tests.Services
             // Assert
             result.Status.Should().Be(LoadStatus.Failed);
             result.Errors.Should().NotBeEmpty();
-            result.Errors.Should().Contain(e => e.Level == ErrorLevel.Critical);
+            result.Errors.Should().Contain(e => e.Level == LogSeverity.Critical);
 
             // Test that ExceptionHandler would handle this correctly
             var firstError = result.Errors.First();
             if (firstError.InnerException != null)
             {
                 var handledError = _handler.Handle(firstError.InnerException, "LoadFile");
-                handledError.Level.Should().Be(ErrorLevel.Critical);
+                handledError.Level.Should().Be(LogSeverity.Critical);
             }
         }
 
@@ -203,7 +204,7 @@ namespace SheetAtlas.Tests.Services
             result.Status.Should().Be(LoadStatus.Failed);
             result.Errors.Should().NotBeEmpty();
             result.Errors.Should().Contain(e =>
-                e.Level == ErrorLevel.Critical &&
+                e.Level == LogSeverity.Critical &&
                 e.Message.Contains("format"));
         }
 
@@ -219,7 +220,7 @@ namespace SheetAtlas.Tests.Services
 
             // Assert
             result.Should().NotBeNull();
-            result.Level.Should().Be(ErrorLevel.Critical);
+            result.Level.Should().Be(LogSeverity.Critical);
             result.Message.Should().Contain("lettura file");
             result.InnerException.Should().Be(ioException);
         }
@@ -236,7 +237,7 @@ namespace SheetAtlas.Tests.Services
 
             // Assert
             result.Should().NotBeNull();
-            result.Level.Should().Be(ErrorLevel.Critical);
+            result.Level.Should().Be(LogSeverity.Critical);
             result.Message.Should().Contain("Accesso");
             result.Message.Should().Contain("negato");
             result.InnerException.Should().Be(unauthorizedException);
@@ -261,7 +262,7 @@ namespace SheetAtlas.Tests.Services
             return new ExcelReaderService(readers, serviceLogger.Object);
         }
 
-        private string GetTestDataPath()
+        private static string GetTestDataPath()
         {
             return Path.Combine(
                 Directory.GetCurrentDirectory(),
@@ -272,7 +273,7 @@ namespace SheetAtlas.Tests.Services
             );
         }
 
-        private string GetTestFilePath(string category, string filename)
+        private static string GetTestFilePath(string category, string filename)
         {
             var path = Path.Combine(GetTestDataPath(), category, filename);
 

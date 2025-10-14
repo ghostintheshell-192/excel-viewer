@@ -262,7 +262,7 @@ public class LoadedFilesManager : ILoadedFilesManager
                     excelFile.FileName, excelFile.Errors.Count);
 
                 // Notify listeners of the failure
-                var criticalErrors = excelFile.Errors.Where(e => e.Level == ErrorLevel.Critical);
+                var criticalErrors = excelFile.Errors.Where(e => e.Level == Logging.Models.LogSeverity.Critical);
                 var errorMessage = criticalErrors.Any()
                     ? criticalErrors.First().Message
                     : "Unknown error";

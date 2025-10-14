@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Text;
 using CsvHelper;
 using CsvHelper.Configuration;
+using SheetAtlas.Logging.Models;
 
 namespace SheetAtlas.Infrastructure.External.Readers
 {
@@ -298,7 +299,7 @@ namespace SheetAtlas.Infrastructure.External.Readers
 
         private LoadStatus DetermineLoadStatus(Dictionary<string, SASheetData> sheets, List<ExcelError> errors)
         {
-            var hasErrors = errors.Any(e => e.Level == ErrorLevel.Error || e.Level == ErrorLevel.Critical);
+            var hasErrors = errors.Any(e => e.Level == LogSeverity.Error || e.Level == LogSeverity.Critical);
 
             if (!hasErrors)
                 return LoadStatus.Success;

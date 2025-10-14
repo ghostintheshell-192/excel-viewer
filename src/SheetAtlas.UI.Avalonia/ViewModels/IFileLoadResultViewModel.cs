@@ -1,5 +1,6 @@
 using SheetAtlas.Core.Domain.Entities;
 using SheetAtlas.Core.Domain.ValueObjects;
+using SheetAtlas.Logging.Models;
 
 namespace SheetAtlas.UI.Avalonia.ViewModels;
 
@@ -17,7 +18,7 @@ public interface IFileLoadResultViewModel : IDisposable
 
 public interface IExcelErrorViewModel
 {
-    ErrorLevel Level { get; }
+    LogSeverity Level { get; }
     string Message { get; }
     string Context { get; }
     CellReference? Location { get; }

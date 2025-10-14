@@ -7,6 +7,7 @@ using SheetAtlas.Infrastructure.External.Readers;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
+using SheetAtlas.Logging.Models;
 
 namespace SheetAtlas.Tests.Integration
 {
@@ -192,7 +193,7 @@ namespace SheetAtlas.Tests.Integration
             result.Status.Should().Be(LoadStatus.Success);
             result.Sheets.Should().BeEmpty(); // No sheets because empty sheet is skipped
             result.Errors.Should().Contain(e =>
-                e.Level == ErrorLevel.Warning &&
+                e.Level == LogSeverity.Warning &&
                 e.Message.Contains("empty"));
         }
 
@@ -209,7 +210,7 @@ namespace SheetAtlas.Tests.Integration
             result.Should().NotBeNull();
             result.Status.Should().Be(LoadStatus.Failed);
             result.Errors.Should().NotBeEmpty();
-            result.Errors.Should().Contain(e => e.Level == ErrorLevel.Critical);
+            result.Errors.Should().Contain(e => e.Level == LogSeverity.Critical);
         }
 
         [Fact]
@@ -226,7 +227,7 @@ namespace SheetAtlas.Tests.Integration
             result.Status.Should().Be(LoadStatus.Failed);
             result.Errors.Should().NotBeEmpty();
             result.Errors.Should().Contain(e =>
-                e.Level == ErrorLevel.Critical &&
+                e.Level == LogSeverity.Critical &&
                 e.Message.Contains("format"));
         }
 

@@ -95,7 +95,7 @@ namespace SheetAtlas.Logging.Services
             }
         }
 
-        private LogLevel MapNotificationLevelToLogLevel(LogSeverity level)
+        private static LogLevel MapNotificationLevelToLogLevel(LogSeverity level)
         {
             return level switch
             {

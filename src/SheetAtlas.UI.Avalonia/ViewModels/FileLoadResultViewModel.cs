@@ -1,5 +1,6 @@
 using SheetAtlas.Core.Domain.Entities;
 using SheetAtlas.Core.Domain.ValueObjects;
+using SheetAtlas.Logging.Models;
 
 namespace SheetAtlas.UI.Avalonia.ViewModels;
 
@@ -41,7 +42,7 @@ public class ExcelErrorViewModel : IExcelErrorViewModel
 {
     private readonly ExcelError _error;
 
-    public ErrorLevel Level => _error.Level;
+    public LogSeverity Level => _error.Level;
     public string Message => _error.Message;
     public string Context => _error.Context;
     public CellReference? Location => _error.Location;
