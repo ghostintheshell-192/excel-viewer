@@ -42,8 +42,8 @@ namespace SheetAtlas.Core.Application.Services
 
         public ExcelRow ExtractRowFromSearchResult(SearchResult searchResult)
         {
-            if (searchResult?.SourceFile == null)
-                throw new ArgumentNullException(nameof(searchResult));
+            ArgumentNullException.ThrowIfNull(searchResult);
+            ArgumentNullException.ThrowIfNull(searchResult.SourceFile, nameof(searchResult.SourceFile));
 
             // Skip non-cell results (filename, sheet name matches)
             if (searchResult.Row < 0 || searchResult.Column < 0)
