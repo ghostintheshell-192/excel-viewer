@@ -5,20 +5,20 @@ using SheetAtlas.Core.Domain.ValueObjects;
 using SheetAtlas.Infrastructure.External;
 using SheetAtlas.Infrastructure.External.Readers;
 using FluentAssertions;
-using Microsoft.Extensions.Logging;
 using Moq;
 using SheetAtlas.Logging.Models;
+using SheetAtlas.Logging.Services;
 
 namespace SheetAtlas.Tests.Services
 {
     public class ExceptionHandlerTests
     {
-        private readonly Mock<ILogger<ExceptionHandler>> _mockLogger;
+        private readonly Mock<ILogService> _mockLogger;
         private readonly ExceptionHandler _handler;
 
         public ExceptionHandlerTests()
         {
-            _mockLogger = new Mock<ILogger<ExceptionHandler>>();
+            _mockLogger = new Mock<ILogService>();
             _handler = new ExceptionHandler(_mockLogger.Object);
         }
 
@@ -249,8 +249,8 @@ namespace SheetAtlas.Tests.Services
 
         private IExcelReaderService CreateRealExcelReaderService()
         {
-            var serviceLogger = new Mock<ILogger<ExcelReaderService>>();
-            var readerLogger = new Mock<ILogger<OpenXmlFileReader>>();
+            var serviceLogger = new Mock<ILogService>();
+            var readerLogger = new Mock<ILogService>();
             var cellParser = new CellReferenceParser();
             var cellValueReader = new CellValueReader();
             var mergedCellProcessor = new MergedCellProcessor(cellParser, cellValueReader);

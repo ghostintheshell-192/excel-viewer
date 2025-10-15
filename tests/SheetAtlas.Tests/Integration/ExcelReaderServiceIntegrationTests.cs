@@ -5,9 +5,9 @@ using SheetAtlas.Core.Domain.ValueObjects;
 using SheetAtlas.Infrastructure.External;
 using SheetAtlas.Infrastructure.External.Readers;
 using FluentAssertions;
-using Microsoft.Extensions.Logging;
 using Moq;
 using SheetAtlas.Logging.Models;
+using SheetAtlas.Logging.Services;
 
 namespace SheetAtlas.Tests.Integration
 {
@@ -23,8 +23,8 @@ namespace SheetAtlas.Tests.Integration
         public ExcelReaderServiceIntegrationTests()
         {
             // Setup real dependencies (not mocks) for integration testing
-            var serviceLogger = new Mock<ILogger<ExcelReaderService>>();
-            var readerLogger = new Mock<ILogger<OpenXmlFileReader>>();
+            var serviceLogger = new Mock<ILogService>();
+            var readerLogger = new Mock<ILogService>();
             var cellParser = new CellReferenceParser();
             var cellValueReader = new CellValueReader();
             var mergedCellProcessor = new MergedCellProcessor(cellParser, cellValueReader);
