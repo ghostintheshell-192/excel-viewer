@@ -2,7 +2,7 @@ using SheetAtlas.Core.Domain.Entities;
 using SheetAtlas.Core.Domain.ValueObjects;
 using SheetAtlas.Core.Application.Interfaces;
 using SheetAtlas.Core.Application.DTOs;
-using Microsoft.Extensions.Logging;
+using SheetAtlas.Logging.Services;
 using System.Globalization;
 using System.Text;
 using CsvHelper;
@@ -21,10 +21,10 @@ namespace SheetAtlas.Infrastructure.External.Readers
     /// </remarks>
     public class CsvFileReader : IConfigurableFileReader
     {
-        private readonly ILogger<CsvFileReader> _logger;
+        private readonly ILogService _logger;
         private CsvReaderOptions _options;
 
-        public CsvFileReader(ILogger<CsvFileReader> logger)
+        public CsvFileReader(ILogService logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _options = CsvReaderOptions.Default;
@@ -42,8 +42,7 @@ namespace SheetAtlas.Infrastructure.External.Readers
                 throw new ArgumentException($"Expected CsvReaderOptions but got {options.GetType().Name}", nameof(options));
 
             _options = csvOptions;
-            _logger.LogDebug("Configured CSV reader with delimiter '{Delimiter}', encoding '{Encoding}'",
-                _options.Delimiter, _options.Encoding.WebName);
+            _logger.LogInfo($"Configured CSV reader with delimiter '{_options.Delimiter}', encoding '{_options.Encoding.WebName}'", "CsvFileReader");
         }
 
         public async Task<ExcelFile> ReadAsync(string filePath, CancellationToken cancellationToken = default)
@@ -64,7 +63,7 @@ namespace SheetAtlas.Infrastructure.External.Readers
                     if (_options == CsvReaderOptions.Default)
                     {
                         delimiter = DetectDelimiter(filePath);
-                        _logger.LogDebug("Auto-detected delimiter: '{Delimiter}'", delimiter);
+                        _logger.LogInfo($"Auto-detected delimiter: '{delimiter}'", "CsvFileReader");
                     }
 
                     var config = new CsvConfiguration(_options.Culture)
@@ -89,21 +88,20 @@ namespace SheetAtlas.Infrastructure.External.Readers
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Error reading CSV records from {FilePath}", filePath);
+                        _logger.LogError($"Error reading CSV records from {filePath}", ex, "CsvFileReader");
                         errors.Add(ExcelError.Critical("File", $"Error parsing CSV: {ex.Message}", ex));
                         return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
                     }
 
                     if (sheetData.RowCount == 0)
                     {
-                        _logger.LogWarning("CSV file {FilePath} contains no data", filePath);
+                        _logger.LogWarning($"CSV file {filePath} contains no data", "CsvFileReader");
                         errors.Add(ExcelError.Warning("File", "CSV file contains no data rows"));
                     }
 
                     sheets["Data"] = sheetData;
 
-                    _logger.LogInformation("Read CSV file with {RowCount} rows and {ColumnCount} columns",
-                        sheetData.RowCount, sheetData.ColumnCount);
+                    _logger.LogInfo($"Read CSV file with {sheetData.RowCount} rows and {sheetData.ColumnCount} columns", "CsvFileReader");
 
                     var status = DetermineLoadStatus(sheets, errors);
                     return new ExcelFile(filePath, status, sheets, errors);
@@ -111,29 +109,29 @@ namespace SheetAtlas.Infrastructure.External.Readers
             }
             catch (ArgumentNullException ex)
             {
-                _logger.LogError(ex, "Null filepath passed to ReadAsync");
+                _logger.LogError("Null filepath passed to ReadAsync", ex, "CsvFileReader");
                 throw; // Programming bug - rethrow
             }
             catch (OperationCanceledException)
             {
-                _logger.LogInformation("File read cancelled: {Path}", filePath);
+                _logger.LogInfo($"File read cancelled: {filePath}", "CsvFileReader");
                 throw; // Propagate cancellation
             }
             catch (IOException ex)
             {
-                _logger.LogError(ex, "I/O error reading CSV file: {Path}", filePath);
+                _logger.LogError($"I/O error reading CSV file: {filePath}", ex, "CsvFileReader");
                 errors.Add(ExcelError.Critical("File", $"Cannot access file: {ex.Message}", ex));
                 return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
             }
             catch (UnauthorizedAccessException ex)
             {
-                _logger.LogError(ex, "Access denied reading CSV file: {Path}", filePath);
+                _logger.LogError($"Access denied reading CSV file: {filePath}", ex, "CsvFileReader");
                 errors.Add(ExcelError.Critical("File", $"Access denied: {ex.Message}", ex));
                 return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error reading CSV file: {Path}", filePath);
+                _logger.LogError($"Unexpected error reading CSV file: {filePath}", ex, "CsvFileReader");
                 errors.Add(ExcelError.Critical("File", $"Error reading file: {ex.Message}", ex));
                 return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
             }
@@ -162,7 +160,7 @@ namespace SheetAtlas.Infrastructure.External.Readers
                 var recordDict = record as IDictionary<string, object>;
                 if (recordDict == null)
                 {
-                    _logger.LogWarning("Skipping non-dictionary record at row {RowNumber}", rowCount);
+                    _logger.LogWarning($"Skipping non-dictionary record at row {rowCount}", "CsvFileReader");
                     continue;
                 }
 
@@ -211,19 +209,17 @@ namespace SheetAtlas.Infrastructure.External.Readers
             // Handle empty file
             if (sheetData == null)
             {
-                _logger.LogWarning("CSV file contains no valid records");
+                _logger.LogWarning("CSV file contains no valid records", "CsvFileReader");
                 return new SASheetData(sheetName, Array.Empty<string>());
             }
 
             // Log interning statistics
             var memorySaved = stringPool.EstimatedMemorySaved(totalStrings);
-            _logger.LogDebug("String interning: {UniqueStrings} unique from {TotalStrings} total (~{MemorySavedKB} KB saved)",
-                stringPool.Count, totalStrings, memorySaved / 1024);
+            _logger.LogInfo($"String interning: {stringPool.Count} unique from {totalStrings} total (~{memorySaved / 1024} KB saved)", "CsvFileReader");
 
             // Trim excess capacity to save memory
             sheetData.TrimExcess();
-            _logger.LogDebug("Sheet trimmed to exact size: {RowCount} rows × {ColumnCount} cols = {CellCount} cells",
-                sheetData.RowCount, sheetData.ColumnCount, sheetData.CellCount);
+            _logger.LogInfo($"Sheet trimmed to exact size: {sheetData.RowCount} rows × {sheetData.ColumnCount} cols = {sheetData.CellCount} cells", "CsvFileReader");
 
             return sheetData;
         }
@@ -251,7 +247,7 @@ namespace SheetAtlas.Infrastructure.External.Readers
 
                 if (linesToAnalyze.Count == 0)
                 {
-                    _logger.LogWarning("CSV file is empty, using default delimiter ','");
+                    _logger.LogWarning("CSV file is empty, using default delimiter ','", "CsvFileReader");
                     return ',';
                 }
 
@@ -275,12 +271,12 @@ namespace SheetAtlas.Infrastructure.External.Readers
                 }
 
                 // Default to comma if no consistent delimiter found
-                _logger.LogDebug("No consistent delimiter found, using default ','");
+                _logger.LogInfo("No consistent delimiter found, using default ','", "CsvFileReader");
                 return ',';
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Error detecting delimiter, using default ','");
+                _logger.LogWarning($"Error detecting delimiter: {ex.Message}, using default ','", "CsvFileReader");
                 return ',';
             }
         }
