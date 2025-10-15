@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using SheetAtlas.Core.Domain.Entities;
-using Microsoft.Extensions.Logging;
+using SheetAtlas.Logging.Services;
 
 namespace SheetAtlas.Core.Application.Services
 {
@@ -19,9 +19,9 @@ namespace SheetAtlas.Core.Application.Services
 
     public class SearchService : ISearchService
     {
-        private readonly ILogger<SearchService> _logger;
+        private readonly ILogService _logger;
 
-        public SearchService(ILogger<SearchService> logger)
+        public SearchService(ILogService logger)
         {
             _logger = logger;
         }
@@ -131,7 +131,7 @@ namespace SheetAtlas.Core.Application.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error in search matching");
+                _logger.LogError("Error in search matching", ex, "SearchService");
 
                 // Fallback alla ricerca semplice
                 return text.Contains(query, StringComparison.OrdinalIgnoreCase);

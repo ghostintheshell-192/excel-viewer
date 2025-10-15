@@ -1,7 +1,7 @@
 using SheetAtlas.Core.Application.Interfaces;
 using SheetAtlas.Core.Domain.Exceptions;
 using SheetAtlas.Core.Domain.ValueObjects;
-using Microsoft.Extensions.Logging;
+using SheetAtlas.Logging.Services;
 
 namespace SheetAtlas.Core.Application.Services
 {
@@ -11,9 +11,9 @@ namespace SheetAtlas.Core.Application.Services
     /// </summary>
     public class ExceptionHandler : IExceptionHandler
     {
-        private readonly ILogger<ExceptionHandler> _logger;
+        private readonly ILogService _logger;
 
-        public ExceptionHandler(ILogger<ExceptionHandler> logger)
+        public ExceptionHandler(ILogService logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
@@ -21,7 +21,7 @@ namespace SheetAtlas.Core.Application.Services
         public ExcelError Handle(Exception exception, string context)
         {
             // Log technical details
-            _logger.LogError(exception, "Error in {Context}: {Message}", context, exception.Message);
+            _logger.LogError($"Error in {context}: {exception.Message}", exception, "ExceptionHandler");
 
             // Convert to user-friendly error
             return exception switch

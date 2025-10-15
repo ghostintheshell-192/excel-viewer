@@ -1,15 +1,15 @@
 using SheetAtlas.Core.Domain.Entities;
 using SheetAtlas.Core.Domain.Exceptions;
 using SheetAtlas.Core.Application.Interfaces;
-using Microsoft.Extensions.Logging;
+using SheetAtlas.Logging.Services;
 
 namespace SheetAtlas.Core.Application.Services
 {
     public class RowComparisonService : IRowComparisonService
     {
-        private readonly ILogger<RowComparisonService> _logger;
+        private readonly ILogService _logger;
 
-        public RowComparisonService(ILogger<RowComparisonService> logger)
+        public RowComparisonService(ILogService logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
@@ -19,7 +19,7 @@ namespace SheetAtlas.Core.Application.Services
             if (request?.SelectedMatches == null || request.SelectedMatches.Count < 2)
                 throw new ArgumentException("At least two search results are required for comparison", nameof(request));
 
-            _logger.LogInformation("Creating row comparison from {Count} search results", request.SelectedMatches.Count);
+            _logger.LogInfo($"Creating row comparison from {request.SelectedMatches.Count} search results", "RowComparisonService");
 
             var excelRows = new List<ExcelRow>();
 
@@ -32,8 +32,7 @@ namespace SheetAtlas.Core.Application.Services
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to extract row from search result: {FileName}, Sheet: {SheetName}, Row: {Row}",
-                        searchResult.FileName, searchResult.SheetName, searchResult.Row);
+                    _logger.LogError($"Failed to extract row from search result: {searchResult.FileName}, Sheet: {searchResult.SheetName}, Row: {searchResult.Row}", ex, "RowComparisonService");
                     throw;
                 }
             }
