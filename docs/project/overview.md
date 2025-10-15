@@ -59,7 +59,7 @@ The application has a working foundation with core features implemented:
 - **Excel Processing**: DocumentFormat.OpenXml
 - **Architecture**: Clean Architecture (Core/Infrastructure/UI layers)
 - **Dependency Injection**: Microsoft.Extensions.DependencyInjection
-- **Logging**: Microsoft.Extensions.Logging with structured logging
+- **Logging**: SheetAtlas.Logging. Internally using Microsoft.Extensions.Logging with structured logging
 - **Testing**: xUnit, Moq, FluentAssertions
 - **Version Control**: Git with develop branch workflow
 - **Packaging**: Self-contained deployments for each platform

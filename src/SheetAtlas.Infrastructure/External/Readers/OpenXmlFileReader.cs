@@ -119,12 +119,6 @@ namespace SheetAtlas.Infrastructure.External.Readers
                     return new ExcelFile(filePath, status, sheets, errors);
                 }, cancellationToken);
             }
-            catch (ArgumentNullException ex)
-            {
-                // This should NEVER happen in production, but catch for safety
-                _logger.LogError("Null filepath passed to ReadAsync", ex, "OpenXmlFileReader");
-                throw; // Rethrow - it's a programming bug
-            }
             catch (OperationCanceledException)
             {
                 _logger.LogInfo($"File read cancelled: {filePath}", "OpenXmlFileReader");

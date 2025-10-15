@@ -107,11 +107,6 @@ namespace SheetAtlas.Infrastructure.External.Readers
                     return new ExcelFile(filePath, status, sheets, errors);
                 }, cancellationToken);
             }
-            catch (ArgumentNullException ex)
-            {
-                _logger.LogError("Null filepath passed to ReadAsync", ex, "CsvFileReader");
-                throw; // Programming bug - rethrow
-            }
             catch (OperationCanceledException)
             {
                 _logger.LogInfo($"File read cancelled: {filePath}", "CsvFileReader");
@@ -274,9 +269,10 @@ namespace SheetAtlas.Infrastructure.External.Readers
                 _logger.LogInfo("No consistent delimiter found, using default ','", "CsvFileReader");
                 return ',';
             }
-            catch (Exception ex)
+            catch (IOException ex)
             {
-                _logger.LogWarning($"Error detecting delimiter: {ex.Message}, using default ','", "CsvFileReader");
+                // File I/O errors (locked, permission denied, etc.) - expected, use fallback
+                _logger.LogWarning($"Cannot read file to detect delimiter: {ex.Message}, using default ','", "CsvFileReader");
                 return ',';
             }
         }
