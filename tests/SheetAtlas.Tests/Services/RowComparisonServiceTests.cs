@@ -39,7 +39,7 @@ namespace SheetAtlas.Tests.Services
             _service.Invoking(s => s.ExtractRowFromSearchResult(searchResult))
                 .Should().Throw<ComparisonException>()
                 .Where(ex => ex.UserMessage.Contains("NonExistentSheet"))
-                .Where(ex => ex.UserMessage.Contains("non è presente"));
+                .Where(ex => ex.UserMessage.Contains("is not present"));
         }
 
         [Fact]
