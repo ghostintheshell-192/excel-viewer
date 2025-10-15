@@ -1,9 +1,10 @@
 using SheetAtlas.Core.Domain.Entities;
 using SheetAtlas.Core.Domain.ValueObjects;
 using SheetAtlas.Core.Application.Interfaces;
-using Microsoft.Extensions.Logging;
+using SheetAtlas.Logging.Services;
 
 using ExcelDataReader;
+using SheetAtlas.Logging.Models;
 
 namespace SheetAtlas.Infrastructure.External.Readers
 {
@@ -16,11 +17,11 @@ namespace SheetAtlas.Infrastructure.External.Readers
     /// </remarks>
     public class XlsFileReader : IFileFormatReader
     {
-        private readonly ILogger<XlsFileReader> _logger;
+        private readonly ILogService _logger;
         private static bool _encodingProviderRegistered = false;
         private static readonly object _encodingLock = new object();
 
-        public XlsFileReader(ILogger<XlsFileReader> logger)
+        public XlsFileReader(ILogService logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             RegisterEncodingProvider();
@@ -65,12 +66,12 @@ namespace SheetAtlas.Infrastructure.External.Readers
 
                     if (dataSet == null || dataSet.Tables.Count == 0)
                     {
-                        _logger.LogWarning("File {FilePath} contains no sheets", filePath);
+                        _logger.LogWarning($"File {filePath} contains no sheets", "XlsFileReader");
                         errors.Add(ExcelError.Warning("File", "File contains no data sheets"));
                         return new ExcelFile(filePath, LoadStatus.Success, sheets, errors);
                     }
 
-                    _logger.LogInformation("Reading .xls file with {SheetCount} sheets", dataSet.Tables.Count);
+                    _logger.LogInfo($"Reading .xls file with {dataSet.Tables.Count} sheets", "XlsFileReader");
 
                     // Convert each DataTable to our format
                     foreach (System.Data.DataTable table in dataSet.Tables)
@@ -89,12 +90,11 @@ namespace SheetAtlas.Infrastructure.External.Readers
                         {
                             var processedSheet = ProcessSheet(Path.GetFileNameWithoutExtension(filePath), table);
                             sheets[sheetName] = processedSheet;
-                            _logger.LogDebug("Sheet {SheetName} read successfully with {RowCount} rows",
-                                sheetName, processedSheet.RowCount);
+                            _logger.LogInfo($"Sheet {sheetName} read successfully with {processedSheet.RowCount} rows", "XlsFileReader");
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogError(ex, "Error processing sheet {SheetName}", sheetName);
+                            _logger.LogError($"Error processing sheet {sheetName}", ex, "XlsFileReader");
                             errors.Add(ExcelError.SheetError(sheetName, $"Error reading sheet: {ex.Message}", ex));
                         }
                     }
@@ -103,32 +103,27 @@ namespace SheetAtlas.Infrastructure.External.Readers
                     return new ExcelFile(filePath, status, sheets, errors);
                 }, cancellationToken);
             }
-            catch (ArgumentNullException ex)
-            {
-                _logger.LogError(ex, "Null filepath passed to ReadAsync");
-                throw; // Programming bug - rethrow
-            }
             catch (OperationCanceledException)
             {
-                _logger.LogInformation("File read cancelled: {Path}", filePath);
+                _logger.LogInfo($"File read cancelled: {filePath}", "XlsFileReader");
                 throw; // Propagate cancellation
             }
             catch (IOException ex)
             {
-                _logger.LogError(ex, "I/O error reading .xls file: {Path}", filePath);
+                _logger.LogError($"I/O error reading .xls file: {filePath}", ex, "XlsFileReader");
                 errors.Add(ExcelError.Critical("File", $"Cannot access file: {ex.Message}", ex));
                 return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
             }
             catch (UnauthorizedAccessException ex)
             {
-                _logger.LogError(ex, "Access denied reading .xls file: {Path}", filePath);
+                _logger.LogError($"Access denied reading .xls file: {filePath}", ex, "XlsFileReader");
                 errors.Add(ExcelError.Critical("File", $"Access denied: {ex.Message}", ex));
                 return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
             }
             catch (Exception ex)
             {
                 // Catch-all for unexpected errors (includes ExcelDataReader errors)
-                _logger.LogError(ex, "Error reading .xls file: {Path}", filePath);
+                _logger.LogError($"Error reading .xls file: {filePath}", ex, "XlsFileReader");
                 errors.Add(ExcelError.Critical("File", $"Error reading file: {ex.Message}", ex));
                 return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
             }
@@ -140,7 +135,7 @@ namespace SheetAtlas.Infrastructure.External.Readers
 
             if (sourceTable.Rows.Count == 0)
             {
-                _logger.LogWarning("Sheet {SheetName} is empty", sheetName);
+                _logger.LogWarning($"Sheet {sheetName} is empty", "XlsFileReader");
                 return new SASheetData(sheetName, Array.Empty<string>());
             }
 
@@ -213,7 +208,7 @@ namespace SheetAtlas.Infrastructure.External.Readers
 
         private LoadStatus DetermineLoadStatus(Dictionary<string, SASheetData> sheets, List<ExcelError> errors)
         {
-            var hasErrors = errors.Any(e => e.Level == ErrorLevel.Error || e.Level == ErrorLevel.Critical);
+            var hasErrors = errors.Any(e => e.Level == LogSeverity.Error || e.Level == LogSeverity.Critical);
 
             if (!hasErrors)
                 return LoadStatus.Success;
@@ -233,7 +228,7 @@ namespace SheetAtlas.Infrastructure.External.Readers
                     {
                         System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
                         _encodingProviderRegistered = true;
-                        _logger.LogDebug("Registered CodePagesEncodingProvider for legacy .xls encoding support");
+                        _logger.LogInfo("Registered CodePagesEncodingProvider for legacy .xls encoding support", "XlsFileReader");
                     }
                 }
             }

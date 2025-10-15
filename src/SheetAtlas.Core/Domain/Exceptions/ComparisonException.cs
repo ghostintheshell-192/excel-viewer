@@ -17,16 +17,16 @@ namespace SheetAtlas.Core.Domain.Exceptions
         public static ComparisonException IncompatibleStructures(string file1, string file2)
             => new(
                 $"Files have incompatible structures: {file1} vs {file2}",
-                "I file hanno strutture incompatibili e non possono essere confrontati");
+                "The files have incompatible structures and cannot be compared");
 
         public static ComparisonException MissingSheet(string sheetName, string fileName)
             => new(
                 $"Sheet '{sheetName}' not found in file {fileName}",
-                $"Il foglio '{sheetName}' non è presente nel file {Path.GetFileName(fileName)}");
+                $"Sheet '{sheetName}' is not present in file {Path.GetFileName(fileName)}");
 
         public static ComparisonException NoCommonColumns()
             => new(
                 "No common columns found between files",
-                "Nessuna colonna in comune trovata tra i file");
+                "No common columns found between files");
     }
 }

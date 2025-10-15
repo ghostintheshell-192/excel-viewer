@@ -5,14 +5,14 @@ using SheetAtlas.Core.Application.Services;
 using SheetAtlas.Core.Application.Interfaces;
 using SheetAtlas.UI.Avalonia.Models.Search;
 using SheetAtlas.UI.Avalonia.ViewModels;
-using Microsoft.Extensions.Logging;
+using SheetAtlas.Logging.Services;
 
 namespace SheetAtlas.UI.Avalonia.Managers.Search;
 
 public class SearchResultsManager : ISearchResultsManager
 {
     private readonly ISearchService _searchService;
-    private readonly ILogger<SearchResultsManager> _logger;
+    private readonly ILogService _logger;
     private readonly ISearchResultFactory _factory;
 
     private IReadOnlyCollection<IFileLoadResultViewModel> _searchableFiles;
@@ -34,7 +34,7 @@ public class SearchResultsManager : ISearchResultsManager
 
     public SearchResultsManager(
         ISearchService searchService,
-        ILogger<SearchResultsManager> logger,
+        ILogService logger,
         ISearchResultFactory factory)
     {
         _searchService = searchService ?? throw new ArgumentNullException(nameof(searchService));
@@ -64,8 +64,7 @@ public class SearchResultsManager : ISearchResultsManager
             ResultsChanged?.Invoke(this, EventArgs.Empty);
             GroupedResultsUpdated?.Invoke(this, new GroupedResultsEventArgs(_groupedResults));
 
-            _logger.LogInformation("Removed {count} search results for file: {fileName}",
-                removedCount, file.FileName);
+            _logger.LogInfo($"Removed {removedCount} search results for file: {file.FileName}", "SearchResultsManager");
         }
     }
 
@@ -106,12 +105,11 @@ public class SearchResultsManager : ISearchResultsManager
             ResultsChanged?.Invoke(this, EventArgs.Empty);
             GroupedResultsUpdated?.Invoke(this, new GroupedResultsEventArgs(_groupedResults));
 
-            _logger.LogInformation("Search completed. Found {count} results for query: {query}",
-                _results.Count, query);
+            _logger.LogInfo($"Search completed. Found {_results.Count} results for query: {query}", "SearchResultsManager");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error performing search for query: {query}", query);
+            _logger.LogError($"Error performing search for query: {query}", ex, "SearchResultsManager");
         }
     }
 
@@ -138,7 +136,7 @@ public class SearchResultsManager : ISearchResultsManager
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating suggestions for query: {query}", query);
+            _logger.LogError($"Error generating suggestions for query: {query}", ex, "SearchResultsManager");
         }
     }
 

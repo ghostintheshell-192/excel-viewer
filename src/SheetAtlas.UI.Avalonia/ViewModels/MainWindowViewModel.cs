@@ -6,7 +6,7 @@ using SheetAtlas.Core.Application.DTOs;
 using SheetAtlas.Infrastructure.External;
 using SheetAtlas.UI.Avalonia.Models.Search;
 using SheetAtlas.UI.Avalonia.Services;
-using Microsoft.Extensions.Logging;
+using SheetAtlas.Logging.Services;
 using Microsoft.Extensions.DependencyInjection;
 using SheetAtlas.UI.Avalonia.Commands;
 using SheetAtlas.UI.Avalonia.Managers;
@@ -20,7 +20,7 @@ public class MainWindowViewModel : ViewModelBase
     private readonly ILoadedFilesManager _filesManager;
     private readonly IRowComparisonCoordinator _comparisonCoordinator;
     private readonly IFilePickerService _filePickerService;
-    private readonly ILogger<MainWindowViewModel> _logger;
+    private readonly ILogService _logger;
     private readonly IThemeManager _themeManager;
     private readonly IActivityLogService _activityLog;
     private readonly IDialogService _dialogService;
@@ -97,7 +97,7 @@ public class MainWindowViewModel : ViewModelBase
         ILoadedFilesManager filesManager,
         IRowComparisonCoordinator comparisonCoordinator,
         IFilePickerService filePickerService,
-        ILogger<MainWindowViewModel> logger,
+        ILogService logger,
         IThemeManager themeManager,
         IActivityLogService activityLog,
         IDialogService dialogService)
@@ -159,7 +159,7 @@ public class MainWindowViewModel : ViewModelBase
         // Switch back to Search Results tab
         SelectedTabIndex = 1;
 
-        _logger.LogInformation("Comparison removed and selections cleared");
+        _logger.LogInfo("Comparison removed and selections cleared", "MainWindowViewModel");
     }
 
     public void SetSearchViewModel(SearchViewModel searchViewModel)
@@ -233,35 +233,35 @@ public class MainWindowViewModel : ViewModelBase
     {
         try
         {
-            _activityLog.LogInfo("Apertura selezione file...", "FileLoad");
+            _activityLog.LogInfo("Opening file selection...", "FileLoad");
 
             var files = await _filePickerService.OpenFilesAsync("Select Excel Files", new[] { "*.xlsx", "*.xls" });
 
             if (files?.Any() != true)
             {
                 // User cancelled or didn't select any files - this is normal
-                _activityLog.LogInfo("Selezione file annullata dall'utente", "FileLoad");
+                _activityLog.LogInfo("File selection cancelled by user", "FileLoad");
                 return;
             }
 
-            _activityLog.LogInfo($"Caricamento di {files.Count()} file...", "FileLoad");
+            _activityLog.LogInfo($"Loading {files.Count()} file(s)...", "FileLoad");
             await _filesManager.LoadFilesAsync(files);
 
-            _activityLog.LogInfo($"Caricamento completato: {files.Count()} file", "FileLoad");
+            _activityLog.LogInfo($"Loading completed: {files.Count()} file(s)", "FileLoad");
         }
         catch (Exception ex)
         {
             // Safety net for unexpected errors
             // Note: FilePickerService and ExcelReaderService handle their own errors internally
             // This catch is only for truly unexpected issues (OOM, async state corruption, etc.)
-            _logger.LogError(ex, "Unexpected error when loading files");
-            _activityLog.LogError("Errore imprevisto durante il caricamento", ex, "FileLoad");
+            _logger.LogError("Unexpected error when loading files", ex, "MainWindowViewModel");
+            _activityLog.LogError("Unexpected error during loading", ex, "FileLoad");
 
             await _dialogService.ShowErrorAsync(
-                "Si è verificato un errore imprevisto durante il caricamento dei file.\n\n" +
-                $"Dettaglio: {ex.Message}\n\n" +
-                "L'operazione è stata annullata.",
-                "Errore Caricamento"
+                "An unexpected error occurred while loading files.\n\n" +
+                $"Details: {ex.Message}\n\n" +
+                "Operation cancelled.",
+                "Loading Error"
             );
         }
     }
@@ -273,11 +273,11 @@ public class MainWindowViewModel : ViewModelBase
     {
         if (file == null)
         {
-            _logger.LogWarning("Clean all data requested with null file");
+            _logger.LogWarning("Clean all data requested with null file", "MainWindowViewModel");
             return;
         }
 
-        _logger.LogInformation("Clean all data requested for: {FileName}", file.FileName);
+        _logger.LogInfo($"Clean all data requested for: {file.FileName}", "MainWindowViewModel");
 
         // Clear selection if this file is currently selected (prevent memory leak)
         if (SelectedFile == file)
@@ -300,7 +300,7 @@ public class MainWindowViewModel : ViewModelBase
         // Finally, remove the file from the loaded files list
         _filesManager.RemoveFile(file);
 
-        _logger.LogInformation("Cleaned all data for file: {FileName}", file.FileName);
+        _logger.LogInfo($"Cleaned all data for file: {file.FileName}", "MainWindowViewModel");
 
         // AGGRESSIVE CLEANUP: Force garbage collection after file removal
         // REASON: DataTable objects (100-500 MB each) end up in Large Object Heap (LOH)
@@ -326,7 +326,7 @@ public class MainWindowViewModel : ViewModelBase
     {
         if (file == null)
         {
-            _logger.LogWarning("Try again requested but file is null");
+            _logger.LogWarning("Try again requested but file is null", "MainWindowViewModel");
             return;
         }
 
@@ -338,22 +338,22 @@ public class MainWindowViewModel : ViewModelBase
     {
         try
         {
-            _activityLog.LogInfo($"Nuovo tentativo di caricamento: {file.FileName}", "FileRetry");
-            _logger.LogInformation("Retrying file load for: {FilePath}", file.FilePath);
+            _activityLog.LogInfo($"Retrying file load: {file.FileName}", "FileRetry");
+            _logger.LogInfo($"Retrying file load for: {file.FilePath}", "MainWindowViewModel");
 
             await _filesManager.RetryLoadAsync(file.FilePath);
 
-            _activityLog.LogInfo($"Tentativo completato: {file.FileName}", "FileRetry");
+            _activityLog.LogInfo($"Retry completed: {file.FileName}", "FileRetry");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrying file load: {FilePath}", file.FilePath);
-            _activityLog.LogError($"Errore nel ricaricamento di {file.FileName}", ex, "FileRetry");
+            _logger.LogError($"Error retrying file load: {file.FilePath}", ex, "MainWindowViewModel");
+            _activityLog.LogError($"Error reloading {file.FileName}", ex, "FileRetry");
 
             await _dialogService.ShowErrorAsync(
-                $"Impossibile ricaricare il file '{file.FileName}'.\n\n" +
-                $"Dettaglio: {ex.Message}",
-                "Errore Ricaricamento"
+                $"Unable to reload file '{file.FileName}'.\n\n" +
+                $"Details: {ex.Message}",
+                "Reload Error"
             );
         }
     }
@@ -361,25 +361,24 @@ public class MainWindowViewModel : ViewModelBase
     // Event handlers for FilesManager events
     private void OnFileLoaded(object? sender, FileLoadedEventArgs e)
     {
-        _logger.LogInformation("File loaded: {FileName} (HasErrors: {HasErrors})",
-            e.File.FileName, e.HasErrors);
+        _logger.LogInfo($"File loaded: {e.File.FileName} (HasErrors: {e.HasErrors})", "MainWindowViewModel");
     }
 
     private void OnFileRemoved(object? sender, FileRemovedEventArgs e)
     {
-        _logger.LogInformation("File removed: {FileName}", e.File.FileName);
+        _logger.LogInfo($"File removed: {e.File.FileName}", "MainWindowViewModel");
     }
 
     private void OnFileLoadFailed(object? sender, FileLoadFailedEventArgs e)
     {
-        _logger.LogError(e.Exception, "File load failed: {FilePath}", e.FilePath);
+        _logger.LogError($"File load failed: {e.FilePath}", e.Exception, "MainWindowViewModel");
     }
 
     private void OnViewSheetsRequested(IFileLoadResultViewModel? file)
     {
         if (file != null)
         {
-            _logger.LogInformation("View sheets requested for: {FileName}", file.FileName);
+            _logger.LogInfo($"View sheets requested for: {file.FileName}", "MainWindowViewModel");
             // TODO: Navigate to sheet view or show sheet details
             // This could open a new window or change the current view
         }
@@ -397,7 +396,7 @@ public class MainWindowViewModel : ViewModelBase
                      $"© 2025 - Built with .NET 8 and Avalonia UI";
 
         await _dialogService.ShowInformationAsync(message, "About");
-        _logger.LogInformation("Displayed About dialog");
+        _logger.LogInfo("Displayed About dialog", "MainWindowViewModel");
     }
 
     private async Task OpenDocumentationAsync()
@@ -414,18 +413,18 @@ public class MainWindowViewModel : ViewModelBase
             };
             System.Diagnostics.Process.Start(psi);
 
-            _activityLog.LogInfo("Documentazione aperta nel browser", "Help");
-            _logger.LogInformation("Opened documentation URL: {Url}", documentationUrl);
+            _activityLog.LogInfo("Documentation opened in browser", "Help");
+            _logger.LogInfo($"Opened documentation URL: {documentationUrl}", "MainWindowViewModel");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to open documentation URL");
-            _activityLog.LogError("Impossibile aprire la documentazione", ex, "Help");
+            _logger.LogError("Failed to open documentation URL", ex, "MainWindowViewModel");
+            _activityLog.LogError("Unable to open documentation", ex, "Help");
 
             await _dialogService.ShowErrorAsync(
-                $"Impossibile aprire il browser.\n\n" +
-                $"Puoi accedere alla documentazione manualmente:\n{documentationUrl}",
-                "Errore Apertura Browser"
+                $"Unable to open browser.\n\n" +
+                $"You can access the documentation manually:\n{documentationUrl}",
+                "Browser Open Error"
             );
         }
 

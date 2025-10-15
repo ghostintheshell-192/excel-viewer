@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using SheetAtlas.Core.Domain.Entities;
-using Microsoft.Extensions.Logging;
+using SheetAtlas.Logging.Services;
 
 namespace SheetAtlas.Core.Application.Services
 {
@@ -19,9 +19,9 @@ namespace SheetAtlas.Core.Application.Services
 
     public class SearchService : ISearchService
     {
-        private readonly ILogger<SearchService> _logger;
+        private readonly ILogService _logger;
 
-        public SearchService(ILogger<SearchService> logger)
+        public SearchService(ILogService logger)
         {
             _logger = logger;
         }
@@ -129,11 +129,16 @@ namespace SheetAtlas.Core.Application.Services
                     ? text.Contains(query)
                     : text.Contains(query, StringComparison.OrdinalIgnoreCase);
             }
-            catch (Exception ex)
+            catch (ArgumentException ex)
             {
-                _logger.LogError(ex, "Error in search matching");
-
-                // Fallback alla ricerca semplice
+                // Invalid regex pattern provided by user - expected error, use fallback
+                _logger.LogWarning($"Invalid regex pattern '{query}': {ex.Message}", "SearchService");
+                return text.Contains(query, StringComparison.OrdinalIgnoreCase);
+            }
+            catch (RegexMatchTimeoutException ex)
+            {
+                // Regex took too long - expected for complex patterns, use fallback
+                _logger.LogWarning($"Regex timeout for pattern '{query}': {ex.Message}", "SearchService");
                 return text.Contains(query, StringComparison.OrdinalIgnoreCase);
             }
         }

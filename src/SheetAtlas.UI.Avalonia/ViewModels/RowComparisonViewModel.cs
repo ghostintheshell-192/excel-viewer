@@ -4,13 +4,13 @@ using SheetAtlas.Core.Domain.Entities;
 using SheetAtlas.UI.Avalonia.Commands;
 using SheetAtlas.UI.Avalonia.Models;
 using SheetAtlas.UI.Avalonia.Managers;
-using Microsoft.Extensions.Logging;
+using SheetAtlas.Logging.Services;
 
 namespace SheetAtlas.UI.Avalonia.ViewModels
 {
     public class RowComparisonViewModel : ViewModelBase
     {
-        private readonly ILogger<RowComparisonViewModel> _logger;
+        private readonly ILogService _logger;
         private readonly IThemeManager? _themeManager;
         private RowComparison? _comparison;
         private ObservableCollection<RowComparisonColumnViewModel> _columns = new();
@@ -41,7 +41,7 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
 
         public event EventHandler? CloseRequested;
 
-        public RowComparisonViewModel(ILogger<RowComparisonViewModel> logger, IThemeManager? themeManager = null)
+        public RowComparisonViewModel(ILogService logger, IThemeManager? themeManager = null)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _themeManager = themeManager;
@@ -59,7 +59,7 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
             }
         }
 
-        public RowComparisonViewModel(RowComparison comparison, ILogger<RowComparisonViewModel> logger, IThemeManager? themeManager = null)
+        public RowComparisonViewModel(RowComparison comparison, ILogService logger, IThemeManager? themeManager = null)
             : this(logger, themeManager)
         {
             Comparison = comparison;
@@ -69,7 +69,7 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
         {
             // Force re-evaluation of all cell background bindings
             RefreshCellColors();
-            _logger.LogInformation("Refreshed cell colors for theme: {Theme}", newTheme);
+            _logger.LogInfo($"Refreshed cell colors for theme: {newTheme}", "RowComparisonViewModel");
         }
 
         private void RefreshCellColors()
@@ -104,11 +104,10 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
             // Log warnings if any structural issues were detected
             if (Comparison.Warnings.Any())
             {
-                _logger.LogWarning("Row comparison detected {WarningCount} structural inconsistencies in column headers", Comparison.Warnings.Count);
+                _logger.LogWarning($"Row comparison detected {Comparison.Warnings.Count} structural inconsistencies in column headers", "RowComparisonViewModel");
                 foreach (var warning in Comparison.Warnings)
                 {
-                    _logger.LogWarning("Column '{ColumnName}': {Message} (Files: {Files})",
-                        warning.ColumnName, warning.Message, string.Join(", ", warning.AffectedFiles));
+                    _logger.LogWarning($"Column '{warning.ColumnName}': {warning.Message} (Files: {string.Join(", ", warning.AffectedFiles)})", "RowComparisonViewModel");
                 }
             }
 
@@ -120,8 +119,7 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
                 Columns.Add(columnViewModel);
             }
 
-            _logger.LogInformation("Created row comparison with {ColumnCount} columns for {RowCount} rows using intelligent header mapping",
-                allHeaders.Count, Comparison.Rows.Count);
+            _logger.LogInfo($"Created row comparison with {allHeaders.Count} columns for {Comparison.Rows.Count} rows using intelligent header mapping", "RowComparisonViewModel");
         }
     }
 

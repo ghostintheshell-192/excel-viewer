@@ -1,3 +1,5 @@
+using SheetAtlas.Logging.Models;
+
 namespace SheetAtlas.Core.Domain.ValueObjects
 {
     public enum LoadStatus
@@ -7,24 +9,16 @@ namespace SheetAtlas.Core.Domain.ValueObjects
         Failed
     }
 
-    public enum ErrorLevel
-    {
-        Info,
-        Warning,
-        Error,
-        Critical
-    }
-
     public class ExcelError
     {
-        public ErrorLevel Level { get; }
+        public LogSeverity Level { get; }
         public string Message { get; }
         public string Context { get; }
         public CellReference? Location { get; }
         public Exception? InnerException { get; }
         public DateTime Timestamp { get; }
 
-        private ExcelError(ErrorLevel level, string message, string context, CellReference? location = null, Exception? innerException = null)
+        private ExcelError(LogSeverity level, string message, string context, CellReference? location = null, Exception? innerException = null)
         {
             Level = level;
             Message = message;
@@ -36,32 +30,32 @@ namespace SheetAtlas.Core.Domain.ValueObjects
 
         public static ExcelError FileError(string message, Exception? ex = null)
         {
-            return new ExcelError(ErrorLevel.Error, message, "File", null, ex);
+            return new ExcelError(LogSeverity.Error, message, "File", null, ex);
         }
 
         public static ExcelError SheetError(string sheetName, string message, Exception? ex = null)
         {
-            return new ExcelError(ErrorLevel.Error, message, $"Sheet:{sheetName}", null, ex);
+            return new ExcelError(LogSeverity.Error, message, $"Sheet:{sheetName}", null, ex);
         }
 
         public static ExcelError CellError(string sheetName, CellReference location, string message, Exception? ex = null)
         {
-            return new ExcelError(ErrorLevel.Error, message, $"Cell:{sheetName}", location, ex);
+            return new ExcelError(LogSeverity.Error, message, $"Cell:{sheetName}", location, ex);
         }
 
         public static ExcelError Warning(string context, string message)
         {
-            return new ExcelError(ErrorLevel.Warning, message, context);
+            return new ExcelError(LogSeverity.Warning, message, context);
         }
 
         public static ExcelError Info(string context, string message)
         {
-            return new ExcelError(ErrorLevel.Info, message, context);
+            return new ExcelError(LogSeverity.Info, message, context);
         }
 
         public static ExcelError Critical(string context, string message, Exception? ex = null)
         {
-            return new ExcelError(ErrorLevel.Critical, message, context, null, ex);
+            return new ExcelError(LogSeverity.Critical, message, context, null, ex);
         }
 
         public override string ToString()

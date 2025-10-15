@@ -1,15 +1,15 @@
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
-using Microsoft.Extensions.Logging;
+using SheetAtlas.Logging.Services;
 
 namespace SheetAtlas.UI.Avalonia.Services;
 
 public class AvaloniaFilePickerService : IFilePickerService
 {
-    private readonly ILogger<AvaloniaFilePickerService> _logger;
+    private readonly ILogService _logger;
 
-    public AvaloniaFilePickerService(ILogger<AvaloniaFilePickerService> logger)
+    public AvaloniaFilePickerService(ILogService logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -30,7 +30,7 @@ public class AvaloniaFilePickerService : IFilePickerService
             var storageProvider = GetStorageProvider();
             if (storageProvider == null)
             {
-                _logger.LogWarning("StorageProvider not available for file picker");
+                _logger.LogWarning("StorageProvider not available for file picker", "AvaloniaFilePickerService");
                 return null;
             }
 
@@ -82,31 +82,31 @@ public class AvaloniaFilePickerService : IFilePickerService
 
             if (result == null || !result.Any())
             {
-                _logger.LogInformation("User cancelled file picker or selected no files");
+                _logger.LogInfo("User cancelled file picker or selected no files", "AvaloniaFilePickerService");
                 return null;
             }
 
             var filePaths = result.Select(f => f.Path.LocalPath).ToList();
-            _logger.LogInformation("User selected {FileCount} files", filePaths.Count);
+            _logger.LogInfo($"User selected {filePaths.Count} files", "AvaloniaFilePickerService");
 
             return filePaths;
         }
         catch (OperationCanceledException)
         {
             // User cancelled - this is normal operation
-            _logger.LogInformation("File picker cancelled by user");
+            _logger.LogInfo("File picker cancelled by user", "AvaloniaFilePickerService");
             return null;
         }
         catch (UnauthorizedAccessException ex)
         {
             // Permission denied to access file system
-            _logger.LogError(ex, "Access denied when opening file picker");
+            _logger.LogError("Access denied when opening file picker", ex, "AvaloniaFilePickerService");
             return null;
         }
         catch (Exception ex)
         {
             // Unexpected errors - platform issues, file system errors, etc.
-            _logger.LogError(ex, "Unexpected error opening file picker");
+            _logger.LogError("Unexpected error opening file picker", ex, "AvaloniaFilePickerService");
             return null;
         }
     }
@@ -118,7 +118,7 @@ public class AvaloniaFilePickerService : IFilePickerService
             var storageProvider = GetStorageProvider();
             if (storageProvider == null)
             {
-                _logger.LogWarning("StorageProvider not available for save file picker");
+                _logger.LogWarning("StorageProvider not available for save file picker", "AvaloniaFilePickerService");
                 return null;
             }
 
@@ -153,31 +153,31 @@ public class AvaloniaFilePickerService : IFilePickerService
 
             if (result == null)
             {
-                _logger.LogInformation("User cancelled save file picker");
+                _logger.LogInfo("User cancelled save file picker", "AvaloniaFilePickerService");
                 return null;
             }
 
             var filePath = result.Path.LocalPath;
-            _logger.LogInformation("User selected save location: {FilePath}", filePath);
+            _logger.LogInfo($"User selected save location: {filePath}", "AvaloniaFilePickerService");
 
             return filePath;
         }
         catch (OperationCanceledException)
         {
             // User cancelled - this is normal operation
-            _logger.LogInformation("Save file picker cancelled by user");
+            _logger.LogInfo("Save file picker cancelled by user", "AvaloniaFilePickerService");
             return null;
         }
         catch (UnauthorizedAccessException ex)
         {
             // Permission denied to access file system
-            _logger.LogError(ex, "Access denied when opening save file picker");
+            _logger.LogError("Access denied when opening save file picker", ex, "AvaloniaFilePickerService");
             return null;
         }
         catch (Exception ex)
         {
             // Unexpected errors - platform issues, file system errors, etc.
-            _logger.LogError(ex, "Unexpected error opening save file picker");
+            _logger.LogError("Unexpected error opening save file picker", ex, "AvaloniaFilePickerService");
             return null;
         }
     }

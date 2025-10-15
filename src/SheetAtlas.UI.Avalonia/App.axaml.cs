@@ -17,6 +17,7 @@ using SheetAtlas.Core.Application.Interfaces;
 using SheetAtlas.Infrastructure.External;
 using SheetAtlas.Infrastructure.External.Readers;
 using SheetAtlas.UI.Avalonia.Managers;
+using SheetAtlas.Logging.Services;
 
 namespace SheetAtlas.UI.Avalonia;
 
@@ -85,6 +86,7 @@ public partial class App : Application
                 services.AddSingleton<IDialogService, AvaloniaDialogService>();
                 services.AddSingleton<IFilePickerService, AvaloniaFilePickerService>();
                 services.AddSingleton<IErrorNotificationService, ErrorNotificationService>();
+                services.AddSingleton<ILogService, LogService>();
                 services.AddSingleton<IActivityLogService, ActivityLogService>();
 
 

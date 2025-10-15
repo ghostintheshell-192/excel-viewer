@@ -1,5 +1,7 @@
 using SheetAtlas.Core.Application.Interfaces;
 using SheetAtlas.Core.Domain.ValueObjects;
+using SheetAtlas.Logging.Models;
+using SheetAtlas.Logging.Services;
 
 namespace SheetAtlas.UI.Avalonia.Services
 {
@@ -28,14 +30,17 @@ namespace SheetAtlas.UI.Avalonia.Services
     public class ErrorNotificationService : IErrorNotificationService
     {
         private readonly IDialogService _dialogService;
+        private readonly ILogService _logService;
         private readonly IExceptionHandler _exceptionHandler;
 
         public ErrorNotificationService(
             IDialogService dialogService,
-            IExceptionHandler exceptionHandler)
+            IExceptionHandler exceptionHandler,
+            ILogService logService)
         {
             _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
             _exceptionHandler = exceptionHandler ?? throw new ArgumentNullException(nameof(exceptionHandler));
+            _logService = logService ?? throw new ArgumentNullException(nameof(logService));
         }
 
         public async Task ShowExceptionAsync(Exception exception, string context)
@@ -48,20 +53,29 @@ namespace SheetAtlas.UI.Avalonia.Services
         {
             var title = error.Level switch
             {
-                ErrorLevel.Critical => "Errore Critico",
-                ErrorLevel.Error => "Errore",
-                ErrorLevel.Warning => "Avviso",
-                ErrorLevel.Info => "Informazione",
-                _ => "Errore"
+                LogSeverity.Critical => "Fatal Error",
+                LogSeverity.Error => "Error",
+                LogSeverity.Warning => "Warning",
+                LogSeverity.Info => "Information",
+                _ => "Error"
             };
 
             var message = FormatErrorMessage(error);
 
-            if (error.Level == ErrorLevel.Warning)
+            // Log the error to LogService (in addition to showing dialog)
+            _logService.AddLogMessage(new LogMessage(
+                error.Level,
+                title,
+                error.Message,
+                error.Context,
+                error.InnerException
+            ));
+
+            if (error.Level == LogSeverity.Warning)
             {
                 await _dialogService.ShowWarningAsync(message, title);
             }
-            else if (error.Level == ErrorLevel.Info)
+            else if (error.Level == LogSeverity.Info)
             {
                 await _dialogService.ShowInformationAsync(message, title);
             }
@@ -78,9 +92,9 @@ namespace SheetAtlas.UI.Avalonia.Services
                 return;
 
             // Group by level
-            var criticalErrors = errorList.Where(e => e.Level == ErrorLevel.Critical).ToList();
-            var regularErrors = errorList.Where(e => e.Level == ErrorLevel.Error).ToList();
-            var warnings = errorList.Where(e => e.Level == ErrorLevel.Warning).ToList();
+            var criticalErrors = errorList.Where(e => e.Level == LogSeverity.Critical).ToList();
+            var regularErrors = errorList.Where(e => e.Level == LogSeverity.Error).ToList();
+            var warnings = errorList.Where(e => e.Level == LogSeverity.Warning).ToList();
 
             var message = BuildMultiErrorMessage(criticalErrors, regularErrors, warnings);
 

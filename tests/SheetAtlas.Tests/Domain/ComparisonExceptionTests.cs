@@ -16,7 +16,7 @@ namespace SheetAtlas.Tests.Domain
             var exception = ComparisonException.IncompatibleStructures(file1, file2);
 
             // Assert
-            exception.UserMessage.Should().Contain("incompatibili");
+            exception.UserMessage.Should().Contain("incompatible");
             exception.Message.Should().Contain(file1);
             exception.Message.Should().Contain(file2);
             exception.ErrorCode.Should().Be("COMPARISON_ERROR");
@@ -35,7 +35,7 @@ namespace SheetAtlas.Tests.Domain
             // Assert
             exception.UserMessage.Should().Contain(sheetName);
             exception.UserMessage.Should().Contain("report.xlsx");
-            exception.UserMessage.Should().Contain("non è presente");
+            exception.UserMessage.Should().Contain("is not present");
             exception.Message.Should().Contain(sheetName);
             exception.Message.Should().Contain(fileName);
         }
@@ -47,8 +47,7 @@ namespace SheetAtlas.Tests.Domain
             var exception = ComparisonException.NoCommonColumns();
 
             // Assert
-            exception.UserMessage.Should().Contain("colonna");
-            exception.UserMessage.Should().Contain("comune");
+            exception.UserMessage.Should().Contain("common columns");
             exception.Message.Should().Contain("No common columns");
         }
 

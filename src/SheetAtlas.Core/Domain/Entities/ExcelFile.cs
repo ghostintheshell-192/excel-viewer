@@ -1,4 +1,5 @@
 using SheetAtlas.Core.Domain.ValueObjects;
+using SheetAtlas.Logging.Models;
 
 namespace SheetAtlas.Core.Domain.Entities
 {
@@ -27,13 +28,13 @@ namespace SheetAtlas.Core.Domain.Entities
             return Sheets.TryGetValue(sheetName, out var sheet) ? sheet : null;
         }
 
-        public bool HasErrors => Errors.Any(e => e.Level == ErrorLevel.Error || e.Level == ErrorLevel.Critical);
+        public bool HasErrors => Errors.Any(e => e.Level == LogSeverity.Error || e.Level == LogSeverity.Critical);
 
-        public bool HasWarnings => Errors.Any(e => e.Level == ErrorLevel.Warning);
+        public bool HasWarnings => Errors.Any(e => e.Level == LogSeverity.Warning);
 
-        public bool HasCriticalErrors => Errors.Any(e => e.Level == ErrorLevel.Critical);
+        public bool HasCriticalErrors => Errors.Any(e => e.Level == LogSeverity.Critical);
 
-        public IEnumerable<ExcelError> GetErrorsByLevel(ErrorLevel level)
+        public IEnumerable<ExcelError> GetErrorsByLevel(LogSeverity level)
         {
             return Errors.Where(e => e.Level == level);
         }
