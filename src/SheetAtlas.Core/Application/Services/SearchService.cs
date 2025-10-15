@@ -129,11 +129,16 @@ namespace SheetAtlas.Core.Application.Services
                     ? text.Contains(query)
                     : text.Contains(query, StringComparison.OrdinalIgnoreCase);
             }
-            catch (Exception ex)
+            catch (ArgumentException ex)
             {
-                _logger.LogError("Error in search matching", ex, "SearchService");
-
-                // Fallback alla ricerca semplice
+                // Invalid regex pattern provided by user - expected error, use fallback
+                _logger.LogWarning($"Invalid regex pattern '{query}': {ex.Message}", "SearchService");
+                return text.Contains(query, StringComparison.OrdinalIgnoreCase);
+            }
+            catch (RegexMatchTimeoutException ex)
+            {
+                // Regex took too long - expected for complex patterns, use fallback
+                _logger.LogWarning($"Regex timeout for pattern '{query}': {ex.Message}", "SearchService");
                 return text.Contains(query, StringComparison.OrdinalIgnoreCase);
             }
         }
