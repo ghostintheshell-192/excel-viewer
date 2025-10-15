@@ -233,21 +233,21 @@ public class MainWindowViewModel : ViewModelBase
     {
         try
         {
-            _activityLog.LogInfo("Apertura selezione file...", "FileLoad");
+            _activityLog.LogInfo("Opening file selection...", "FileLoad");
 
             var files = await _filePickerService.OpenFilesAsync("Select Excel Files", new[] { "*.xlsx", "*.xls" });
 
             if (files?.Any() != true)
             {
                 // User cancelled or didn't select any files - this is normal
-                _activityLog.LogInfo("Selezione file annullata dall'utente", "FileLoad");
+                _activityLog.LogInfo("File selection cancelled by user", "FileLoad");
                 return;
             }
 
-            _activityLog.LogInfo($"Caricamento di {files.Count()} file...", "FileLoad");
+            _activityLog.LogInfo($"Loading {files.Count()} file(s)...", "FileLoad");
             await _filesManager.LoadFilesAsync(files);
 
-            _activityLog.LogInfo($"Caricamento completato: {files.Count()} file", "FileLoad");
+            _activityLog.LogInfo($"Loading completed: {files.Count()} file(s)", "FileLoad");
         }
         catch (Exception ex)
         {
@@ -255,13 +255,13 @@ public class MainWindowViewModel : ViewModelBase
             // Note: FilePickerService and ExcelReaderService handle their own errors internally
             // This catch is only for truly unexpected issues (OOM, async state corruption, etc.)
             _logger.LogError("Unexpected error when loading files", ex, "MainWindowViewModel");
-            _activityLog.LogError("Errore imprevisto durante il caricamento", ex, "FileLoad");
+            _activityLog.LogError("Unexpected error during loading", ex, "FileLoad");
 
             await _dialogService.ShowErrorAsync(
-                "Si è verificato un errore imprevisto durante il caricamento dei file.\n\n" +
-                $"Dettaglio: {ex.Message}\n\n" +
-                "L'operazione è stata annullata.",
-                "Errore Caricamento"
+                "An unexpected error occurred while loading files.\n\n" +
+                $"Details: {ex.Message}\n\n" +
+                "Operation cancelled.",
+                "Loading Error"
             );
         }
     }
@@ -338,22 +338,22 @@ public class MainWindowViewModel : ViewModelBase
     {
         try
         {
-            _activityLog.LogInfo($"Nuovo tentativo di caricamento: {file.FileName}", "FileRetry");
+            _activityLog.LogInfo($"Retrying file load: {file.FileName}", "FileRetry");
             _logger.LogInfo($"Retrying file load for: {file.FilePath}", "MainWindowViewModel");
 
             await _filesManager.RetryLoadAsync(file.FilePath);
 
-            _activityLog.LogInfo($"Tentativo completato: {file.FileName}", "FileRetry");
+            _activityLog.LogInfo($"Retry completed: {file.FileName}", "FileRetry");
         }
         catch (Exception ex)
         {
             _logger.LogError($"Error retrying file load: {file.FilePath}", ex, "MainWindowViewModel");
-            _activityLog.LogError($"Errore nel ricaricamento di {file.FileName}", ex, "FileRetry");
+            _activityLog.LogError($"Error reloading {file.FileName}", ex, "FileRetry");
 
             await _dialogService.ShowErrorAsync(
-                $"Impossibile ricaricare il file '{file.FileName}'.\n\n" +
-                $"Dettaglio: {ex.Message}",
-                "Errore Ricaricamento"
+                $"Unable to reload file '{file.FileName}'.\n\n" +
+                $"Details: {ex.Message}",
+                "Reload Error"
             );
         }
     }
@@ -413,18 +413,18 @@ public class MainWindowViewModel : ViewModelBase
             };
             System.Diagnostics.Process.Start(psi);
 
-            _activityLog.LogInfo("Documentazione aperta nel browser", "Help");
+            _activityLog.LogInfo("Documentation opened in browser", "Help");
             _logger.LogInfo($"Opened documentation URL: {documentationUrl}", "MainWindowViewModel");
         }
         catch (Exception ex)
         {
             _logger.LogError("Failed to open documentation URL", ex, "MainWindowViewModel");
-            _activityLog.LogError("Impossibile aprire la documentazione", ex, "Help");
+            _activityLog.LogError("Unable to open documentation", ex, "Help");
 
             await _dialogService.ShowErrorAsync(
-                $"Impossibile aprire il browser.\n\n" +
-                $"Puoi accedere alla documentazione manualmente:\n{documentationUrl}",
-                "Errore Apertura Browser"
+                $"Unable to open browser.\n\n" +
+                $"You can access the documentation manually:\n{documentationUrl}",
+                "Browser Open Error"
             );
         }
 

@@ -52,7 +52,7 @@ namespace SheetAtlas.Infrastructure.External.Readers
 
                     if (workbookPart == null)
                     {
-                        errors.Add(ExcelError.Critical("File", "File corrotto: workbook part mancante"));
+                        errors.Add(ExcelError.Critical("Workbook", $"Workbook part missing in {Path.GetFileName(filePath)}"));
                         return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
                     }
 
@@ -103,13 +103,13 @@ namespace SheetAtlas.Infrastructure.External.Readers
                         }
                         catch (InvalidCastException ex)
                         {
-                            // GetPartById potrebbe ritornare un tipo diverso
+                            // GetPartById could return different type
                             _logger.LogError($"Invalid sheet part type for {sheetName}", ex, "OpenXmlFileReader");
                             errors.Add(ExcelError.SheetError(sheetName, $"Invalid sheet structure", ex));
                         }
                         catch (OpenXmlPackageException ex)
                         {
-                            // Errori specifici OpenXML per singoli sheet
+                            // OpenXML-specific errors for single sheet
                             _logger.LogError($"Corrupted sheet {sheetName}", ex, "OpenXmlFileReader");
                             errors.Add(ExcelError.SheetError(sheetName, $"Sheet corrupted: {ex.Message}", ex));
                         }
@@ -121,9 +121,9 @@ namespace SheetAtlas.Infrastructure.External.Readers
             }
             catch (ArgumentNullException ex)
             {
-                // Questo NON dovrebbe mai succedere in produzione, ma catch per sicurezza
+                // This should NEVER happen in production, but catch for safety
                 _logger.LogError("Null filepath passed to ReadAsync", ex, "OpenXmlFileReader");
-                throw; // Rilancia - è un bug di programmazione
+                throw; // Rethrow - it's a programming bug
             }
             catch (OperationCanceledException)
             {

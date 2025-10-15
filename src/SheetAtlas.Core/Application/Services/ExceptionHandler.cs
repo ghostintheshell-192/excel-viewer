@@ -35,28 +35,28 @@ namespace SheetAtlas.Core.Application.Services
                 // Framework exceptions (need translation)
                 FileNotFoundException fnfEx => ExcelError.Critical(
                     context,
-                    $"File non trovato: {Path.GetFileName(fnfEx.FileName ?? "sconosciuto")}",
+                    $"File not found: {Path.GetFileName(fnfEx.FileName ?? "unknown")}",
                     fnfEx),
 
                 UnauthorizedAccessException uaEx => ExcelError.Critical(
                     context,
-                    "Accesso al file negato. Verifica i permessi.",
+                    "File access denied. Check permissions.",
                     uaEx),
 
                 IOException ioEx => ExcelError.Critical(
                     context,
-                    $"Errore di lettura file: {ioEx.Message}",
+                    $"File reading error: {ioEx.Message}",
                     ioEx),
 
                 InvalidOperationException invOpEx => ExcelError.Critical(
                     context,
-                    "Operazione non valida sul file Excel.",
+                    "Invalid operation on Excel file.",
                     invOpEx),
 
                 // Generic fallback
                 _ => ExcelError.Critical(
                     context,
-                    "Errore imprevisto durante l'elaborazione.",
+                    "Unexpected error during processing.",
                     exception)
             };
         }
@@ -66,11 +66,11 @@ namespace SheetAtlas.Core.Application.Services
             return exception switch
             {
                 SheetAtlasException customEx => customEx.UserMessage,
-                FileNotFoundException _ => "File non trovato",
-                UnauthorizedAccessException _ => "Accesso negato",
-                IOException _ => "Errore di lettura file",
-                InvalidOperationException _ => "File Excel corrotto",
-                _ => "Errore imprevisto"
+                FileNotFoundException _ => "File not found",
+                UnauthorizedAccessException _ => "Access denied",
+                IOException _ => "File reading error",
+                InvalidOperationException _ => "Corrupted Excel file",
+                _ => "Unexpected error"
             };
         }
 
