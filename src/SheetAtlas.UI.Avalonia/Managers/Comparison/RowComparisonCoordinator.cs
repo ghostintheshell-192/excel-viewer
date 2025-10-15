@@ -3,7 +3,7 @@ using System.ComponentModel;
 using SheetAtlas.Core.Application.DTOs;
 using SheetAtlas.Core.Domain.Entities;
 using SheetAtlas.UI.Avalonia.ViewModels;
-using Microsoft.Extensions.Logging;
+using SheetAtlas.Logging.Services;
 
 namespace SheetAtlas.UI.Avalonia.Managers.Comparison;
 
@@ -13,8 +13,8 @@ namespace SheetAtlas.UI.Avalonia.Managers.Comparison;
 /// </summary>
 public class RowComparisonCoordinator : IRowComparisonCoordinator
 {
-    private readonly ILogger<RowComparisonCoordinator> _logger;
-    private readonly ILogger<RowComparisonViewModel> _comparisonViewModelLogger;
+    private readonly ILogService _logger;
+    private readonly ILogService _comparisonViewModelLogger;
     private readonly IThemeManager _themeManager;
 
     private readonly ObservableCollection<RowComparisonViewModel> _rowComparisons = new();
@@ -44,8 +44,8 @@ public class RowComparisonCoordinator : IRowComparisonCoordinator
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public RowComparisonCoordinator(
-        ILogger<RowComparisonCoordinator> logger,
-        ILogger<RowComparisonViewModel> comparisonViewModelLogger,
+        ILogService logger,
+        ILogService comparisonViewModelLogger,
         IThemeManager themeManager)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -59,7 +59,7 @@ public class RowComparisonCoordinator : IRowComparisonCoordinator
     {
         if (comparison == null)
         {
-            _logger.LogWarning("CreateComparison called with null comparison");
+            _logger.LogWarning("CreateComparison called with null comparison", "RowComparisonCoordinator");
             return;
         }
 
@@ -71,8 +71,7 @@ public class RowComparisonCoordinator : IRowComparisonCoordinator
         _rowComparisons.Add(comparisonViewModel);
         SelectedComparison = comparisonViewModel; // Auto-select new comparison
 
-        _logger.LogInformation("Created row comparison: {ComparisonName} with {RowCount} rows",
-            comparison.Name, comparison.Rows.Count);
+        _logger.LogInfo($"Created row comparison: {comparison.Name} with {comparison.Rows.Count} rows", "RowComparisonCoordinator");
 
         ComparisonAdded?.Invoke(this, new ComparisonAddedEventArgs(comparisonViewModel));
     }
@@ -81,13 +80,13 @@ public class RowComparisonCoordinator : IRowComparisonCoordinator
     {
         if (comparison == null)
         {
-            _logger.LogWarning("RemoveComparison called with null comparison");
+            _logger.LogWarning("RemoveComparison called with null comparison", "RowComparisonCoordinator");
             return;
         }
 
         if (!_rowComparisons.Contains(comparison))
         {
-            _logger.LogWarning("Attempted to remove comparison not in collection: {ComparisonName}", comparison.Title);
+            _logger.LogWarning($"Attempted to remove comparison not in collection: {comparison.Title}", "RowComparisonCoordinator");
             return;
         }
 
@@ -95,7 +94,7 @@ public class RowComparisonCoordinator : IRowComparisonCoordinator
         comparison.CloseRequested -= OnComparisonCloseRequested;
 
         _rowComparisons.Remove(comparison);
-        _logger.LogInformation("Removed row comparison: {ComparisonName}", comparison.Title);
+        _logger.LogInfo($"Removed row comparison: {comparison.Title}", "RowComparisonCoordinator");
 
         // Clear selection if this was the selected comparison
         if (SelectedComparison == comparison)
@@ -156,8 +155,7 @@ public class RowComparisonCoordinator : IRowComparisonCoordinator
                 // Unsubscribe from old
                 comparisonViewModel.CloseRequested -= OnComparisonCloseRequested;
 
-                _logger.LogInformation("Updated comparison '{Name}': removed rows from {FilePath}, {RemainingCount} rows remaining",
-                    updatedComparison.Name, file.FilePath, remainingRows.Count);
+                _logger.LogInfo($"Updated comparison '{updatedComparison.Name}': removed rows from {file.FilePath}, {remainingRows.Count} rows remaining", "RowComparisonCoordinator");
             }
             else
             {
@@ -172,8 +170,7 @@ public class RowComparisonCoordinator : IRowComparisonCoordinator
             RemoveComparison(comparison);
         }
 
-        _logger.LogInformation("Processed comparisons for removed file: {FilePath} (removed {RemovedCount} comparisons)",
-            file.FilePath, comparisonsToRemove.Count);
+        _logger.LogInfo($"Processed comparisons for removed file: {file.FilePath} (removed {comparisonsToRemove.Count} comparisons)", "RowComparisonCoordinator");
     }
 
     private void OnComparisonCloseRequested(object? sender, EventArgs e)

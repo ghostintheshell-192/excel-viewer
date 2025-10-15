@@ -3,13 +3,13 @@ using System.Windows.Input;
 using SheetAtlas.Core.Domain.ValueObjects;
 using SheetAtlas.UI.Avalonia.Commands;
 using SheetAtlas.UI.Avalonia.Models;
-using Microsoft.Extensions.Logging;
+using SheetAtlas.Logging.Services;
 
 namespace SheetAtlas.UI.Avalonia.ViewModels;
 
 public class FileDetailsViewModel : ViewModelBase
 {
-    private readonly ILogger<FileDetailsViewModel> _logger;
+    private readonly ILogService _logger;
     private IFileLoadResultViewModel? _selectedFile;
 
     public IFileLoadResultViewModel? SelectedFile
@@ -33,7 +33,7 @@ public class FileDetailsViewModel : ViewModelBase
     public ICommand TryAgainCommand { get; }
     public ICommand ViewSheetsCommand { get; }
 
-    public FileDetailsViewModel(ILogger<FileDetailsViewModel> logger)
+    public FileDetailsViewModel(ILogService logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -229,32 +229,32 @@ public class FileDetailsViewModel : ViewModelBase
     // Action handlers - these will be implemented to communicate with MainWindowViewModel
     private void ExecuteRemoveFromList()
     {
-        _logger.LogInformation("Remove from list requested for: {FileName}", SelectedFile?.FileName);
+        _logger.LogInfo($"Remove from list requested for: {SelectedFile?.FileName}", "FileDetailsViewModel");
         // Will be handled by MainWindowViewModel
         RemoveFromListRequested?.Invoke(SelectedFile);
     }
 
     private void ExecuteCleanAllData()
     {
-        _logger.LogInformation("Clean all data requested for: {FileName}", SelectedFile?.FileName);
+        _logger.LogInfo($"Clean all data requested for: {SelectedFile?.FileName}", "FileDetailsViewModel");
         CleanAllDataRequested?.Invoke(SelectedFile);
     }
 
     private void ExecuteRemoveNotification()
     {
-        _logger.LogInformation("Remove notification requested for: {FileName}", SelectedFile?.FileName);
+        _logger.LogInfo($"Remove notification requested for: {SelectedFile?.FileName}", "FileDetailsViewModel");
         RemoveNotificationRequested?.Invoke(SelectedFile);
     }
 
     private void ExecuteTryAgain()
     {
-        _logger.LogInformation("Try again requested for: {FileName}", SelectedFile?.FileName);
+        _logger.LogInfo($"Try again requested for: {SelectedFile?.FileName}", "FileDetailsViewModel");
         TryAgainRequested?.Invoke(SelectedFile);
     }
 
     private void ExecuteViewSheets()
     {
-        _logger.LogInformation("View sheets requested for: {FileName}", SelectedFile?.FileName);
+        _logger.LogInfo($"View sheets requested for: {SelectedFile?.FileName}", "FileDetailsViewModel");
         ViewSheetsRequested?.Invoke(SelectedFile);
     }
 

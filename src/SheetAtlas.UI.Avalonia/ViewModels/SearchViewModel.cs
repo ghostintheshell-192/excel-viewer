@@ -5,7 +5,7 @@ using SheetAtlas.Core.Application.Services;
 using SheetAtlas.UI.Avalonia.Managers.Search;
 using SheetAtlas.UI.Avalonia.Managers.Selection;
 using SheetAtlas.UI.Avalonia.Models.Search;
-using Microsoft.Extensions.Logging;
+using SheetAtlas.Logging.Services;
 using Avalonia.Threading;
 using SheetAtlas.UI.Avalonia.Commands;
 
@@ -15,7 +15,7 @@ public class SearchViewModel : ViewModelBase
 {
     private readonly ISearchResultsManager _searchResultsManager;
     private readonly ISelectionManager _selectionManager;
-    private readonly ILogger<SearchViewModel> _logger;
+    private readonly ILogService _logger;
 
     private string _searchQuery = string.Empty;
     private bool _caseSensitive;
@@ -110,7 +110,7 @@ public class SearchViewModel : ViewModelBase
     public SearchViewModel(
         ISearchResultsManager searchResultsManager,
         ISelectionManager selectionManager,
-        ILogger<SearchViewModel> logger)
+        ILogService logger)
     {
         _searchResultsManager = searchResultsManager ?? throw new ArgumentNullException(nameof(searchResultsManager));
         _selectionManager = selectionManager ?? throw new ArgumentNullException(nameof(selectionManager));
@@ -211,7 +211,7 @@ public class SearchViewModel : ViewModelBase
         catch (Exception ex)
         {
             // Log but don't crash - clearing results is not critical
-            _logger.LogError(ex, "Error clearing search results");
+            _logger.LogError("Error clearing search results", ex, "SearchViewModel");
         }
     }
 
@@ -272,7 +272,7 @@ public class SearchViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in OnTextChanged with text: '{Text}'", text);
+            _logger.LogError($"Error in OnTextChanged with text: '{text}'", ex, "SearchViewModel");
             SearchSuggestions.Clear();
             IsDropDownOpen = false;
         }

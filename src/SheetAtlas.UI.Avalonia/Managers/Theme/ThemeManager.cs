@@ -2,13 +2,13 @@ using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Styling;
-using Microsoft.Extensions.Logging;
+using SheetAtlas.Logging.Services;
 
 namespace SheetAtlas.UI.Avalonia.Managers
 {
     public class ThemeManager : INotifyPropertyChanged, IThemeManager
     {
-        private readonly ILogger<ThemeManager> _logger;
+        private readonly ILogService _logger;
         private Theme _currentTheme = Theme.Light;
 
         public Theme CurrentTheme
@@ -36,7 +36,7 @@ namespace SheetAtlas.UI.Avalonia.Managers
         public event PropertyChangedEventHandler? PropertyChanged;
         public event EventHandler<Theme>? ThemeChanged;
 
-        public ThemeManager(ILogger<ThemeManager> logger)
+        public ThemeManager(ILogService logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -46,7 +46,7 @@ namespace SheetAtlas.UI.Avalonia.Managers
 
         public void SetTheme(Theme theme)
         {
-            _logger.LogInformation("Setting theme to {Theme}", theme);
+            _logger.LogInfo($"Setting theme to {theme}", "ThemeManager");
 
             try
             {
@@ -56,7 +56,7 @@ namespace SheetAtlas.UI.Avalonia.Managers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to set theme to {Theme}", theme);
+                _logger.LogError($"Failed to set theme to {theme}", ex, "ThemeManager");
                 throw;
             }
         }
@@ -78,7 +78,7 @@ namespace SheetAtlas.UI.Avalonia.Managers
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to initialize theme, using Light theme as fallback");
+                _logger.LogWarning("Failed to initialize theme, using Light theme as fallback", "ThemeManager");
                 ApplyTheme(Theme.Light);
                 CurrentTheme = Theme.Light;
             }
@@ -89,7 +89,7 @@ namespace SheetAtlas.UI.Avalonia.Managers
             var application = Application.Current;
             if (application == null)
             {
-                _logger.LogWarning("Application.Current is null, cannot apply theme");
+                _logger.LogWarning("Application.Current is null, cannot apply theme", "ThemeManager");
                 return;
             }
 
@@ -125,16 +125,16 @@ namespace SheetAtlas.UI.Avalonia.Managers
                         application.Resources[kvp.Key] = kvp.Value;
                     }
 
-                    _logger.LogInformation("Applied {Theme} theme variant and {ResourceCount} resources", theme, themeDictionary.Count);
+                    _logger.LogInfo($"Applied {theme} theme variant and {themeDictionary.Count} resources", "ThemeManager");
                 }
                 else
                 {
-                    _logger.LogError("Failed to find theme dictionary for {Theme}", theme);
+                    _logger.LogError($"Failed to find theme dictionary for {theme}", "ThemeManager");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error applying theme {Theme}", theme);
+                _logger.LogError($"Error applying theme {theme}", ex, "ThemeManager");
             }
         }
 
@@ -192,7 +192,7 @@ namespace SheetAtlas.UI.Avalonia.Managers
         private void SaveThemePreference(Theme theme)
         {
             // TODO: Save to user settings or config file
-            _logger.LogDebug("Theme preference saved: {Theme}", theme);
+            _logger.LogInfo($"Theme preference saved: {theme}", "ThemeManager");
         }
     }
 }
