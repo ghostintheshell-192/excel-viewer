@@ -132,11 +132,14 @@ namespace SheetAtlas.Infrastructure.External.Readers
             }
             catch (FileFormatException ex)
             {
-                // File format errors: .xls files, corrupted packages, unsupported formats
-                _logger.LogError(ex, "Unsupported or corrupted file format: {Path}", filePath);
-                errors.Add(ExcelError.Critical("File", $"Unsupported file format (.xls files are not supported, use .xlsx): {ex.Message}", ex));
+                // Corrupted .xlsx file
+                _logger.LogError(ex, "Corrupted file format: {Path}", filePath);
+                errors.Add(ExcelError.Critical("File",
+                    $"Corrupted or invalid .xlsx file: {ex.Message}",
+                    ex));
                 return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
             }
+
             catch (IOException ex)
             {
                 // File I/O errors: locked, permission denied, network issues

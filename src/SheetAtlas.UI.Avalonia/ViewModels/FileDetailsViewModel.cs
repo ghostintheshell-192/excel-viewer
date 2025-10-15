@@ -115,9 +115,15 @@ public class FileDetailsViewModel : ViewModelBase
             Properties.Add(new FileDetailProperty("Error Type", GetErrorType(error)));
             Properties.Add(new FileDetailProperty("Details", TruncateText(error.Message, 60)));
 
-            if (error.Message.Contains("corrupted data") || error.Message.Contains("FileFormatException"))
+            if (error.Message.Contains("Unsupported file format"))
             {
-                Properties.Add(new FileDetailProperty("Suggestion", "Convert to .xlsx format"));
+                // Only for really unsupported formats
+                Properties.Add(new FileDetailProperty("Suggestion", "Use supported format (.xlsx, .xls, .csv)"));
+            }
+            else if (error.Message.Contains("corrupted") || error.Message.Contains("invalid"))
+            {
+                // Corrupted File; no conversion will help you
+                Properties.Add(new FileDetailProperty("Suggestion", "File may be damaged - try opening in Excel first"));
             }
         }
         else
@@ -166,8 +172,10 @@ public class FileDetailsViewModel : ViewModelBase
 
     private string GetErrorType(ExcelError error)
     {
-        if (error.Message.Contains("FileFormatException") || error.Message.Contains("corrupted"))
+        if (error.Message.Contains("Unsupported file format"))
             return "Format Not Supported";
+        if (error.Message.Contains("corrupted") || error.Message.Contains("invalid"))
+            return "Corrupted File";
         if (error.Message.Contains("access") || error.Message.Contains("permission"))
             return "Access Denied";
         if (error.Message.Contains("not found"))
