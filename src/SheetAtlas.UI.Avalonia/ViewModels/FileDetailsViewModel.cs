@@ -70,7 +70,7 @@ public class FileDetailsViewModel : ViewModelBase
                 break;
 
             case LoadStatus.Failed:
-                AddFailedDetails();
+                // No additional details needed - errors are shown in the file panel treeview
                 AddFailedActions();
                 break;
 
@@ -102,35 +102,6 @@ public class FileDetailsViewModel : ViewModelBase
         }
 
         Properties.Add(new FileDetailProperty("Data Status", "Searchable"));
-    }
-
-    private void AddFailedDetails()
-    {
-        Properties.Add(new FileDetailProperty("Load Results", ""));
-        Properties.Add(new FileDetailProperty("", ""));
-
-        if (SelectedFile?.File?.Errors?.Any() == true)
-        {
-            var error = SelectedFile.File.Errors.First();
-            Properties.Add(new FileDetailProperty("Error Type", GetErrorType(error)));
-            Properties.Add(new FileDetailProperty("Details", TruncateText(error.Message, 60)));
-
-            if (error.Message.Contains("Unsupported file format"))
-            {
-                // Only for really unsupported formats
-                Properties.Add(new FileDetailProperty("Suggestion", "Use supported format (.xlsx, .xls, .csv)"));
-            }
-            else if (error.Message.Contains("corrupted") || error.Message.Contains("invalid"))
-            {
-                // Corrupted File; no conversion will help you
-                Properties.Add(new FileDetailProperty("Suggestion", "File may be damaged - try opening in Excel first"));
-            }
-        }
-        else
-        {
-            Properties.Add(new FileDetailProperty("Error Type", "Unknown Error"));
-            Properties.Add(new FileDetailProperty("Details", "No specific error details available"));
-        }
     }
 
     private void AddPartialSuccessDetails()
@@ -168,19 +139,6 @@ public class FileDetailsViewModel : ViewModelBase
     {
         Actions.Add(new FileDetailAction("Remove from List", RemoveFromListCommand, "Remove file from the loaded files list"));
         Actions.Add(new FileDetailAction("View Details", ViewSheetsCommand, "View what was loaded successfully"));
-    }
-
-    private string GetErrorType(ExcelError error)
-    {
-        if (error.Message.Contains("Unsupported file format"))
-            return "Format Not Supported";
-        if (error.Message.Contains("corrupted") || error.Message.Contains("invalid"))
-            return "Corrupted File";
-        if (error.Message.Contains("access") || error.Message.Contains("permission"))
-            return "Access Denied";
-        if (error.Message.Contains("not found"))
-            return "File Not Found";
-        return "Load Error";
     }
 
     private string GetFileFormat(string filePath)

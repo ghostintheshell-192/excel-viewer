@@ -8,6 +8,7 @@ public class FileLoadResultViewModel : ViewModelBase, IFileLoadResultViewModel, 
 {
     private ExcelFile? _file;
     private bool _disposed = false;
+    private bool _isExpanded = false;
 
     public string FilePath => _file?.FilePath ?? string.Empty;
     public string FileName => _file?.FileName ?? string.Empty;
@@ -18,6 +19,12 @@ public class FileLoadResultViewModel : ViewModelBase, IFileLoadResultViewModel, 
     public bool HasCriticalErrors => _file?.HasCriticalErrors ?? false;
 
     public IReadOnlyList<ExcelError> Errors => _file?.Errors ?? Array.Empty<ExcelError>();
+
+    public bool IsExpanded
+    {
+        get => _isExpanded;
+        set => SetField(ref _isExpanded, value);
+    }
 
     public FileLoadResultViewModel(ExcelFile file)
     {

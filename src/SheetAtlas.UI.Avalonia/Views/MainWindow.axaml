@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:SheetAtlas.UI.Avalonia.ViewModels"
         xmlns:views="using:SheetAtlas.UI.Avalonia.Views"
+        xmlns:converters="using:SheetAtlas.UI.Avalonia.Converters"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
@@ -10,6 +11,10 @@
         Title="Excel Cross Reference Viewer"
         MinWidth="800" MinHeight="600"
         Background="{DynamicResource MainBackground}">
+
+    <Window.Resources>
+        <converters:CollectionNotEmptyConverter x:Key="CollectionNotEmptyConverter"/>
+    </Window.Resources>
 
     <Design.DataContext>
         <vm:MainWindowViewModel/>
@@ -174,7 +179,7 @@
                               Foreground="{DynamicResource PrimaryText}"/>
 
                     <Button Grid.Column="1" Content="✕"
-                            Width="20" Height="20" Padding="0"
+                            Width="20" Height="20" Padding="3,0,3,0"
                             ToolTip.Tip="Clear selection"
                             Click="OnClearSelectionClick"
                             IsVisible="{Binding SelectedFile, Converter={x:Static ObjectConverters.IsNotNull}}"/>
@@ -184,22 +189,158 @@
                          ItemsSource="{Binding LoadedFiles}"
                          SelectedItem="{Binding SelectedFile}"
                          Margin="4"
+                         Padding="0,0,0,-8"
                          Background="{DynamicResource CardBackground}"
                          BorderBrush="{DynamicResource BorderColor}"
                          BorderThickness="1"
                          CornerRadius="4">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Vertical" Margin="4">
-                                <TextBlock Text="{Binding FileName}" FontWeight="Medium"
-                                          Foreground="{DynamicResource PrimaryText}"/>
-                                <TextBlock Text="{Binding FilePath}" FontSize="10"
-                                          Foreground="{DynamicResource SecondaryText}" TextTrimming="CharacterEllipsis"/>
-                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                                    <TextBlock Text="Status: " FontSize="10"
-                                              Foreground="{DynamicResource SecondaryText}"/>
-                                    <TextBlock Text="{Binding Status}" FontSize="10" FontWeight="Medium"
-                                              Foreground="{DynamicResource PrimaryText}"/>
+                            <StackPanel Orientation="Vertical" Margin="0">
+                                <!-- File info with error indicator -->
+                                <Grid Tapped="OnFileItemTapped"
+                                     Background="Transparent">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Status icon (conditional, outline style) -->
+                                    <Panel Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Center">
+                                        <!-- Critical/Error icon (red hexagon) -->
+                                        <TextBlock Text="⬢"
+                                                  FontSize="16"
+                                                  Foreground="#D32F2F"
+                                                  IsVisible="{Binding HasErrors}"/>
+                                        <!-- Warning icon (orange triangle) -->
+                                        <TextBlock Text="△"
+                                                  FontSize="16"
+                                                  Foreground="{DynamicResource AccentOrange}">
+                                            <TextBlock.IsVisible>
+                                                <MultiBinding>
+                                                    <MultiBinding.Converter>
+                                                        <x:Static Member="BoolConverters.And"/>
+                                                    </MultiBinding.Converter>
+                                                    <Binding Path="HasWarnings"/>
+                                                    <Binding Path="HasErrors" Converter="{x:Static BoolConverters.Not}"/>
+                                                </MultiBinding>
+                                            </TextBlock.IsVisible>
+                                        </TextBlock>
+                                        <!-- Success icon (green circle) -->
+                                        <TextBlock Text="○"
+                                                  FontSize="16"
+                                                  Foreground="#388E3C">
+                                            <TextBlock.IsVisible>
+                                                <MultiBinding>
+                                                    <MultiBinding.Converter>
+                                                        <x:Static Member="BoolConverters.And"/>
+                                                    </MultiBinding.Converter>
+                                                    <Binding Path="HasErrors" Converter="{x:Static BoolConverters.Not}"/>
+                                                    <Binding Path="HasWarnings" Converter="{x:Static BoolConverters.Not}"/>
+                                                </MultiBinding>
+                                            </TextBlock.IsVisible>
+                                        </TextBlock>
+                                    </Panel>
+
+                                    <!-- File name and path -->
+                                    <StackPanel Grid.Column="1" Orientation="Vertical">
+                                        <TextBlock Text="{Binding FileName}"
+                                                  FontWeight="Medium"
+                                                  Foreground="{DynamicResource PrimaryText}"/>
+                                        <TextBlock Text="{Binding FilePath}"
+                                                  FontSize="10"
+                                                  Foreground="{DynamicResource SecondaryText}"
+                                                  TextTrimming="CharacterEllipsis"/>
+                                    </StackPanel>
+
+                                    <!-- Error count badge (show only if errors exist) -->
+                                    <Border Grid.Column="2"
+                                           Background="#FFEBEE"
+                                           CornerRadius="10"
+                                           Padding="6,2"
+                                           Margin="4,0,0,0"
+                                           VerticalAlignment="Center">
+                                        <Border.IsVisible>
+                                            <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                                                <Binding Path="HasErrors"/>
+                                                <Binding Path="HasWarnings"/>
+                                            </MultiBinding>
+                                        </Border.IsVisible>
+                                        <TextBlock Text="{Binding Errors.Count, StringFormat='{}{0}'}"
+                                                  FontSize="10"
+                                                  FontWeight="SemiBold"
+                                                  Foreground="#C62828"/>
+                                    </Border>
+                                </Grid>
+
+                                <!-- Expanded error list (visible only when expanded AND has errors) -->
+                                <!-- Tree-style error list (same style as search results) -->
+                                <StackPanel Margin="0,8,0,0">
+                                    <StackPanel.IsVisible>
+                                        <MultiBinding>
+                                            <MultiBinding.Converter>
+                                                <x:Static Member="BoolConverters.And"/>
+                                            </MultiBinding.Converter>
+                                            <Binding Path="IsExpanded"/>
+                                            <Binding Path="Errors" Converter="{StaticResource CollectionNotEmptyConverter}"/>
+                                        </MultiBinding>
+                                    </StackPanel.IsVisible>
+
+                                    <!-- Header (similar to TreeView search header) -->
+                                    <Border Background="{DynamicResource SearchQueryBackground}"
+                                           Padding="8,6"
+                                           BorderThickness="0,0,0,1"
+                                           BorderBrush="{DynamicResource SubtleBorder}">
+                                        <TextBlock Foreground="{DynamicResource SearchQueryText}"
+                                                  FontWeight="SemiBold"
+                                                  FontSize="11">
+                                            <Run Text="Errors and Warnings ("/>
+                                            <Run Text="{Binding Errors.Count}"/>
+                                            <Run Text=")"/>
+                                        </TextBlock>
+                                    </Border>
+
+                                    <!-- Error items (similar to TreeView result items) -->
+                                    <ItemsControl ItemsSource="{Binding Errors}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Padding="8,4"
+                                                       BorderThickness="0,0,0,1"
+                                                       BorderBrush="{DynamicResource SubtleBorder}"
+                                                       Background="Transparent">
+                                                    <Border.Styles>
+                                                        <Style Selector="Border:pointerover">
+                                                            <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
+                                                        </Style>
+                                                    </Border.Styles>
+
+                                                    <Grid ColumnDefinitions="Auto,*">
+                                                        <!-- Error Level Badge -->
+                                                        <Border Grid.Column="0"
+                                                               Background="{Binding Level, Converter={x:Static converters:LogSeverityToColorConverter.Instance}}"
+                                                               CornerRadius="3"
+                                                               Padding="6,2"
+                                                               Margin="0,0,8,0"
+                                                               VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding Level}"
+                                                                      FontSize="9"
+                                                                      FontWeight="SemiBold"
+                                                                      Foreground="White"/>
+                                                        </Border>
+
+                                                        <!-- Error Message -->
+                                                        <TextBlock Grid.Column="1"
+                                                                  Text="{Binding Message}"
+                                                                  FontSize="11"
+                                                                  TextWrapping="Wrap"
+                                                                  Foreground="{DynamicResource PrimaryText}"
+                                                                  VerticalAlignment="Center"/>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
                                 </StackPanel>
                             </StackPanel>
                         </DataTemplate>

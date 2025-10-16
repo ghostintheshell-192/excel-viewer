@@ -17,80 +17,71 @@
             <TextBlock Text="File Details" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,12"/>
 
             <!-- Properties Table -->
-            <Border BorderBrush="Gray" BorderThickness="1" Margin="0,0,0,16">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
+            <ItemsControl ItemsSource="{Binding Properties}" Margin="0,0,0,16">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
 
-                    <!-- Table Content -->
-                    <ItemsControl ItemsSource="{Binding Properties}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel>
+                            <!-- Header Row -->
+                            <Border BorderBrush="LightGray" BorderThickness="0,0,0,1"
+                                    IsVisible="{Binding IsHeader}">
+                                <TextBlock Text="{Binding Key}"
+                                          FontWeight="SemiBold"
+                                          Background="LightGray"
+                                          Padding="8,4"
+                                          FontSize="12"/>
+                            </Border>
 
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel>
-                                    <!-- Header Row -->
-                                    <Border BorderBrush="LightGray" BorderThickness="0,0,0,1"
-                                            IsVisible="{Binding IsHeader}">
-                                        <TextBlock Text="{Binding Key}"
-                                                  FontWeight="SemiBold"
-                                                  Background="LightGray"
-                                                  Padding="8,4"
-                                                  FontSize="12"/>
-                                    </Border>
+                            <!-- Separator Row -->
+                            <Border Height="8" IsVisible="{Binding IsSeparator}"/>
 
-                                    <!-- Separator Row -->
-                                    <Border Height="8" IsVisible="{Binding IsSeparator}"/>
+                            <!-- Regular Property Row -->
+                            <Grid IsVisible="{Binding IsRegularRow}" MinHeight="24">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120"/>
+                                    <ColumnDefinition Width="2"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
 
-                                    <!-- Regular Property Row -->
-                                    <Grid IsVisible="{Binding IsRegularRow}" MinHeight="24">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="120"/>
-                                            <ColumnDefinition Width="2"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
+                                <!-- Property Key -->
+                                <Border Grid.Column="0"
+                                        BorderBrush="DarkGray"
+                                        BorderThickness="1,1,1,1"
+                                        Background="#F0F0F0">
+                                    <TextBlock Text="{Binding Key}"
+                                              FontWeight="Bold"
+                                              Padding="8,4"
+                                              VerticalAlignment="Center"
+                                              FontSize="12"
+                                              Foreground="Black"/>
+                                </Border>
 
-                                        <!-- Property Key -->
-                                        <Border Grid.Column="0"
-                                                BorderBrush="DarkGray"
-                                                BorderThickness="1,1,1,1"
-                                                Background="#F0F0F0">
-                                            <TextBlock Text="{Binding Key}"
-                                                      FontWeight="Bold"
-                                                      Padding="8,4"
-                                                      VerticalAlignment="Center"
-                                                      FontSize="12"
-                                                      Foreground="Black"/>
-                                        </Border>
+                                <!-- Divider -->
+                                <Border Grid.Column="1"
+                                        Background="DarkGray"/>
 
-                                        <!-- Divider -->
-                                        <Border Grid.Column="1"
-                                                Background="DarkGray"/>
-
-                                        <!-- Property Value -->
-                                        <Border Grid.Column="2"
-                                                BorderBrush="DarkGray"
-                                                BorderThickness="1,1,1,1"
-                                                Background="White">
-                                            <TextBlock Text="{Binding Value}"
-                                                      Padding="8,4"
-                                                      VerticalAlignment="Center"
-                                                      TextWrapping="Wrap"
-                                                      FontSize="12"
-                                                      Foreground="Black"/>
-                                        </Border>
-                                    </Grid>
-                                </StackPanel>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </Grid>
-            </Border>
+                                <!-- Property Value -->
+                                <Border Grid.Column="2"
+                                        BorderBrush="DarkGray"
+                                        BorderThickness="1,1,1,1"
+                                        Background="White">
+                                    <TextBlock Text="{Binding Value}"
+                                              Padding="8,4"
+                                              VerticalAlignment="Center"
+                                              TextWrapping="Wrap"
+                                              FontSize="12"
+                                              Foreground="Black"/>
+                                </Border>
+                            </Grid>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
 
             <!-- Actions Section -->
             <TextBlock Text="Actions" FontWeight="SemiBold" FontSize="14" Margin="0,0,0,8"/>
