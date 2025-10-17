@@ -128,6 +128,10 @@
 
             <!-- Help Menu -->
             <MenuItem Header="_Help">
+                <MenuItem Header="📋 View Error _Log"
+                         Command="{Binding ViewErrorLogCommand}"
+                         InputGesture="Ctrl+L"/>
+                <Separator/>
                 <MenuItem Header="_About SheetAtlas"
                          Command="{Binding ShowAboutCommand}"/>
                 <MenuItem Header="_Documentation"
