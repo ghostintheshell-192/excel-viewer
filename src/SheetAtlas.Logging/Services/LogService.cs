@@ -139,30 +139,32 @@ namespace SheetAtlas.Logging.Services
         }
 
         /// <summary>
-        /// Formats a log message for file output
+        /// Formats a log message for file output with improved readability
         /// </summary>
         private string FormatLogLine(LogMessage message)
         {
             var timestamp = message.Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff");
             var level = message.Level.ToString().ToUpperInvariant().PadRight(8);
-            var title = message.Title;
-            var msg = message.Message;
+            var context = !string.IsNullOrEmpty(message.Context) ? message.Context : message.Title;
 
-            var line = $"{timestamp} [{level}] {title}: {msg}";
+            // Header line: [timestamp] LEVEL | Context
+            var line = $"[{timestamp}] {level} | {context}";
 
-            // Add context if present
-            if (!string.IsNullOrEmpty(message.Context))
-            {
-                line += $" | Context: {message.Context}";
-            }
+            // Message on indented line for better readability
+            line += $"{Environment.NewLine}  {message.Message}";
 
             // Add exception details if present
             if (message.Exception != null)
             {
-                line += $"{Environment.NewLine}    Exception: {message.Exception.GetType().Name}: {message.Exception.Message}";
+                line += $"{Environment.NewLine}  → Exception: {message.Exception.GetType().Name}: {message.Exception.Message}";
+
                 if (!string.IsNullOrEmpty(message.Exception.StackTrace))
                 {
-                    line += $"{Environment.NewLine}    StackTrace: {message.Exception.StackTrace}";
+                    // Indent stack trace for clarity
+                    var indentedStackTrace = string.Join(Environment.NewLine,
+                        message.Exception.StackTrace.Split(Environment.NewLine)
+                            .Select(l => $"    {l}"));
+                    line += $"{Environment.NewLine}{indentedStackTrace}";
                 }
             }
 
