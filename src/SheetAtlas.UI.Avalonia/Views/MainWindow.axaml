@@ -204,6 +204,7 @@
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
 
                                     <!-- Status icon (conditional, outline style) -->
@@ -259,7 +260,7 @@
                                            Background="#FFEBEE"
                                            CornerRadius="10"
                                            Padding="6,2"
-                                           Margin="4,0,0,0"
+                                           Margin="4,0,4,0"
                                            VerticalAlignment="Center">
                                         <Border.IsVisible>
                                             <MultiBinding Converter="{x:Static BoolConverters.Or}">
@@ -272,6 +273,50 @@
                                                   FontWeight="SemiBold"
                                                   Foreground="#C62828"/>
                                     </Border>
+
+                                    <!-- Kebab menu button -->
+                                    <Button Grid.Column="3"
+                                            Content="⋮"
+                                            Width="16"
+                                            Height="24"
+                                            Padding="0"
+                                            Margin="0"
+                                            FontSize="16"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource SecondaryText}"
+                                            Tapped="OnKebabMenuTapped">
+                                        <Button.Styles>
+                                            <Style Selector="Button:pointerover">
+                                                <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
+                                            </Style>
+                                        </Button.Styles>
+                                        <Button.Flyout>
+                                            <MenuFlyout Placement="BottomEdgeAlignedRight">
+                                                <!-- Success file actions -->
+                                                <MenuItem Header="Remove from List"
+                                                         Click="OnRemoveFromListClick"
+                                                         IsVisible="{Binding Status, Converter={x:Static converters:EnumEqualsConverter.Instance}, ConverterParameter=Success}"/>
+                                                <MenuItem Header="Clean All Data"
+                                                         Click="OnCleanAllDataClick"
+                                                         IsVisible="{Binding Status, Converter={x:Static converters:EnumEqualsConverter.Instance}, ConverterParameter=Success}"/>
+
+                                                <!-- Failed file actions -->
+                                                <MenuItem Header="Remove Notification"
+                                                         Click="OnRemoveNotificationClick"
+                                                         IsVisible="{Binding Status, Converter={x:Static converters:EnumEqualsConverter.Instance}, ConverterParameter=Failed}"/>
+                                                <MenuItem Header="Try Again"
+                                                         Click="OnTryAgainClick"
+                                                         IsVisible="{Binding Status, Converter={x:Static converters:EnumEqualsConverter.Instance}, ConverterParameter=Failed}"/>
+
+                                                <!-- PartialSuccess file actions -->
+                                                <MenuItem Header="Remove from List"
+                                                         Click="OnRemoveFromListClick"
+                                                         IsVisible="{Binding Status, Converter={x:Static converters:EnumEqualsConverter.Instance}, ConverterParameter=PartialSuccess}"/>
+                                            </MenuFlyout>
+                                        </Button.Flyout>
+                                    </Button>
                                 </Grid>
 
                                 <!-- Expanded error list (visible only when expanded AND has errors) -->

@@ -199,7 +199,6 @@ public class MainWindowViewModel : ViewModelBase
         FileDetailsViewModel.CleanAllDataRequested += OnCleanAllDataRequested;
         FileDetailsViewModel.RemoveNotificationRequested += OnRemoveNotificationRequested;
         FileDetailsViewModel.TryAgainRequested += OnTryAgainRequested;
-        FileDetailsViewModel.ViewSheetsRequested += OnViewSheetsRequested;
 
         // Set current selection if any
         FileDetailsViewModel.SelectedFile = SelectedFile;
@@ -372,16 +371,6 @@ public class MainWindowViewModel : ViewModelBase
     private void OnFileLoadFailed(object? sender, FileLoadFailedEventArgs e)
     {
         _logger.LogError($"File load failed: {e.FilePath}", e.Exception, "MainWindowViewModel");
-    }
-
-    private void OnViewSheetsRequested(IFileLoadResultViewModel? file)
-    {
-        if (file != null)
-        {
-            _logger.LogInfo($"View sheets requested for: {file.FileName}", "MainWindowViewModel");
-            // TODO: Navigate to sheet view or show sheet details
-            // This could open a new window or change the current view
-        }
     }
 
     private async Task ShowAboutDialogAsync()

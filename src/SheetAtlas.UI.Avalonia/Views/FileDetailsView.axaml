@@ -83,27 +83,6 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <!-- Actions Section -->
-            <TextBlock Text="Actions" FontWeight="SemiBold" FontSize="14" Margin="0,0,0,8"/>
-
-            <ItemsControl ItemsSource="{Binding Actions}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Spacing="8"/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Button Content="{Binding Name}"
-                                Command="{Binding Command}"
-                                HorizontalAlignment="Left"
-                                Padding="12,6"
-                                ToolTip.Tip="{Binding Description}"/>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-
             <!-- Empty State -->
             <TextBlock Text="Select a file from the list to view details"
                       FontStyle="Italic"

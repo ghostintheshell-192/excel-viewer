@@ -25,13 +25,11 @@ public class FileDetailsViewModel : ViewModelBase
     }
 
     public ObservableCollection<FileDetailProperty> Properties { get; } = new();
-    public ObservableCollection<FileDetailAction> Actions { get; } = new();
 
     public ICommand RemoveFromListCommand { get; }
     public ICommand CleanAllDataCommand { get; }
     public ICommand RemoveNotificationCommand { get; }
     public ICommand TryAgainCommand { get; }
-    public ICommand ViewSheetsCommand { get; }
 
     public FileDetailsViewModel(ILogService logger)
     {
@@ -41,13 +39,11 @@ public class FileDetailsViewModel : ViewModelBase
         CleanAllDataCommand = new RelayCommand(() => { ExecuteCleanAllData(); return Task.CompletedTask; });
         RemoveNotificationCommand = new RelayCommand(() => { ExecuteRemoveNotification(); return Task.CompletedTask; });
         TryAgainCommand = new RelayCommand(() => { ExecuteTryAgain(); return Task.CompletedTask; });
-        ViewSheetsCommand = new RelayCommand(() => { ExecuteViewSheets(); return Task.CompletedTask; });
     }
 
     private void UpdateDetails()
     {
         Properties.Clear();
-        Actions.Clear();
 
         if (SelectedFile == null) return;
 
@@ -66,17 +62,14 @@ public class FileDetailsViewModel : ViewModelBase
         {
             case LoadStatus.Success:
                 AddSuccessDetails();
-                AddSuccessActions();
                 break;
 
             case LoadStatus.Failed:
                 // No additional details needed - errors are shown in the file panel treeview
-                AddFailedActions();
                 break;
 
             case LoadStatus.PartialSuccess:
                 AddPartialSuccessDetails();
-                AddPartialSuccessActions();
                 break;
         }
     }
@@ -120,25 +113,6 @@ public class FileDetailsViewModel : ViewModelBase
         {
             Properties.Add(new FileDetailProperty("Sheets Loaded", SelectedFile.File.Sheets.Count.ToString()));
         }
-    }
-
-    private void AddSuccessActions()
-    {
-        Actions.Add(new FileDetailAction("Remove from List", RemoveFromListCommand, "Remove file from the loaded files list"));
-        Actions.Add(new FileDetailAction("Clean All Data", CleanAllDataCommand, "Remove file and clean all associated data"));
-        Actions.Add(new FileDetailAction("View Sheets", ViewSheetsCommand, "View detailed sheet information"));
-    }
-
-    private void AddFailedActions()
-    {
-        Actions.Add(new FileDetailAction("Remove Notification", RemoveNotificationCommand, "Remove failed file notification"));
-        Actions.Add(new FileDetailAction("Try Again", TryAgainCommand, "Attempt to reload the file"));
-    }
-
-    private void AddPartialSuccessActions()
-    {
-        Actions.Add(new FileDetailAction("Remove from List", RemoveFromListCommand, "Remove file from the loaded files list"));
-        Actions.Add(new FileDetailAction("View Details", ViewSheetsCommand, "View what was loaded successfully"));
     }
 
     private string GetFileFormat(string filePath)
@@ -210,16 +184,9 @@ public class FileDetailsViewModel : ViewModelBase
         TryAgainRequested?.Invoke(SelectedFile);
     }
 
-    private void ExecuteViewSheets()
-    {
-        _logger.LogInfo($"View sheets requested for: {SelectedFile?.FileName}", "FileDetailsViewModel");
-        ViewSheetsRequested?.Invoke(SelectedFile);
-    }
-
     // Events to communicate with parent ViewModels
     public event Action<IFileLoadResultViewModel?>? RemoveFromListRequested;
     public event Action<IFileLoadResultViewModel?>? CleanAllDataRequested;
     public event Action<IFileLoadResultViewModel?>? RemoveNotificationRequested;
     public event Action<IFileLoadResultViewModel?>? TryAgainRequested;
-    public event Action<IFileLoadResultViewModel?>? ViewSheetsRequested;
 }
