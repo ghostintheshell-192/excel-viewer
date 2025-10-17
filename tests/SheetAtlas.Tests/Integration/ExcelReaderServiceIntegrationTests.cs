@@ -179,7 +179,7 @@ namespace SheetAtlas.Tests.Integration
         #region Invalid Files Tests
 
         [Fact]
-        public async Task LoadFileAsync_EmptyFile_ReturnsSuccessWithWarning()
+        public async Task LoadFileAsync_EmptyFile_ReturnsSuccessWithInfo()
         {
             // Arrange
             var filePath = GetTestFilePath("Invalid", "empty.xlsx");
@@ -193,7 +193,7 @@ namespace SheetAtlas.Tests.Integration
             result.Status.Should().Be(LoadStatus.Success);
             result.Sheets.Should().BeEmpty(); // No sheets because empty sheet is skipped
             result.Errors.Should().Contain(e =>
-                e.Level == LogSeverity.Warning &&
+                e.Level == LogSeverity.Info &&
                 e.Message.Contains("empty"));
         }
 
