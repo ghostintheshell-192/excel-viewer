@@ -18,7 +18,21 @@ public class FileLoadResultViewModel : ViewModelBase, IFileLoadResultViewModel, 
     public bool HasWarnings => _file?.HasWarnings ?? false;
     public bool HasCriticalErrors => _file?.HasCriticalErrors ?? false;
 
-    public IReadOnlyList<ExcelError> Errors => _file?.Errors ?? Array.Empty<ExcelError>();
+    // Only show Critical, Error, Warning in UI - filter out Info messages
+    public IReadOnlyList<ExcelError> Errors
+    {
+        get
+        {
+            if (_file?.Errors == null)
+                return Array.Empty<ExcelError>();
+
+            return _file.Errors
+                .Where(e => e.Level == LogSeverity.Critical ||
+                            e.Level == LogSeverity.Error ||
+                            e.Level == LogSeverity.Warning)
+                .ToList();
+        }
+    }
 
     public bool IsExpanded
     {

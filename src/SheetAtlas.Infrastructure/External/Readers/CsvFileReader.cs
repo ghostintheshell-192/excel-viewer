@@ -95,8 +95,8 @@ namespace SheetAtlas.Infrastructure.External.Readers
 
                     if (sheetData.RowCount == 0)
                     {
-                        _logger.LogWarning($"CSV file {filePath} contains no data", "CsvFileReader");
-                        errors.Add(ExcelError.Warning("File", "CSV file contains no data rows"));
+                        _logger.LogInfo($"CSV file {filePath} contains no data rows", "CsvFileReader");
+                        errors.Add(ExcelError.Info("File", "CSV file is empty (no data rows)"));
                     }
 
                     sheets["Data"] = sheetData;

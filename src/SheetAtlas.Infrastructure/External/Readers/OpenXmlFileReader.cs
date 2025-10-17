@@ -93,8 +93,8 @@ namespace SheetAtlas.Infrastructure.External.Readers
                             // Skip empty sheets (no columns means no meaningful data)
                             if (sheetData == null)
                             {
-                                errors.Add(ExcelError.Warning(sheetName, "Sheet is empty (no columns), skipping"));
-                                _logger.LogWarning($"Sheet {sheetName} is empty, skipping", "OpenXmlFileReader");
+                                errors.Add(ExcelError.Info("File", $"Sheet '{sheetName}' is empty and was skipped"));
+                                _logger.LogInfo($"Sheet {sheetName} is empty, skipping", "OpenXmlFileReader");
                                 continue;
                             }
 
