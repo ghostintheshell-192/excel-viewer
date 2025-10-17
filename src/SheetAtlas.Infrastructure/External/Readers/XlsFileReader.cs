@@ -89,6 +89,15 @@ namespace SheetAtlas.Infrastructure.External.Readers
                         try
                         {
                             var processedSheet = ProcessSheet(Path.GetFileNameWithoutExtension(filePath), table);
+
+                            // Skip empty sheets (no rows or no columns) - this is normal, not an error
+                            if (processedSheet == null)
+                            {
+                                errors.Add(ExcelError.Info("File", $"Sheet '{sheetName}' is empty and was skipped"));
+                                _logger.LogInfo($"Sheet {sheetName} is empty, skipping", "XlsFileReader");
+                                continue;
+                            }
+
                             sheets[sheetName] = processedSheet;
                             _logger.LogInfo($"Sheet {sheetName} read successfully with {processedSheet.RowCount} rows", "XlsFileReader");
                         }
@@ -129,14 +138,14 @@ namespace SheetAtlas.Infrastructure.External.Readers
             }
         }
 
-        private SASheetData ProcessSheet(string fileName, System.Data.DataTable sourceTable)
+        private SASheetData? ProcessSheet(string fileName, System.Data.DataTable sourceTable)
         {
             var sheetName = sourceTable.TableName;
 
-            if (sourceTable.Rows.Count == 0)
+            // Return null for empty sheets (no rows or no columns) - caller will handle as Info
+            if (sourceTable.Rows.Count == 0 || sourceTable.Columns.Count == 0)
             {
-                _logger.LogWarning($"Sheet {sheetName} is empty", "XlsFileReader");
-                return new SASheetData(sheetName, Array.Empty<string>());
+                return null;
             }
 
             // First row is treated as header (matching OpenXML behavior)

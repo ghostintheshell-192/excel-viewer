@@ -6,6 +6,7 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using SheetAtlas.Logging.Models;
+using System.Xml;
 
 namespace SheetAtlas.Infrastructure.External.Readers
 {
@@ -93,8 +94,8 @@ namespace SheetAtlas.Infrastructure.External.Readers
                             // Skip empty sheets (no columns means no meaningful data)
                             if (sheetData == null)
                             {
-                                errors.Add(ExcelError.Warning(sheetName, "Sheet is empty (no columns), skipping"));
-                                _logger.LogWarning($"Sheet {sheetName} is empty, skipping", "OpenXmlFileReader");
+                                errors.Add(ExcelError.Info("File", $"Sheet '{sheetName}' is empty and was skipped"));
+                                _logger.LogInfo($"Sheet {sheetName} is empty, skipping", "OpenXmlFileReader");
                                 continue;
                             }
 
@@ -106,6 +107,12 @@ namespace SheetAtlas.Infrastructure.External.Readers
                             // GetPartById could return different type
                             _logger.LogError($"Invalid sheet part type for {sheetName}", ex, "OpenXmlFileReader");
                             errors.Add(ExcelError.SheetError(sheetName, $"Invalid sheet structure", ex));
+                        }
+                        catch (XmlException ex)
+                        {
+                            // XML parsing errors: malformed XML in worksheet
+                            _logger.LogError($"Malformed XML in sheet {sheetName}", ex, "OpenXmlFileReader");
+                            errors.Add(ExcelError.SheetError(sheetName, $"Sheet contains invalid XML: {ex.Message}", ex));
                         }
                         catch (OpenXmlPackageException ex)
                         {

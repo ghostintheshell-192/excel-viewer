@@ -14,6 +14,7 @@ public interface IFileLoadResultViewModel : IDisposable
     bool HasCriticalErrors { get; }
     IReadOnlyList<ExcelError> Errors { get; }
     ExcelFile? File { get; }
+    bool IsExpanded { get; set; }
 }
 
 public interface IExcelErrorViewModel

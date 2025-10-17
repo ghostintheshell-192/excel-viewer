@@ -35,6 +35,9 @@ public partial class App : Application
         // Create and configure the host
         _host = CreateHostBuilder().Build();
 
+        // Initialize LogService immediately to create log directory
+        _ = _host.Services.GetRequiredService<ILogService>();
+
         // Initialize theme manager
         var themeManager = _host.Services.GetRequiredService<IThemeManager>();
 

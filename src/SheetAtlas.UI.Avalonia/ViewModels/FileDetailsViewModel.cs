@@ -25,13 +25,11 @@ public class FileDetailsViewModel : ViewModelBase
     }
 
     public ObservableCollection<FileDetailProperty> Properties { get; } = new();
-    public ObservableCollection<FileDetailAction> Actions { get; } = new();
 
     public ICommand RemoveFromListCommand { get; }
     public ICommand CleanAllDataCommand { get; }
     public ICommand RemoveNotificationCommand { get; }
     public ICommand TryAgainCommand { get; }
-    public ICommand ViewSheetsCommand { get; }
 
     public FileDetailsViewModel(ILogService logger)
     {
@@ -41,13 +39,12 @@ public class FileDetailsViewModel : ViewModelBase
         CleanAllDataCommand = new RelayCommand(() => { ExecuteCleanAllData(); return Task.CompletedTask; });
         RemoveNotificationCommand = new RelayCommand(() => { ExecuteRemoveNotification(); return Task.CompletedTask; });
         TryAgainCommand = new RelayCommand(() => { ExecuteTryAgain(); return Task.CompletedTask; });
-        ViewSheetsCommand = new RelayCommand(() => { ExecuteViewSheets(); return Task.CompletedTask; });
+        ViewErrorLogCommand = new RelayCommand(OpenErrorLogAsync);
     }
 
     private void UpdateDetails()
     {
         Properties.Clear();
-        Actions.Clear();
 
         if (SelectedFile == null) return;
 
@@ -66,25 +63,25 @@ public class FileDetailsViewModel : ViewModelBase
         {
             case LoadStatus.Success:
                 AddSuccessDetails();
-                AddSuccessActions();
                 break;
 
             case LoadStatus.Failed:
-                AddFailedDetails();
-                AddFailedActions();
+                // No additional details needed - errors are shown in the file panel treeview
                 break;
 
             case LoadStatus.PartialSuccess:
                 AddPartialSuccessDetails();
-                AddPartialSuccessActions();
                 break;
         }
     }
 
     private void AddSuccessDetails()
     {
-        Properties.Add(new FileDetailProperty("Content", ""));
+        Properties.Add(new FileDetailProperty("Load Results", ""));
         Properties.Add(new FileDetailProperty("", ""));
+
+        Properties.Add(new FileDetailProperty("Status", "Success"));
+        Properties.Add(new FileDetailProperty("Warnings", "No problems detected"));
 
         if (SelectedFile?.File?.Sheets != null)
         {
@@ -93,94 +90,67 @@ public class FileDetailsViewModel : ViewModelBase
                 sheetNames += $" (+{SelectedFile.File.Sheets.Count - 3} more)";
 
             Properties.Add(new FileDetailProperty("Sheets", $"{SelectedFile.File.Sheets.Count} ({sheetNames})"));
-
-            var totalRows = SelectedFile.File.Sheets.Values.Sum(sheet => sheet.RowCount);
-            var totalCols = SelectedFile.File.Sheets.Values.Max(sheet => sheet.ColumnCount);
-
-            Properties.Add(new FileDetailProperty("Total Rows", totalRows.ToString()));
-            Properties.Add(new FileDetailProperty("Total Cols", totalCols.ToString()));
-        }
-
-        Properties.Add(new FileDetailProperty("Data Status", "Searchable"));
-    }
-
-    private void AddFailedDetails()
-    {
-        Properties.Add(new FileDetailProperty("Load Results", ""));
-        Properties.Add(new FileDetailProperty("", ""));
-
-        if (SelectedFile?.File?.Errors?.Any() == true)
-        {
-            var error = SelectedFile.File.Errors.First();
-            Properties.Add(new FileDetailProperty("Error Type", GetErrorType(error)));
-            Properties.Add(new FileDetailProperty("Details", TruncateText(error.Message, 60)));
-
-            if (error.Message.Contains("Unsupported file format"))
-            {
-                // Only for really unsupported formats
-                Properties.Add(new FileDetailProperty("Suggestion", "Use supported format (.xlsx, .xls, .csv)"));
-            }
-            else if (error.Message.Contains("corrupted") || error.Message.Contains("invalid"))
-            {
-                // Corrupted File; no conversion will help you
-                Properties.Add(new FileDetailProperty("Suggestion", "File may be damaged - try opening in Excel first"));
-            }
-        }
-        else
-        {
-            Properties.Add(new FileDetailProperty("Error Type", "Unknown Error"));
-            Properties.Add(new FileDetailProperty("Details", "No specific error details available"));
         }
     }
 
     private void AddPartialSuccessDetails()
     {
         Properties.Add(new FileDetailProperty("Load Results", ""));
-        Properties.Add(new FileDetailProperty("", ""));
+
+        // Add separator with optional action link
+        var separator = new FileDetailProperty("", "");
+        if (SelectedFile?.File?.Errors?.Any() == true)
+        {
+            separator.ActionText = "View Error Log";
+            separator.ActionCommand = ViewErrorLogCommand;
+        }
+        Properties.Add(separator);
 
         Properties.Add(new FileDetailProperty("Status", "Partially Loaded"));
 
         if (SelectedFile?.File?.Errors?.Any() == true)
         {
-            Properties.Add(new FileDetailProperty("Warnings", $"{SelectedFile.File.Errors.Count} issues found"));
+            var errorCount = SelectedFile.File.Errors.Count;
+            var issueWord = errorCount == 1 ? "issue" : "issues";
+            Properties.Add(new FileDetailProperty("Warnings", $"{errorCount} {issueWord} detected"));
         }
 
-        if (SelectedFile?.File?.Sheets != null)
+        if (SelectedFile?.File?.Sheets != null && SelectedFile.File.Sheets.Count > 0)
         {
-            Properties.Add(new FileDetailProperty("Sheets Loaded", SelectedFile.File.Sheets.Count.ToString()));
+            var sheetNames = string.Join(", ", SelectedFile.File.Sheets.Keys);
+            Properties.Add(new FileDetailProperty("Sheets", $"{SelectedFile.File.Sheets.Count} ({sheetNames})"));
         }
     }
 
-    private void AddSuccessActions()
-    {
-        Actions.Add(new FileDetailAction("Remove from List", RemoveFromListCommand, "Remove file from the loaded files list"));
-        Actions.Add(new FileDetailAction("Clean All Data", CleanAllDataCommand, "Remove file and clean all associated data"));
-        Actions.Add(new FileDetailAction("View Sheets", ViewSheetsCommand, "View detailed sheet information"));
-    }
+    public ICommand ViewErrorLogCommand { get; }
 
-    private void AddFailedActions()
+    private async Task OpenErrorLogAsync()
     {
-        Actions.Add(new FileDetailAction("Remove Notification", RemoveNotificationCommand, "Remove failed file notification"));
-        Actions.Add(new FileDetailAction("Try Again", TryAgainCommand, "Attempt to reload the file"));
-    }
+        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var logDirectory = Path.Combine(appDataPath, "SheetAtlas", "Logs");
+        var logFile = Path.Combine(logDirectory, string.Format("app-{0:yyyy-MM-dd}.log", DateTime.Now));
 
-    private void AddPartialSuccessActions()
-    {
-        Actions.Add(new FileDetailAction("Remove from List", RemoveFromListCommand, "Remove file from the loaded files list"));
-        Actions.Add(new FileDetailAction("View Details", ViewSheetsCommand, "View what was loaded successfully"));
-    }
+        if (!File.Exists(logFile))
+        {
+            _logger.LogInfo("Error log viewer opened - no log file found", "FileDetailsViewModel");
+            return;
+        }
 
-    private string GetErrorType(ExcelError error)
-    {
-        if (error.Message.Contains("Unsupported file format"))
-            return "Format Not Supported";
-        if (error.Message.Contains("corrupted") || error.Message.Contains("invalid"))
-            return "Corrupted File";
-        if (error.Message.Contains("access") || error.Message.Contains("permission"))
-            return "Access Denied";
-        if (error.Message.Contains("not found"))
-            return "File Not Found";
-        return "Load Error";
+        try
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = logFile,
+                UseShellExecute = true
+            };
+            System.Diagnostics.Process.Start(psi);
+
+            _logger.LogInfo($"Opened error log file: {logFile}", "FileDetailsViewModel");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Failed to open error log file", ex, "FileDetailsViewModel");
+        }
     }
 
     private string GetFileFormat(string filePath)
@@ -252,16 +222,9 @@ public class FileDetailsViewModel : ViewModelBase
         TryAgainRequested?.Invoke(SelectedFile);
     }
 
-    private void ExecuteViewSheets()
-    {
-        _logger.LogInfo($"View sheets requested for: {SelectedFile?.FileName}", "FileDetailsViewModel");
-        ViewSheetsRequested?.Invoke(SelectedFile);
-    }
-
     // Events to communicate with parent ViewModels
     public event Action<IFileLoadResultViewModel?>? RemoveFromListRequested;
     public event Action<IFileLoadResultViewModel?>? CleanAllDataRequested;
     public event Action<IFileLoadResultViewModel?>? RemoveNotificationRequested;
     public event Action<IFileLoadResultViewModel?>? TryAgainRequested;
-    public event Action<IFileLoadResultViewModel?>? ViewSheetsRequested;
 }
