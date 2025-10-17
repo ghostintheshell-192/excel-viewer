@@ -16,13 +16,6 @@ echo -e "${BLUE}  Pre-Push Tests${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 
-# Check if this is a .NET project
-if [ ! -f "*.sln" ] && [ ! -f "*.csproj" ]; then
-    # Not a .NET project, skip tests
-    echo -e "${YELLOW}ℹ No .NET project detected, skipping tests${NC}"
-    exit 0
-fi
-
 # Check if solution file exists
 SOLUTION_FILE=$(find . -maxdepth 1 -name "*.sln" | head -n 1)
 
