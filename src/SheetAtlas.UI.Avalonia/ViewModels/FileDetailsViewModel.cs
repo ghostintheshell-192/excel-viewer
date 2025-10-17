@@ -39,6 +39,7 @@ public class FileDetailsViewModel : ViewModelBase
         CleanAllDataCommand = new RelayCommand(() => { ExecuteCleanAllData(); return Task.CompletedTask; });
         RemoveNotificationCommand = new RelayCommand(() => { ExecuteRemoveNotification(); return Task.CompletedTask; });
         TryAgainCommand = new RelayCommand(() => { ExecuteTryAgain(); return Task.CompletedTask; });
+        ViewErrorLogCommand = new RelayCommand(OpenErrorLogAsync);
     }
 
     private void UpdateDetails()
@@ -76,8 +77,11 @@ public class FileDetailsViewModel : ViewModelBase
 
     private void AddSuccessDetails()
     {
-        Properties.Add(new FileDetailProperty("Content", ""));
+        Properties.Add(new FileDetailProperty("Load Results", ""));
         Properties.Add(new FileDetailProperty("", ""));
+
+        Properties.Add(new FileDetailProperty("Status", "Success"));
+        Properties.Add(new FileDetailProperty("Warnings", "No problems detected"));
 
         if (SelectedFile?.File?.Sheets != null)
         {
@@ -86,32 +90,66 @@ public class FileDetailsViewModel : ViewModelBase
                 sheetNames += $" (+{SelectedFile.File.Sheets.Count - 3} more)";
 
             Properties.Add(new FileDetailProperty("Sheets", $"{SelectedFile.File.Sheets.Count} ({sheetNames})"));
-
-            var totalRows = SelectedFile.File.Sheets.Values.Sum(sheet => sheet.RowCount);
-            var totalCols = SelectedFile.File.Sheets.Values.Max(sheet => sheet.ColumnCount);
-
-            Properties.Add(new FileDetailProperty("Total Rows", totalRows.ToString()));
-            Properties.Add(new FileDetailProperty("Total Cols", totalCols.ToString()));
         }
-
-        Properties.Add(new FileDetailProperty("Data Status", "Searchable"));
     }
 
     private void AddPartialSuccessDetails()
     {
         Properties.Add(new FileDetailProperty("Load Results", ""));
-        Properties.Add(new FileDetailProperty("", ""));
+
+        // Add separator with optional action link
+        var separator = new FileDetailProperty("", "");
+        if (SelectedFile?.File?.Errors?.Any() == true)
+        {
+            separator.ActionText = "View Error Log";
+            separator.ActionCommand = ViewErrorLogCommand;
+        }
+        Properties.Add(separator);
 
         Properties.Add(new FileDetailProperty("Status", "Partially Loaded"));
 
         if (SelectedFile?.File?.Errors?.Any() == true)
         {
-            Properties.Add(new FileDetailProperty("Warnings", $"{SelectedFile.File.Errors.Count} issues found"));
+            var errorCount = SelectedFile.File.Errors.Count;
+            var issueWord = errorCount == 1 ? "issue" : "issues";
+            Properties.Add(new FileDetailProperty("Warnings", $"{errorCount} {issueWord} detected"));
         }
 
-        if (SelectedFile?.File?.Sheets != null)
+        if (SelectedFile?.File?.Sheets != null && SelectedFile.File.Sheets.Count > 0)
         {
-            Properties.Add(new FileDetailProperty("Sheets Loaded", SelectedFile.File.Sheets.Count.ToString()));
+            var sheetNames = string.Join(", ", SelectedFile.File.Sheets.Keys);
+            Properties.Add(new FileDetailProperty("Sheets", $"{SelectedFile.File.Sheets.Count} ({sheetNames})"));
+        }
+    }
+
+    public ICommand ViewErrorLogCommand { get; }
+
+    private async Task OpenErrorLogAsync()
+    {
+        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var logDirectory = Path.Combine(appDataPath, "SheetAtlas", "Logs");
+        var logFile = Path.Combine(logDirectory, string.Format("app-{0:yyyy-MM-dd}.log", DateTime.Now));
+
+        if (!File.Exists(logFile))
+        {
+            _logger.LogInfo("Error log viewer opened - no log file found", "FileDetailsViewModel");
+            return;
+        }
+
+        try
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = logFile,
+                UseShellExecute = true
+            };
+            System.Diagnostics.Process.Start(psi);
+
+            _logger.LogInfo($"Opened error log file: {logFile}", "FileDetailsViewModel");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Failed to open error log file", ex, "FileDetailsViewModel");
         }
     }
 

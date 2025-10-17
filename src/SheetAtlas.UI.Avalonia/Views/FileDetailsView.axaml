@@ -28,17 +28,42 @@
                     <DataTemplate>
                         <StackPanel>
                             <!-- Header Row -->
-                            <Border BorderBrush="LightGray" BorderThickness="0,0,0,1"
+                            <!--<Border BorderBrush="LightGray" BorderThickness="0,0,0,1"
                                     IsVisible="{Binding IsHeader}">
                                 <TextBlock Text="{Binding Key}"
                                           FontWeight="SemiBold"
                                           Background="LightGray"
                                           Padding="8,4"
                                           FontSize="12"/>
+                            </Border>-->
+
+                            <!-- Separator Row (with optional action link) -->
+                             <Border IsVisible="{Binding IsSeparator}"
+                                    MinHeight="8"
+                                    Padding="0,0,0,8"
+                                    Margin="0"
+                                    Background="#E0E0E0">
+                                <!-- Show link if ActionCommand is present, otherwise empty -->
+
+                                <Button Content="{Binding ActionText}"
+                                       Command="{Binding ActionCommand}"
+                                       HorizontalAlignment="Right"
+                                       Background="Transparent"
+                                       Foreground="#0066CC"
+                                       Cursor="Hand"
+                                       Padding="4,0,0,0"
+                                       Margin="0,0,8,0"
+                                       BorderThickness="0"
+                                       IsVisible="{Binding ActionCommand, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                    <Button.Styles>
+                                        <Style Selector="Button:pointerover">
+                                            <Setter Property="Foreground" Value="#0052A3"/>
+                                            <Setter Property="TextBlock.TextDecorations" Value="Underline"/>
+                                        </Style>
+                                    </Button.Styles>
+                                </Button>
                             </Border>
 
-                            <!-- Separator Row -->
-                            <Border Height="8" IsVisible="{Binding IsSeparator}"/>
 
                             <!-- Regular Property Row -->
                             <Grid IsVisible="{Binding IsRegularRow}" MinHeight="24">
