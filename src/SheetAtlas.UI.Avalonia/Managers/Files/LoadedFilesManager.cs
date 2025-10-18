@@ -1,6 +1,10 @@
 using System.Collections.ObjectModel;
+using System.Reflection;
+using SheetAtlas.Core.Application.DTOs;
+using SheetAtlas.Core.Application.Interfaces;
 using SheetAtlas.Core.Domain.Entities;
 using SheetAtlas.Core.Domain.ValueObjects;
+using SheetAtlas.Core.Shared.Helpers;
 using SheetAtlas.Infrastructure.External;
 using SheetAtlas.UI.Avalonia.Services;
 using SheetAtlas.UI.Avalonia.ViewModels;
@@ -17,6 +21,7 @@ public class LoadedFilesManager : ILoadedFilesManager
     private readonly IExcelReaderService _excelReaderService;
     private readonly IDialogService _dialogService;
     private readonly ILogService _logger;
+    private readonly IFileLogService _fileLogService;
 
     private readonly ObservableCollection<IFileLoadResultViewModel> _loadedFiles = new();
 
@@ -29,11 +34,13 @@ public class LoadedFilesManager : ILoadedFilesManager
     public LoadedFilesManager(
         IExcelReaderService excelReaderService,
         IDialogService dialogService,
-        ILogService logger)
+        ILogService logger,
+        IFileLogService fileLogService)
     {
         _excelReaderService = excelReaderService ?? throw new ArgumentNullException(nameof(excelReaderService));
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _fileLogService = fileLogService ?? throw new ArgumentNullException(nameof(fileLogService));
 
         LoadedFiles = new ReadOnlyObservableCollection<IFileLoadResultViewModel>(_loadedFiles);
     }
@@ -292,5 +299,109 @@ public class LoadedFilesManager : ILoadedFilesManager
         _loadedFiles.Add(fileViewModel);
 
         FileLoaded?.Invoke(this, new FileLoadedEventArgs(fileViewModel, hasErrors));
+
+        // Save structured log asynchronously (fire-and-forget)
+        _ = Task.Run(async () => await SaveFileLogAsync(excelFile));
+    }
+
+    /// <summary>
+    /// Saves a structured JSON log for the loaded file
+    /// Runs asynchronously and does not block the UI
+    /// </summary>
+    private async Task SaveFileLogAsync(ExcelFile excelFile)
+    {
+        try
+        {
+            var logEntry = CreateFileLogEntry(excelFile);
+            await _fileLogService.SaveFileLogAsync(logEntry);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Failed to save file log for {excelFile.FileName}", ex, "LoadedFilesManager");
+            // Don't throw - logging should never crash the app
+        }
+    }
+
+    /// <summary>
+    /// Creates a FileLogEntry from an ExcelFile
+    /// </summary>
+    private FileLogEntry CreateFileLogEntry(ExcelFile excelFile)
+    {
+        // Get file info
+        FileInfo? fileInfo = null;
+        try
+        {
+            fileInfo = new FileInfo(excelFile.FilePath);
+        }
+        catch
+        {
+            // File might not exist anymore
+        }
+
+        // Compute file hash
+        string fileHash = "md5:unknown";
+        try
+        {
+            if (fileInfo != null && fileInfo.Exists)
+            {
+                fileHash = FilePathHelper.ComputeFileHash(excelFile.FilePath);
+            }
+        }
+        catch
+        {
+            // Hash computation failed
+        }
+
+        // Get app version
+        var appVersion = Assembly.GetExecutingAssembly()
+            .GetName()
+            .Version?
+            .ToString() ?? "0.0.0";
+
+        // Create log entry
+        var logEntry = new FileLogEntry
+        {
+            SchemaVersion = "1.0",
+            File = new FileInfoDto
+            {
+                Name = excelFile.FileName,
+                OriginalPath = excelFile.FilePath,
+                SizeBytes = fileInfo?.Length ?? 0,
+                Hash = fileHash,
+                LastModified = fileInfo?.LastWriteTime ?? DateTime.MinValue
+            },
+            LoadAttempt = new LoadAttemptInfo
+            {
+                Timestamp = DateTime.Now,
+                Status = excelFile.Status.ToString(),
+                DurationMs = 0, // TODO: measure actual duration in future
+                AppVersion = appVersion
+            },
+            Errors = excelFile.Errors.ToList(), // Convert IReadOnlyList to List
+            Summary = CreateErrorSummary(excelFile.Errors),
+            Extensions = null
+        };
+
+        return logEntry;
+    }
+
+    /// <summary>
+    /// Creates error summary with aggregations
+    /// </summary>
+    private ErrorSummary CreateErrorSummary(IReadOnlyList<ExcelError> errors)
+    {
+        var summary = new ErrorSummary
+        {
+            TotalErrors = errors.Count,
+            BySeverity = errors
+                .GroupBy(e => e.Level.ToString())
+                .ToDictionary(g => g.Key, g => g.Count()),
+            ByContext = errors
+                .Where(e => !string.IsNullOrEmpty(e.Context))
+                .GroupBy(e => e.Context!)
+                .ToDictionary(g => g.Key, g => g.Count())
+        };
+
+        return summary;
     }
 }

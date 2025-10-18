@@ -84,6 +84,7 @@ public partial class App : Application
                 services.AddSingleton<ISearchService, SearchService>();
                 services.AddSingleton<IRowComparisonService, RowComparisonService>();
                 services.AddSingleton<IExceptionHandler, ExceptionHandler>();
+                services.AddSingleton<IFileLogService, FileLogService>();
 
                 // Register Avalonia-specific services
                 services.AddSingleton<IDialogService, AvaloniaDialogService>();
