@@ -107,18 +107,19 @@
             <!-- File Menu -->
             <MenuItem Header="_File">
                 <MenuItem Header="📁 _Load Files"
-                         Command="{Binding LoadFileCommand}"
-                         InputGesture="Ctrl+O"/>
+                         Command="{Binding LoadFileCommand}"/>
                 <Separator/>
                 <MenuItem Header="Recent Files" IsEnabled="False"/>
             </MenuItem>
 
             <!-- View Menu -->
             <MenuItem Header="_View">
+                <MenuItem Header="Show _Search"
+                          Command="{Binding ShowSearchTabCommand}"/>
+                <MenuItem Header="Show _Comparison"
+                          Command="{Binding ShowComparisonTabCommand}"/>
+                <Separator/>
                 <MenuItem Header="Show _Status Bar" IsEnabled="False"/>
-                <MenuItem Header="Show Search _Results"
-                         Command="{Binding ShowSearchResultsCommand}"
-                         InputGesture="Ctrl+R"/>
             </MenuItem>
 
             <!-- Tools Menu -->
@@ -296,109 +297,43 @@
                           HorizontalAlignment="Center"/>
             </Button>
 
-            <!-- Search Panel -->
+            <!-- Main Content Area -->
             <Grid Grid.Column="2" Margin="12,0,0,0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-
-                <!-- Search Box -->
-                <Grid Grid.Row="0" Margin="0,0,0,8">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-
-                    <TextBox Grid.Column="0"
-                             Text="{Binding SearchViewModel.SearchQuery}"
-                             Watermark="Enter search term..."
-                             Margin="0,0,8,0"
-                             KeyDown="OnSearchTextBoxKeyDown"/>
-
-                    <Button Grid.Column="1" Content="🔍"
-                            Command="{Binding SearchViewModel.SearchCommand}"
-                            Margin="0,0,4,0" Padding="8,4"/>
-
-                    <Button Grid.Column="2" Content="✕"
-                            Command="{Binding SearchViewModel.ClearSearchCommand}"
-                            Padding="8,4"/>
-                </Grid>
-
-                <!-- Search Options and Row Comparison Controls -->
-                <Grid Grid.Row="1" Margin="0,0,0,8">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Search Options -->
-                    <StackPanel Grid.Column="0" Orientation="Horizontal">
-                        <CheckBox Content="Case Sensitive"
-                                  IsChecked="{Binding SearchViewModel.CaseSensitive}"
-                                  Margin="0,0,12,0"/>
-                        <CheckBox Content="Exact Match"
-                                  IsChecked="{Binding SearchViewModel.ExactMatch}"
-                                  Margin="0,0,12,0"/>
-                        <CheckBox Content="Use Regex"
-                                  IsChecked="{Binding SearchViewModel.UseRegexSearch}"/>
+                <!-- Welcome Message (when no tabs visible) -->
+                <Border IsVisible="{Binding HasAnyTabVisible, Converter={x:Static BoolConverters.Not}}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                    <StackPanel Spacing="16" HorizontalAlignment="Center">
+                        <TextBlock Text="SheetAtlas"
+                                  FontSize="24"
+                                  FontWeight="SemiBold"
+                                  Foreground="{DynamicResource PrimaryText}"
+                                  HorizontalAlignment="Center"/>
+                        <TextBlock Text="Start here: File → Load Files"
+                                  FontSize="14"
+                                  Foreground="{DynamicResource SecondaryText}"
+                                  HorizontalAlignment="Center"/>
                     </StackPanel>
+                </Border>
 
-                    <!-- Row Comparison Controls (aligned to the right) -->
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-                        <!-- Selected rows counter -->
-                        <Border Background="#E3F2FD"
-                               CornerRadius="4"
-                               Padding="8,4"
-                               IsVisible="{Binding TreeSearchResultsViewModel.CanCompareRows}">
-                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                <TextBlock Text="{Binding TreeSearchResultsViewModel.SelectedCount}"
-                                          FontWeight="SemiBold"
-                                          Foreground="#1976D2"/>
-                                <TextBlock Text="selected rows"
-                                          Foreground="#666666"/>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- Compare Rows Button -->
-                        <Button Content="Compare Rows"
-                                Background="#FF6B35"
-                                Foreground="White"
-                                FontWeight="SemiBold"
-                                BorderThickness="0"
-                                CornerRadius="4"
-                                Padding="12,6"
-                                Command="{Binding TreeSearchResultsViewModel.CompareSelectedRowsCommand}"
-                                IsEnabled="{Binding TreeSearchResultsViewModel.CanCompareRows}"/>
-
-                        <!-- Clear Selection Button -->
-                        <Button Content="Clear"
-                                Background="#263238"
-                                Foreground="White"
-                                BorderThickness="0"
-                                CornerRadius="4"
-                                Padding="12,6"
-                                FontSize="12"
-                                Command="{Binding TreeSearchResultsViewModel.ClearSelectionCommand}"/>
-
-                        <!-- Clear History Button -->
-                        <Button Content="Clear History"
-                                Background="#263238"
-                                Foreground="White"
-                                BorderThickness="0"
-                                CornerRadius="4"
-                                Padding="12,6"
-                                FontSize="12"
-                                Command="{Binding TreeSearchResultsViewModel.ClearHistoryCommand}"/>
-                    </StackPanel>
-                </Grid>
-
-                <!-- Content Area: Tab Control -->
-                <TabControl Grid.Row="2" SelectedIndex="{Binding SelectedTabIndex}">
+                <!-- Content Area: Tab Control (full height) -->
+                <TabControl SelectedIndex="{Binding SelectedTabIndex}"
+                           IsVisible="{Binding HasAnyTabVisible}">
                     <!-- File Details Tab -->
-                    <TabItem Header="File Details" IsEnabled="{Binding SelectedFile, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <TabItem IsVisible="{Binding IsFileDetailsTabVisible}">
+                        <TabItem.Header>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="File Details" VerticalAlignment="Center"/>
+                                <Button Content="✕"
+                                        Command="{Binding CloseFileDetailsTabCommand}"
+                                        Padding="4,0"
+                                        FontSize="14"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Foreground="{DynamicResource SecondaryText}"
+                                        ToolTip.Tip="Close tab"/>
+                            </StackPanel>
+                        </TabItem.Header>
                         <ContentControl Content="{Binding FileDetailsViewModel}">
                             <ContentControl.ContentTemplate>
                                 <DataTemplate>
@@ -408,20 +343,147 @@
                         </ContentControl>
                     </TabItem>
 
-                    <!-- Search Results Tab -->
-                    <TabItem Header="Search Results">
-                        <!-- Tree View Only -->
-                        <ContentControl Content="{Binding TreeSearchResultsViewModel}">
-                            <ContentControl.ContentTemplate>
-                                <DataTemplate>
-                                    <views:TreeSearchResultsView/>
-                                </DataTemplate>
-                            </ContentControl.ContentTemplate>
-                        </ContentControl>
+                    <!-- Search Tab -->
+                    <TabItem IsVisible="{Binding IsSearchTabVisible}">
+                        <TabItem.Header>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="Search" VerticalAlignment="Center"/>
+                                <Button Content="✕"
+                                        Command="{Binding CloseSearchTabCommand}"
+                                        Padding="4,0"
+                                        FontSize="14"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Foreground="{DynamicResource SecondaryText}"
+                                        ToolTip.Tip="Close tab"/>
+                            </StackPanel>
+                        </TabItem.Header>
+
+                        <!-- Search Tab Content -->
+                        <Grid Margin="8">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Search Box -->
+                            <Grid Grid.Row="0" Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBox Grid.Column="0"
+                                         Text="{Binding SearchViewModel.SearchQuery}"
+                                         Watermark="Enter search term..."
+                                         Margin="0,0,8,0"
+                                         KeyDown="OnSearchTextBoxKeyDown"/>
+
+                                <Button Grid.Column="1" Content="Search"
+                                        Command="{Binding SearchViewModel.SearchCommand}"
+                                        Margin="0,0,4,0" Padding="12,6"/>
+
+                                <Button Grid.Column="2" Content="Clear"
+                                        Command="{Binding SearchViewModel.ClearSearchCommand}"
+                                        Padding="12,6"/>
+                            </Grid>
+
+                            <!-- Search Options and Row Comparison Controls -->
+                            <Grid Grid.Row="1" Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Search Options -->
+                                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                    <CheckBox Content="Case Sensitive"
+                                              IsChecked="{Binding SearchViewModel.CaseSensitive}"
+                                              Margin="0,0,12,0"/>
+                                    <CheckBox Content="Exact Match"
+                                              IsChecked="{Binding SearchViewModel.ExactMatch}"
+                                              Margin="0,0,12,0"/>
+                                    <CheckBox Content="Use Regex"
+                                              IsChecked="{Binding SearchViewModel.UseRegexSearch}"/>
+                                </StackPanel>
+
+                                <!-- Row Comparison Controls (aligned to the right) -->
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                                    <!-- Selected rows counter -->
+                                    <Border Background="#E3F2FD"
+                                           CornerRadius="4"
+                                           Padding="8,4"
+                                           IsVisible="{Binding TreeSearchResultsViewModel.CanCompareRows}">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <TextBlock Text="{Binding TreeSearchResultsViewModel.SelectedCount}"
+                                                      FontWeight="SemiBold"
+                                                      Foreground="#1976D2"/>
+                                            <TextBlock Text="selected rows"
+                                                      Foreground="#666666"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Compare Rows Button -->
+                                    <Button Content="Compare Rows"
+                                            Background="#FF6B35"
+                                            Foreground="White"
+                                            FontWeight="SemiBold"
+                                            BorderThickness="0"
+                                            CornerRadius="4"
+                                            Padding="12,6"
+                                            Command="{Binding TreeSearchResultsViewModel.CompareSelectedRowsCommand}"
+                                            IsEnabled="{Binding TreeSearchResultsViewModel.CanCompareRows}"/>
+
+                                    <!-- Clear Selection Button -->
+                                    <Button Content="Clear"
+                                            Background="#263238"
+                                            Foreground="White"
+                                            BorderThickness="0"
+                                            CornerRadius="4"
+                                            Padding="12,6"
+                                            FontSize="12"
+                                            Command="{Binding TreeSearchResultsViewModel.ClearSelectionCommand}"/>
+
+                                    <!-- Clear History Button -->
+                                    <Button Content="Clear History"
+                                            Background="#263238"
+                                            Foreground="White"
+                                            BorderThickness="0"
+                                            CornerRadius="4"
+                                            Padding="12,6"
+                                            FontSize="12"
+                                            Command="{Binding TreeSearchResultsViewModel.ClearHistoryCommand}"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Search Results Tree View -->
+                            <ContentControl Grid.Row="2" Content="{Binding TreeSearchResultsViewModel}">
+                                <ContentControl.ContentTemplate>
+                                    <DataTemplate>
+                                        <views:TreeSearchResultsView/>
+                                    </DataTemplate>
+                                </ContentControl.ContentTemplate>
+                            </ContentControl>
+                        </Grid>
                     </TabItem>
 
                     <!-- Row Comparison Tab -->
-                    <TabItem Header="Row Comparison" IsEnabled="{Binding SelectedComparison, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <TabItem IsVisible="{Binding IsComparisonTabVisible}">
+                        <TabItem.Header>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="Row Comparison" VerticalAlignment="Center"/>
+                                <Button Content="✕"
+                                        Command="{Binding CloseComparisonTabCommand}"
+                                        Padding="4,0"
+                                        FontSize="14"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Foreground="{DynamicResource SecondaryText}"
+                                        ToolTip.Tip="Close tab"/>
+                            </StackPanel>
+                        </TabItem.Header>
                         <ContentControl Content="{Binding SelectedComparison}">
                             <ContentControl.ContentTemplate>
                                 <DataTemplate>

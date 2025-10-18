@@ -29,6 +29,9 @@ public class MainWindowViewModel : ViewModelBase
     private object? _currentView;
     private int _selectedTabIndex;
     private bool _isSidebarExpanded;
+    private bool _isFileDetailsTabVisible;
+    private bool _isSearchTabVisible;
+    private bool _isComparisonTabVisible;
 
     public ReadOnlyObservableCollection<IFileLoadResultViewModel> LoadedFiles => _filesManager.LoadedFiles;
     public ReadOnlyObservableCollection<RowComparisonViewModel> RowComparisons => _comparisonCoordinator.RowComparisons;
@@ -57,16 +60,17 @@ public class MainWindowViewModel : ViewModelBase
                     FileDetailsViewModel.SelectedFile = value;
                 }
 
-                // Switch to appropriate tab
+                // Show/hide File Details tab based on selection
                 if (value != null)
                 {
-                    // File selected - switch to File Details tab
-                    SelectedTabIndex = 0;
+                    // File selected - show and switch to File Details tab
+                    IsFileDetailsTabVisible = true;
+                    SelectedTabIndex = GetTabIndex("FileDetails");
                 }
                 else
                 {
-                    // No file selected - switch to Search Results tab
-                    SelectedTabIndex = 1;
+                    // No file selected - hide File Details tab
+                    IsFileDetailsTabVisible = false;
                 }
             }
         }
@@ -90,10 +94,53 @@ public class MainWindowViewModel : ViewModelBase
         set => SetField(ref _isSidebarExpanded, value);
     }
 
+    public bool IsFileDetailsTabVisible
+    {
+        get => _isFileDetailsTabVisible;
+        set
+        {
+            if (SetField(ref _isFileDetailsTabVisible, value))
+            {
+                OnPropertyChanged(nameof(HasAnyTabVisible));
+            }
+        }
+    }
+
+    public bool IsSearchTabVisible
+    {
+        get => _isSearchTabVisible;
+        set
+        {
+            if (SetField(ref _isSearchTabVisible, value))
+            {
+                OnPropertyChanged(nameof(HasAnyTabVisible));
+            }
+        }
+    }
+
+    public bool IsComparisonTabVisible
+    {
+        get => _isComparisonTabVisible;
+        set
+        {
+            if (SetField(ref _isComparisonTabVisible, value))
+            {
+                OnPropertyChanged(nameof(HasAnyTabVisible));
+            }
+        }
+    }
+
+    public bool HasAnyTabVisible => IsFileDetailsTabVisible || IsSearchTabVisible || IsComparisonTabVisible;
+
     public IThemeManager ThemeManager { get; }
     public ICommand LoadFileCommand { get; }
     public ICommand ToggleThemeCommand { get; }
     public ICommand ToggleSidebarCommand { get; }
+    public ICommand ShowSearchTabCommand { get; }
+    public ICommand ShowComparisonTabCommand { get; }
+    public ICommand CloseFileDetailsTabCommand { get; }
+    public ICommand CloseSearchTabCommand { get; }
+    public ICommand CloseComparisonTabCommand { get; }
     public ICommand ShowSearchResultsCommand { get; }
     public ICommand ShowAboutCommand { get; }
     public ICommand ShowDocumentationCommand { get; }
@@ -119,17 +166,56 @@ public class MainWindowViewModel : ViewModelBase
         _activityLog = activityLog ?? throw new ArgumentNullException(nameof(activityLog));
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
 
-        // Initialize with Search Results tab selected
-        _selectedTabIndex = 1;
+        // Initialize with no tab selected (clean start)
+        _selectedTabIndex = -1;
 
         // Initialize sidebar as collapsed (new UX)
         _isSidebarExpanded = false;
+
+        // Initialize all tabs as hidden (new UX - progressive disclosure)
+        _isFileDetailsTabVisible = false;
+        _isSearchTabVisible = false;
+        _isComparisonTabVisible = false;
 
         LoadFileCommand = new RelayCommand(async () => await LoadFileAsync());
 
         ToggleSidebarCommand = new RelayCommand(() =>
         {
             IsSidebarExpanded = !IsSidebarExpanded;
+            return Task.CompletedTask;
+        });
+
+        ShowSearchTabCommand = new RelayCommand(() =>
+        {
+            IsSearchTabVisible = true;
+            SelectedTabIndex = GetTabIndex("Search");
+            return Task.CompletedTask;
+        });
+
+        ShowComparisonTabCommand = new RelayCommand(() =>
+        {
+            IsComparisonTabVisible = true;
+            SelectedTabIndex = GetTabIndex("Comparison");
+            return Task.CompletedTask;
+        });
+
+        CloseFileDetailsTabCommand = new RelayCommand(() =>
+        {
+            IsFileDetailsTabVisible = false;
+            SelectedFile = null;
+            return Task.CompletedTask;
+        });
+
+        CloseSearchTabCommand = new RelayCommand(() =>
+        {
+            IsSearchTabVisible = false;
+            return Task.CompletedTask;
+        });
+
+        CloseComparisonTabCommand = new RelayCommand(() =>
+        {
+            IsComparisonTabVisible = false;
+            SelectedComparison = null;
             return Task.CompletedTask;
         });
 
@@ -142,7 +228,9 @@ public class MainWindowViewModel : ViewModelBase
 
         ShowSearchResultsCommand = new RelayCommand(() =>
         {
-            SelectedTabIndex = 1; // Switch to Search Results tab
+            // Deprecated - use ShowSearchTabCommand instead
+            IsSearchTabVisible = true;
+            SelectedTabIndex = GetTabIndex("Search");
             return Task.CompletedTask;
         });
 
@@ -175,8 +263,15 @@ public class MainWindowViewModel : ViewModelBase
         // Clear all selections in TreeSearchResultsViewModel
         TreeSearchResultsViewModel?.ClearSelection();
 
-        // Switch back to Search Results tab
-        SelectedTabIndex = 1;
+        // If Search tab is visible, switch to it; otherwise just deselect
+        if (IsSearchTabVisible)
+        {
+            SelectedTabIndex = GetTabIndex("Search");
+        }
+        else
+        {
+            SelectedTabIndex = -1;
+        }
 
         _logger.LogInfo("Comparison removed and selections cleared", "MainWindowViewModel");
     }
@@ -201,8 +296,9 @@ public class MainWindowViewModel : ViewModelBase
                     {
                         TreeSearchResultsViewModel.AddSearchResults(query, results.ToList());
 
-                        // Switch to Search Results tab to show results
-                        SelectedTabIndex = 1;
+                        // Show and switch to Search tab to display results
+                        IsSearchTabVisible = true;
+                        SelectedTabIndex = GetTabIndex("Search");
                     }
                 }
             };
@@ -238,12 +334,12 @@ public class MainWindowViewModel : ViewModelBase
 
     private void OnComparisonSelectionChanged(object? sender, ComparisonSelectionChangedEventArgs e)
     {
-        // Switch to comparison tab ONLY when user manually selects a comparison
-        // Do NOT switch if we're just updating an existing comparison (e.g., after file removal)
-        if (e.NewSelection != null && e.OldSelection == null)
+        // Show/hide comparison tab based on selection
+        if (e.NewSelection != null)
         {
-            // User selected a comparison for the first time (not replacing existing)
-            SelectedTabIndex = 2; // Comparison tab
+            // Comparison created/selected - show and switch to Comparison tab
+            IsComparisonTabVisible = true;
+            SelectedTabIndex = GetTabIndex("Comparison");
         }
     }
 
@@ -490,6 +586,36 @@ public class MainWindowViewModel : ViewModelBase
                 "Error Opening Log"
             );
         }
+    }
+
+    /// <summary>
+    /// Calculates the tab index based on which tabs are currently visible.
+    /// Tab order: FileDetails, Search, Comparison
+    /// </summary>
+    private int GetTabIndex(string tabName)
+    {
+        int index = 0;
+
+        if (tabName == "FileDetails")
+        {
+            return IsFileDetailsTabVisible ? index : -1;
+        }
+
+        if (IsFileDetailsTabVisible) index++;
+
+        if (tabName == "Search")
+        {
+            return IsSearchTabVisible ? index : -1;
+        }
+
+        if (IsSearchTabVisible) index++;
+
+        if (tabName == "Comparison")
+        {
+            return IsComparisonTabVisible ? index : -1;
+        }
+
+        return -1;
     }
 }
 
