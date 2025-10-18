@@ -14,6 +14,8 @@
 
     <Window.Resources>
         <converters:CollectionNotEmptyConverter x:Key="CollectionNotEmptyConverter"/>
+        <converters:BoolToSidebarWidthConverter x:Key="BoolToSidebarWidthConverter"/>
+        <converters:BoolToTextConverter x:Key="BoolToTextConverter"/>
     </Window.Resources>
 
     <Design.DataContext>
@@ -159,31 +161,32 @@
         <!-- Main Content -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="300"/>
-                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="{Binding IsSidebarExpanded, Converter={StaticResource BoolToSidebarWidthConverter}}"/>
+                <ColumnDefinition Width="20"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
             <!-- Files Panel -->
-            <Grid Grid.Column="0">
+            <Grid Grid.Column="0" Background="{DynamicResource SecondaryBackground}" IsVisible="{Binding IsSidebarExpanded}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
                 <!-- Header with clear button -->
-                <Grid Grid.Row="0" Margin="0,0,0,8" Background="Transparent" Tapped="OnHeaderTapped">
+                <Grid Grid.Row="0" Margin="8,8,8,8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
                     <TextBlock Grid.Column="0" Text="Loaded Files" FontWeight="SemiBold"
-                              FontSize="14" Background="Transparent"
+                              FontSize="14"
                               Foreground="{DynamicResource PrimaryText}"/>
 
-                    <Button Grid.Column="1" Content="✕"
-                            Width="20" Height="20" Padding="3,0,3,0"
+                    <Button Grid.Column="1" Content="Clear"
+                            Padding="8,4"
+                            FontSize="11"
                             ToolTip.Tip="Clear selection"
                             Click="OnClearSelectionClick"
                             IsVisible="{Binding SelectedFile, Converter={x:Static ObjectConverters.IsNotNull}}"/>
@@ -201,45 +204,27 @@
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Vertical" Margin="0">
-                                <!-- File info with error indicator -->
-                                <Grid Tapped="OnFileItemTapped"
-                                     Background="Transparent">
+                                <Grid Tapped="OnFileItemTapped" Background="Transparent">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <!-- Status icon (conditional, outline style) -->
+                                    <!-- Status icon -->
                                     <Panel Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Center">
-                                        <!-- Critical/Error icon (red hexagon) -->
-                                        <TextBlock Text="⬢"
-                                                  FontSize="16"
-                                                  Foreground="#D32F2F"
-                                                  IsVisible="{Binding HasErrors}"/>
-                                        <!-- Warning icon (orange triangle) -->
-                                        <TextBlock Text="△"
-                                                  FontSize="16"
-                                                  Foreground="{DynamicResource AccentOrange}">
+                                        <TextBlock Text="⬢" FontSize="16" Foreground="#D32F2F" IsVisible="{Binding HasErrors}"/>
+                                        <TextBlock Text="△" FontSize="16" Foreground="{DynamicResource AccentOrange}">
                                             <TextBlock.IsVisible>
-                                                <MultiBinding>
-                                                    <MultiBinding.Converter>
-                                                        <x:Static Member="BoolConverters.And"/>
-                                                    </MultiBinding.Converter>
+                                                <MultiBinding Converter="{x:Static BoolConverters.And}">
                                                     <Binding Path="HasWarnings"/>
                                                     <Binding Path="HasErrors" Converter="{x:Static BoolConverters.Not}"/>
                                                 </MultiBinding>
                                             </TextBlock.IsVisible>
                                         </TextBlock>
-                                        <!-- Success icon (green circle) -->
-                                        <TextBlock Text="○"
-                                                  FontSize="16"
-                                                  Foreground="#388E3C">
+                                        <TextBlock Text="○" FontSize="16" Foreground="#388E3C">
                                             <TextBlock.IsVisible>
-                                                <MultiBinding>
-                                                    <MultiBinding.Converter>
-                                                        <x:Static Member="BoolConverters.And"/>
-                                                    </MultiBinding.Converter>
+                                                <MultiBinding Converter="{x:Static BoolConverters.And}">
                                                     <Binding Path="HasErrors" Converter="{x:Static BoolConverters.Not}"/>
                                                     <Binding Path="HasWarnings" Converter="{x:Static BoolConverters.Not}"/>
                                                 </MultiBinding>
@@ -258,7 +243,7 @@
                                                   TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
 
-                                    <!-- Error count badge (show only if errors exist) -->
+                                    <!-- Error count badge -->
                                     <Border Grid.Column="2"
                                            Background="#FFEBEE"
                                            CornerRadius="10"
@@ -283,8 +268,33 @@
                 </ListBox>
             </Grid>
 
-            <!-- Splitter -->
-            <GridSplitter Grid.Column="1" Background="{DynamicResource BorderColor}" ResizeDirection="Columns"/>
+            <!-- Toggle Sidebar Bar (replaces GridSplitter) -->
+            <Button Grid.Column="1"
+                    Command="{Binding ToggleSidebarCommand}"
+                    Background="{DynamicResource BorderColor}"
+                    BorderThickness="0"
+                    Padding="0"
+                    CornerRadius="0"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    Cursor="Hand"
+                    ToolTip.Tip="{Binding IsSidebarExpanded, Converter={StaticResource BoolToTextConverter}, ConverterParameter='Collapse Sidebar|Expand Sidebar'}">
+                <Button.Styles>
+                    <Style Selector="Button:pointerover">
+                        <Setter Property="Background" Value="{DynamicResource AccentOrange}"/>
+                    </Style>
+                    <Style Selector="Button:pressed">
+                        <Setter Property="Background" Value="{DynamicResource PrimaryNavyBlue}"/>
+                    </Style>
+                </Button.Styles>
+                <TextBlock Text="{Binding IsSidebarExpanded, Converter={StaticResource BoolToTextConverter}, ConverterParameter='◀|▶'}"
+                          FontSize="12"
+                          Foreground="{DynamicResource SecondaryText}"
+                          VerticalAlignment="Center"
+                          HorizontalAlignment="Center"/>
+            </Button>
 
             <!-- Search Panel -->
             <Grid Grid.Column="2" Margin="12,0,0,0">

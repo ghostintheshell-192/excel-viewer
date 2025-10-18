@@ -28,6 +28,7 @@ public class MainWindowViewModel : ViewModelBase
     private IFileLoadResultViewModel? _selectedFile;
     private object? _currentView;
     private int _selectedTabIndex;
+    private bool _isSidebarExpanded;
 
     public ReadOnlyObservableCollection<IFileLoadResultViewModel> LoadedFiles => _filesManager.LoadedFiles;
     public ReadOnlyObservableCollection<RowComparisonViewModel> RowComparisons => _comparisonCoordinator.RowComparisons;
@@ -83,9 +84,16 @@ public class MainWindowViewModel : ViewModelBase
         set => SetField(ref _selectedTabIndex, value);
     }
 
+    public bool IsSidebarExpanded
+    {
+        get => _isSidebarExpanded;
+        set => SetField(ref _isSidebarExpanded, value);
+    }
+
     public IThemeManager ThemeManager { get; }
     public ICommand LoadFileCommand { get; }
     public ICommand ToggleThemeCommand { get; }
+    public ICommand ToggleSidebarCommand { get; }
     public ICommand ShowSearchResultsCommand { get; }
     public ICommand ShowAboutCommand { get; }
     public ICommand ShowDocumentationCommand { get; }
@@ -114,7 +122,16 @@ public class MainWindowViewModel : ViewModelBase
         // Initialize with Search Results tab selected
         _selectedTabIndex = 1;
 
+        // Initialize sidebar as collapsed (new UX)
+        _isSidebarExpanded = false;
+
         LoadFileCommand = new RelayCommand(async () => await LoadFileAsync());
+
+        ToggleSidebarCommand = new RelayCommand(() =>
+        {
+            IsSidebarExpanded = !IsSidebarExpanded;
+            return Task.CompletedTask;
+        });
 
         ThemeManager = themeManager;
         ToggleThemeCommand = new RelayCommand(() =>
