@@ -28,6 +28,17 @@ namespace SheetAtlas.Core.Domain.ValueObjects
             Timestamp = DateTime.UtcNow;
         }
 
+        // Constructor overload for JSON deserialization (preserves original timestamp)
+        private ExcelError(LogSeverity level, string message, string context, DateTime timestamp, CellReference? location = null, Exception? innerException = null)
+        {
+            Level = level;
+            Message = message;
+            Context = context;
+            Location = location;
+            InnerException = innerException;
+            Timestamp = timestamp;
+        }
+
         public static ExcelError FileError(string message, Exception? ex = null)
         {
             return new ExcelError(LogSeverity.Error, message, "File", null, ex);
@@ -56,6 +67,12 @@ namespace SheetAtlas.Core.Domain.ValueObjects
         public static ExcelError Critical(string context, string message, Exception? ex = null)
         {
             return new ExcelError(LogSeverity.Critical, message, context, null, ex);
+        }
+
+        // Factory method for JSON deserialization (preserves timestamp)
+        public static ExcelError FromJson(LogSeverity level, string message, string context, DateTime timestamp, CellReference? location = null, Exception? innerException = null)
+        {
+            return new ExcelError(level, message, context, timestamp, location, innerException);
         }
 
         public override string ToString()

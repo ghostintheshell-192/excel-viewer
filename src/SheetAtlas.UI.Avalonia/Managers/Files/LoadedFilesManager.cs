@@ -157,12 +157,14 @@ public class LoadedFilesManager : ILoadedFilesManager
 
         try
         {
-            // Remove existing failed file entry
+            // Find existing file entry and its index
             var existingFile = _loadedFiles.FirstOrDefault(f =>
                 f.FilePath.Equals(filePath, StringComparison.OrdinalIgnoreCase));
 
+            int originalIndex = -1;
             if (existingFile != null)
             {
+                originalIndex = _loadedFiles.IndexOf(existingFile);
                 RemoveFile(existingFile);
             }
 
@@ -184,7 +186,8 @@ public class LoadedFilesManager : ILoadedFilesManager
             {
                 try
                 {
-                    await ProcessLoadedFileAsync(reloadedFile);
+                    // Process file but insert at original position instead of appending
+                    await ProcessLoadedFileAtIndexAsync(reloadedFile, originalIndex);
 
                     if (reloadedFile.Status == LoadStatus.Success)
                     {
@@ -291,12 +294,80 @@ public class LoadedFilesManager : ILoadedFilesManager
     }
 
     /// <summary>
+    /// Processes a loaded Excel file and inserts it at specific index (for retry scenarios)
+    /// </summary>
+    private async Task ProcessLoadedFileAtIndexAsync(ExcelFile excelFile, int targetIndex)
+    {
+        // For retry, we don't check duplicates since we already removed the old entry
+
+        // Respect Core's LoadStatus to determine handling strategy
+        switch (excelFile.Status)
+        {
+            case LoadStatus.Success:
+                // File loaded successfully - insert at original position
+                AddFileToCollectionAtIndex(excelFile, targetIndex, hasErrors: false);
+                _logger.LogInfo($"File reloaded successfully: {excelFile.FileName}", "LoadedFilesManager");
+                break;
+
+            case LoadStatus.PartialSuccess:
+                // File loaded with warnings/errors but has usable data - insert at original position
+                AddFileToCollectionAtIndex(excelFile, targetIndex, hasErrors: true);
+                _logger.LogWarning($"File reloaded with errors: {excelFile.FileName} - {excelFile.Errors.Count} errors", "LoadedFilesManager");
+                break;
+
+            case LoadStatus.Failed:
+                // File completely failed to load - insert at original position
+                AddFileToCollectionAtIndex(excelFile, targetIndex, hasErrors: true);
+
+                _logger.LogError($"File reload failed: {excelFile.FileName} - {excelFile.Errors.Count} errors", "LoadedFilesManager");
+
+                // Notify listeners of the failure
+                var criticalErrors = excelFile.Errors.Where(e => e.Level == Logging.Models.LogSeverity.Critical);
+                var errorMessage = criticalErrors.Any()
+                    ? criticalErrors.First().Message
+                    : "Unknown error";
+
+                FileLoadFailed?.Invoke(this, new FileLoadFailedEventArgs(
+                    excelFile.FilePath,
+                    new InvalidOperationException(errorMessage)));
+                break;
+
+            default:
+                _logger.LogWarning($"Unknown LoadStatus: {excelFile.Status} for file {excelFile.FileName}", "LoadedFilesManager");
+                break;
+        }
+    }
+
+    /// <summary>
     /// Adds a file to the collection and notifies listeners.
     /// </summary>
     private void AddFileToCollection(ExcelFile excelFile, bool hasErrors)
     {
         var fileViewModel = new FileLoadResultViewModel(excelFile);
         _loadedFiles.Add(fileViewModel);
+
+        FileLoaded?.Invoke(this, new FileLoadedEventArgs(fileViewModel, hasErrors));
+
+        // Save structured log asynchronously (fire-and-forget)
+        _ = Task.Run(async () => await SaveFileLogAsync(excelFile));
+    }
+
+    /// <summary>
+    /// Adds a file to the collection at specific index (for retry scenarios)
+    /// </summary>
+    private void AddFileToCollectionAtIndex(ExcelFile excelFile, int targetIndex, bool hasErrors)
+    {
+        var fileViewModel = new FileLoadResultViewModel(excelFile);
+
+        // Insert at original position if valid, otherwise add at end
+        if (targetIndex >= 0 && targetIndex < _loadedFiles.Count)
+        {
+            _loadedFiles.Insert(targetIndex, fileViewModel);
+        }
+        else
+        {
+            _loadedFiles.Add(fileViewModel);
+        }
 
         FileLoaded?.Invoke(this, new FileLoadedEventArgs(fileViewModel, hasErrors));
 

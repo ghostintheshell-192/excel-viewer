@@ -22,6 +22,7 @@ namespace SheetAtlas.Core.Application.Services
             string context = string.Empty;
             CellReference? location = null;
             Exception? exception = null;
+            DateTime timestamp = DateTime.Now; // Default to now if not in JSON
 
             // Temporary variables for location and exception parsing
             string? locationSheet = null;
@@ -54,6 +55,14 @@ namespace SheetAtlas.Core.Application.Services
 
                     case "context":
                         context = reader.GetString() ?? string.Empty;
+                        break;
+
+                    case "timestamp":
+                        if (reader.TokenType == JsonTokenType.String)
+                        {
+                            if (DateTime.TryParse(reader.GetString(), out var parsedTimestamp))
+                                timestamp = parsedTimestamp;
+                        }
                         break;
 
                     case "location":
@@ -120,28 +129,8 @@ namespace SheetAtlas.Core.Application.Services
                     $"[{exceptionType ?? "Unknown"}] {exceptionMessage}");
             }
 
-            // Use factory methods based on context
-            if (context.StartsWith("File", StringComparison.OrdinalIgnoreCase))
-                return ExcelError.FileError(message, exception);
-
-            if (context.StartsWith("Sheet", StringComparison.OrdinalIgnoreCase))
-            {
-                var sheetName = ExtractSheetName(context) ?? "Unknown";
-                return ExcelError.SheetError(sheetName, message, exception);
-            }
-
-            if (context.StartsWith("Cell", StringComparison.OrdinalIgnoreCase) && location != null)
-            {
-                var sheetName = ExtractSheetName(context) ?? "Unknown";
-                return ExcelError.CellError(sheetName, location, message, exception);
-            }
-
-            // Fallback for warnings or other types
-            if (severity == Logging.Models.LogSeverity.Warning)
-                return ExcelError.Warning(context, message);
-
-            // Default fallback
-            return ExcelError.FileError(message, exception);
+            // Use FromJson factory method to preserve timestamp
+            return ExcelError.FromJson(severity, message, context, timestamp, location, exception);
         }
 
         private CellReference? ParseCellReference(string cellNotation)

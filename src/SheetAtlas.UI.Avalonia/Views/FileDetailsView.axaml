@@ -3,7 +3,7 @@
              xmlns:vm="using:SheetAtlas.UI.Avalonia.ViewModels"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="600"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:Class="SheetAtlas.UI.Avalonia.Views.FileDetailsView"
              x:DataType="vm:FileDetailsViewModel">
 
@@ -11,110 +11,208 @@
         <vm:FileDetailsViewModel/>
     </Design.DataContext>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="12">
-            <!-- Header -->
-            <TextBlock Text="File Details" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,12"/>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>  <!-- BASIC INFORMATION Header + Toolbar -->
+            <RowDefinition Height="Auto"/>  <!-- BASIC INFORMATION Content -->
+            <RowDefinition Height="*"/>     <!-- NOTIFICATIONS AND ERRORS -->
+        </Grid.RowDefinitions>
 
-            <!-- Properties Table -->
-            <ItemsControl ItemsSource="{Binding Properties}" Margin="0,0,0,16">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
+        <!-- BASIC INFORMATION Header with Toolbar -->
+        <Border Grid.Row="0"
+                Background="{DynamicResource SecondaryBackground}"
+                BorderBrush="{DynamicResource BorderColor}"
+                BorderThickness="0,0,0,1"
+                Padding="12,8">
+            <Grid ColumnDefinitions="*,Auto">
+                <!-- Section Title (Left) -->
+                <TextBlock Grid.Column="0"
+                          Text="BASIC INFORMATION"
+                          FontWeight="Bold"
+                          FontSize="12"
+                          VerticalAlignment="Center"
+                          Foreground="{DynamicResource SecondaryText}"/>
 
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel>
-                            <!-- Header Row -->
-                            <!--<Border BorderBrush="LightGray" BorderThickness="0,0,0,1"
-                                    IsVisible="{Binding IsHeader}">
-                                <TextBlock Text="{Binding Key}"
-                                          FontWeight="SemiBold"
-                                          Background="LightGray"
-                                          Padding="8,4"
-                                          FontSize="12"/>
-                            </Border>-->
+                <!-- Toolbar Buttons (Right) -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                    <Button Content="Retry"
+                            Command="{Binding RetryCommand}"
+                            Padding="12,6"
+                            FontSize="13"
+                            Background="{DynamicResource PrimaryNavyBlue}"
+                            Foreground="White"
+                            BorderThickness="0"
+                            CornerRadius="4"/>
+                    <Button Content="Clear"
+                            Command="{Binding ClearCommand}"
+                            Padding="12,6"
+                            FontSize="13"
+                            Background="#757575"
+                            Foreground="White"
+                            BorderThickness="0"
+                            CornerRadius="4"/>
+                </StackPanel>
+            </Grid>
+        </Border>
 
-                            <!-- Separator Row (with optional action link) -->
-                             <Border IsVisible="{Binding IsSeparator}"
-                                    MinHeight="8"
-                                    Padding="0,0,0,8"
-                                    Margin="0"
-                                    Background="#E0E0E0">
-                                <!-- Show link if ActionCommand is present, otherwise empty -->
+        <!-- BASIC INFORMATION Content -->
+        <Border Grid.Row="1"
+                BorderBrush="{DynamicResource BorderColor}"
+                BorderThickness="0,0,0,1"
+                Padding="12"
+                Background="{DynamicResource CardBackground}">
+            <StackPanel>
 
-                                <Button Content="{Binding ActionText}"
-                                       Command="{Binding ActionCommand}"
-                                       HorizontalAlignment="Right"
-                                       Background="Transparent"
-                                       Foreground="#0066CC"
-                                       Cursor="Hand"
-                                       Padding="4,0,0,0"
-                                       Margin="0,0,8,0"
-                                       BorderThickness="0"
-                                       IsVisible="{Binding ActionCommand, Converter={x:Static ObjectConverters.IsNotNull}}">
-                                    <Button.Styles>
-                                        <Style Selector="Button:pointerover">
-                                            <Setter Property="Foreground" Value="#0052A3"/>
-                                            <Setter Property="TextBlock.TextDecorations" Value="Underline"/>
-                                        </Style>
-                                    </Button.Styles>
-                                </Button>
-                            </Border>
+                <!-- Information Grid -->
+                <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto">
+                    <!-- File Path -->
+                    <TextBlock Grid.Row="0" Grid.Column="0"
+                              Text="FILE PATH"
+                              FontWeight="SemiBold"
+                              FontSize="11"
+                              Foreground="{DynamicResource SecondaryText}"
+                              Margin="0,0,8,6"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1"
+                              Text="{Binding FilePath}"
+                              FontSize="11"
+                              Foreground="{DynamicResource PrimaryText}"
+                              TextWrapping="Wrap"
+                              Margin="0,0,0,6"/>
 
+                    <!-- File Size -->
+                    <TextBlock Grid.Row="1" Grid.Column="0"
+                              Text="FILE SIZE"
+                              FontWeight="SemiBold"
+                              FontSize="11"
+                              Foreground="{DynamicResource SecondaryText}"
+                              Margin="0,0,8,0"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1"
+                              Text="{Binding FileSize}"
+                              FontSize="11"
+                              Foreground="{DynamicResource PrimaryText}"/>
+                </Grid>
+            </StackPanel>
+        </Border>
 
-                            <!-- Regular Property Row -->
-                            <Grid IsVisible="{Binding IsRegularRow}" MinHeight="24">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="120"/>
-                                    <ColumnDefinition Width="2"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
+        <!-- NOTIFICATIONS AND ERRORS Section -->
+        <Border Grid.Row="2"
+                Background="{DynamicResource MainBackground}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>  <!-- Section Header -->
+                    <RowDefinition Height="Auto"/>  <!-- Table Header -->
+                    <RowDefinition Height="*"/>     <!-- Table Content -->
+                </Grid.RowDefinitions>
 
-                                <!-- Property Key -->
-                                <Border Grid.Column="0"
-                                        BorderBrush="DarkGray"
-                                        BorderThickness="1,1,1,1"
-                                        Background="#F0F0F0">
-                                    <TextBlock Text="{Binding Key}"
-                                              FontWeight="Bold"
-                                              Padding="8,4"
-                                              VerticalAlignment="Center"
-                                              FontSize="12"
-                                              Foreground="Black"/>
-                                </Border>
+                <!-- Section Header -->
+                <Border Grid.Row="0"
+                        Background="{DynamicResource SecondaryBackground}"
+                        BorderBrush="{DynamicResource BorderColor}"
+                        BorderThickness="0,0,0,1"
+                        Padding="12,8">
+                    <TextBlock Text="NOTIFICATIONS AND ERRORS"
+                              FontWeight="Bold"
+                              FontSize="12"
+                              Foreground="{DynamicResource SecondaryText}"/>
+                </Border>
 
-                                <!-- Divider -->
-                                <Border Grid.Column="1"
-                                        Background="DarkGray"/>
+                <!-- Table Header -->
+                <Border Grid.Row="1"
+                        Background="{DynamicResource CardBackground}"
+                        BorderBrush="{DynamicResource BorderColor}"
+                        BorderThickness="0,0,0,1"
+                        Padding="12,8">
+                    <Grid ColumnDefinitions="180,120,*">
+                        <TextBlock Grid.Column="0"
+                                  Text="TIMESTAMP"
+                                  FontWeight="Bold"
+                                  FontSize="11"
+                                  Foreground="{DynamicResource SecondaryText}"/>
+                        <TextBlock Grid.Column="1"
+                                  Text="LOG LEVEL"
+                                  FontWeight="Bold"
+                                  FontSize="11"
+                                  Foreground="{DynamicResource SecondaryText}"/>
+                        <TextBlock Grid.Column="2"
+                                  Text="MESSAGE"
+                                  FontWeight="Bold"
+                                  FontSize="11"
+                                  Foreground="{DynamicResource SecondaryText}"/>
+                    </Grid>
+                </Border>
 
-                                <!-- Property Value -->
-                                <Border Grid.Column="2"
-                                        BorderBrush="DarkGray"
-                                        BorderThickness="1,1,1,1"
-                                        Background="White">
-                                    <TextBlock Text="{Binding Value}"
-                                              Padding="8,4"
-                                              VerticalAlignment="Center"
-                                              TextWrapping="Wrap"
-                                              FontSize="12"
-                                              Foreground="Black"/>
-                                </Border>
-                            </Grid>
-                        </StackPanel>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+                <!-- Table Content -->
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <!-- Loading Indicator -->
+                        <ProgressBar IsVisible="{Binding IsLoadingHistory}"
+                                    IsIndeterminate="True"
+                                    Margin="12"/>
 
-            <!-- Empty State -->
-            <TextBlock Text="Select a file from the list to view details"
-                      FontStyle="Italic"
-                      Foreground="Gray"
-                      HorizontalAlignment="Center"
-                      Margin="0,40,0,0"
-                      IsVisible="{Binding SelectedFile, Converter={x:Static ObjectConverters.IsNull}}"/>
-        </StackPanel>
-    </ScrollViewer>
+                        <!-- Error Log Rows -->
+                        <ItemsControl ItemsSource="{Binding ErrorLogs}"
+                                     IsVisible="{Binding !IsLoadingHistory}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="{DynamicResource BorderColor}"
+                                           BorderThickness="0,0,0,1"
+                                           Padding="12,8"
+                                           Background="Transparent">
+                                        <Border.Styles>
+                                            <Style Selector="Border:pointerover">
+                                                <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
+                                            </Style>
+                                        </Border.Styles>
+
+                                        <Grid ColumnDefinitions="180,120,*">
+                                            <!-- Timestamp -->
+                                            <TextBlock Grid.Column="0"
+                                                      Text="{Binding TimestampFormatted}"
+                                                      FontSize="11"
+                                                      VerticalAlignment="Center"
+                                                      Foreground="{DynamicResource PrimaryText}"/>
+
+                                            <!-- Log Level -->
+                                            <TextBlock Grid.Column="1"
+                                                      Text="{Binding LogLevelText}"
+                                                      FontSize="11"
+                                                      FontWeight="SemiBold"
+                                                      VerticalAlignment="Center"
+                                                      Foreground="{Binding LogLevelColor}"/>
+
+                                            <!-- Message -->
+                                            <TextBlock Grid.Column="2"
+                                                      Text="{Binding Message}"
+                                                      FontSize="11"
+                                                      TextWrapping="Wrap"
+                                                      VerticalAlignment="Center"
+                                                      Foreground="{DynamicResource PrimaryText}"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- Empty State -->
+                        <TextBlock Text="No error logs available. File load attempts will appear here."
+                                  FontStyle="Italic"
+                                  Foreground="Gray"
+                                  HorizontalAlignment="Center"
+                                  Margin="0,40,0,0"
+                                  IsVisible="{Binding !HasErrorLogs}"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <!-- Empty State (no file selected) -->
+        <TextBlock Text="Select a file from the list to view details"
+                  Grid.RowSpan="3"
+                  FontStyle="Italic"
+                  Foreground="Gray"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Margin="0,40,0,0"
+                  IsVisible="{Binding SelectedFile, Converter={x:Static ObjectConverters.IsNull}}"/>
+    </Grid>
 </UserControl>

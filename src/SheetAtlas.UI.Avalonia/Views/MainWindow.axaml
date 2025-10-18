@@ -208,7 +208,6 @@
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
 
                                     <!-- Status icon (conditional, outline style) -->
@@ -277,120 +276,7 @@
                                                   FontWeight="SemiBold"
                                                   Foreground="#C62828"/>
                                     </Border>
-
-                                    <!-- Kebab menu button -->
-                                    <Button Grid.Column="3"
-                                            Content="⋮"
-                                            Width="16"
-                                            Height="24"
-                                            Padding="0"
-                                            Margin="0"
-                                            FontSize="16"
-                                            Background="Transparent"
-                                            BorderThickness="0"
-                                            VerticalAlignment="Center"
-                                            Foreground="{DynamicResource SecondaryText}"
-                                            Tapped="OnKebabMenuTapped">
-                                        <Button.Styles>
-                                            <Style Selector="Button:pointerover">
-                                                <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
-                                            </Style>
-                                        </Button.Styles>
-                                        <Button.Flyout>
-                                            <MenuFlyout Placement="BottomEdgeAlignedRight">
-                                                <!-- Success file actions -->
-                                                <MenuItem Header="Remove from List"
-                                                         Click="OnRemoveFromListClick"
-                                                         IsVisible="{Binding Status, Converter={x:Static converters:EnumEqualsConverter.Instance}, ConverterParameter=Success}"/>
-                                                <MenuItem Header="Clean All Data"
-                                                         Click="OnCleanAllDataClick"
-                                                         IsVisible="{Binding Status, Converter={x:Static converters:EnumEqualsConverter.Instance}, ConverterParameter=Success}"/>
-
-                                                <!-- Failed file actions -->
-                                                <MenuItem Header="Remove Notification"
-                                                         Click="OnRemoveNotificationClick"
-                                                         IsVisible="{Binding Status, Converter={x:Static converters:EnumEqualsConverter.Instance}, ConverterParameter=Failed}"/>
-                                                <MenuItem Header="Try Again"
-                                                         Click="OnTryAgainClick"
-                                                         IsVisible="{Binding Status, Converter={x:Static converters:EnumEqualsConverter.Instance}, ConverterParameter=Failed}"/>
-
-                                                <!-- PartialSuccess file actions -->
-                                                <MenuItem Header="Remove from List"
-                                                         Click="OnRemoveFromListClick"
-                                                         IsVisible="{Binding Status, Converter={x:Static converters:EnumEqualsConverter.Instance}, ConverterParameter=PartialSuccess}"/>
-                                            </MenuFlyout>
-                                        </Button.Flyout>
-                                    </Button>
                                 </Grid>
-
-                                <!-- Expanded error list (visible only when expanded AND has errors) -->
-                                <!-- Tree-style error list (same style as search results) -->
-                                <StackPanel Margin="0,8,0,0">
-                                    <StackPanel.IsVisible>
-                                        <MultiBinding>
-                                            <MultiBinding.Converter>
-                                                <x:Static Member="BoolConverters.And"/>
-                                            </MultiBinding.Converter>
-                                            <Binding Path="IsExpanded"/>
-                                            <Binding Path="Errors" Converter="{StaticResource CollectionNotEmptyConverter}"/>
-                                        </MultiBinding>
-                                    </StackPanel.IsVisible>
-
-                                    <!-- Header (similar to TreeView search header) -->
-                                    <Border Background="{DynamicResource SearchQueryBackground}"
-                                           Padding="8,6"
-                                           BorderThickness="0,0,0,1"
-                                           BorderBrush="{DynamicResource SubtleBorder}">
-                                        <TextBlock Foreground="{DynamicResource SearchQueryText}"
-                                                  FontWeight="SemiBold"
-                                                  FontSize="11">
-                                            <Run Text="Errors and Warnings ("/>
-                                            <Run Text="{Binding Errors.Count}"/>
-                                            <Run Text=")"/>
-                                        </TextBlock>
-                                    </Border>
-
-                                    <!-- Error items (similar to TreeView result items) -->
-                                    <ItemsControl ItemsSource="{Binding Errors}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Border Padding="8,4"
-                                                       BorderThickness="0,0,0,1"
-                                                       BorderBrush="{DynamicResource SubtleBorder}"
-                                                       Background="Transparent">
-                                                    <Border.Styles>
-                                                        <Style Selector="Border:pointerover">
-                                                            <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
-                                                        </Style>
-                                                    </Border.Styles>
-
-                                                    <Grid ColumnDefinitions="Auto,*">
-                                                        <!-- Error Level Badge -->
-                                                        <Border Grid.Column="0"
-                                                               Background="{Binding Level, Converter={x:Static converters:LogSeverityToColorConverter.Instance}}"
-                                                               CornerRadius="3"
-                                                               Padding="6,2"
-                                                               Margin="0,0,8,0"
-                                                               VerticalAlignment="Center">
-                                                            <TextBlock Text="{Binding Level}"
-                                                                      FontSize="9"
-                                                                      FontWeight="SemiBold"
-                                                                      Foreground="White"/>
-                                                        </Border>
-
-                                                        <!-- Error Message -->
-                                                        <TextBlock Grid.Column="1"
-                                                                  Text="{Binding Message}"
-                                                                  FontSize="11"
-                                                                  TextWrapping="Wrap"
-                                                                  Foreground="{DynamicResource PrimaryText}"
-                                                                  VerticalAlignment="Center"/>
-                                                    </Grid>
-                                                </Border>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </StackPanel>
                             </StackPanel>
                         </DataTemplate>
                     </ListBox.ItemTemplate>

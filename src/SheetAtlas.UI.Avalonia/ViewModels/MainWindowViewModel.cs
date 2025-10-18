@@ -342,7 +342,18 @@ public class MainWindowViewModel : ViewModelBase
             _activityLog.LogInfo($"Retrying file load: {file.FileName}", "FileRetry");
             _logger.LogInfo($"Retrying file load for: {file.FilePath}", "MainWindowViewModel");
 
-            await _filesManager.RetryLoadAsync(file.FilePath);
+            var filePath = file.FilePath; // Save path before removal
+
+            await _filesManager.RetryLoadAsync(filePath);
+
+            // Re-select the file after retry to maintain focus
+            var reloadedFile = _filesManager.LoadedFiles.FirstOrDefault(f =>
+                f.FilePath.Equals(filePath, StringComparison.OrdinalIgnoreCase));
+
+            if (reloadedFile != null)
+            {
+                FileDetailsViewModel.SelectedFile = reloadedFile;
+            }
 
             _activityLog.LogInfo($"Retry completed: {file.FileName}", "FileRetry");
         }
