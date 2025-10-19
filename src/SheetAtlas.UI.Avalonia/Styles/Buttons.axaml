@@ -55,4 +55,22 @@
             <Setter Property="Background" Value="{DynamicResource ErrorColor}"/>
         </Style>
 
+        <Style Selector="Button.SecondaryButton">
+            <Setter Property="Background" Value="{DynamicResource Gray600}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <Style Selector="Button.SecondaryButton:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Gray700}"/>
+        </Style>
+
 </Styles>

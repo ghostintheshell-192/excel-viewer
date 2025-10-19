@@ -36,21 +36,13 @@
                 <!-- Toolbar Buttons (Right) -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
                     <Button Content="Retry"
+                            Classes="ModernButton"
                             Command="{Binding RetryCommand}"
-                            Padding="12,6"
-                            FontSize="13"
-                            Background="{DynamicResource PrimaryNavyBlue}"
-                            Foreground="White"
-                            BorderThickness="0"
-                            CornerRadius="4"/>
+                            FontSize="13"/>
                     <Button Content="Clear"
+                            Classes="SecondaryButton"
                             Command="{Binding ClearCommand}"
-                            Padding="12,6"
-                            FontSize="13"
-                            Background="#757575"
-                            Foreground="White"
-                            BorderThickness="0"
-                            CornerRadius="4"/>
+                            FontSize="13"/>
                 </StackPanel>
             </Grid>
         </Border>
