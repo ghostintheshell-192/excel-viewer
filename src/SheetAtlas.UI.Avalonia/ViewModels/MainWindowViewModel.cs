@@ -203,12 +203,14 @@ public class MainWindowViewModel : ViewModelBase
         {
             IsFileDetailsTabVisible = false;
             SelectedFile = null;
+            SwitchToNextVisibleTab("FileDetails");
             return Task.CompletedTask;
         });
 
         CloseSearchTabCommand = new RelayCommand(() =>
         {
             IsSearchTabVisible = false;
+            SwitchToNextVisibleTab("Search");
             return Task.CompletedTask;
         });
 
@@ -216,6 +218,7 @@ public class MainWindowViewModel : ViewModelBase
         {
             IsComparisonTabVisible = false;
             SelectedComparison = null;
+            SwitchToNextVisibleTab("Comparison");
             return Task.CompletedTask;
         });
 
@@ -589,33 +592,60 @@ public class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Calculates the tab index based on which tabs are currently visible.
-    /// Tab order: FileDetails, Search, Comparison
+    /// Returns the absolute tab index for a given tab name.
+    /// These indices correspond to the TabItem positions in MainWindow.axaml.
+    /// IMPORTANT: These are absolute indices in the XAML markup, NOT relative to visible tabs.
+    /// Avalonia TabControl uses absolute indices regardless of TabItem visibility.
     /// </summary>
     private int GetTabIndex(string tabName)
     {
-        int index = 0;
-
-        if (tabName == "FileDetails")
+        return tabName switch
         {
-            return IsFileDetailsTabVisible ? index : -1;
+            "FileDetails" => 0,  // First TabItem in XAML
+            "Search" => 1,       // Second TabItem in XAML
+            "Comparison" => 2,   // Third TabItem in XAML
+            _ => -1              // Invalid tab name
+        };
+    }
+
+    /// <summary>
+    /// Switches to the next visible tab after closing the current one.
+    /// Uses a priority order to determine which tab to select.
+    /// If no tabs are visible, sets SelectedTabIndex to -1 (welcome screen).
+    /// </summary>
+    /// <param name="closedTabName">The name of the tab being closed (to exclude from selection)</param>
+    private void SwitchToNextVisibleTab(string closedTabName)
+    {
+        // Define priority order for tab selection
+        // Each tab type has its preferred fallback sequence
+        var tabPriorities = closedTabName switch
+        {
+            "FileDetails" => new[] { "Search", "Comparison" },
+            "Search" => new[] { "FileDetails", "Comparison" },
+            "Comparison" => new[] { "Search", "FileDetails" },
+            _ => Array.Empty<string>()
+        };
+
+        // Find first visible tab from priority list
+        foreach (var tabName in tabPriorities)
+        {
+            bool isVisible = tabName switch
+            {
+                "FileDetails" => IsFileDetailsTabVisible,
+                "Search" => IsSearchTabVisible,
+                "Comparison" => IsComparisonTabVisible,
+                _ => false
+            };
+
+            if (isVisible)
+            {
+                SelectedTabIndex = GetTabIndex(tabName);
+                return;
+            }
         }
 
-        if (IsFileDetailsTabVisible) index++;
-
-        if (tabName == "Search")
-        {
-            return IsSearchTabVisible ? index : -1;
-        }
-
-        if (IsSearchTabVisible) index++;
-
-        if (tabName == "Comparison")
-        {
-            return IsComparisonTabVisible ? index : -1;
-        }
-
-        return -1;
+        // No tabs visible - show welcome screen
+        SelectedTabIndex = -1;
     }
 }
 
