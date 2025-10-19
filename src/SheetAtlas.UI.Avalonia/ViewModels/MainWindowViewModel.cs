@@ -7,6 +7,7 @@ using SheetAtlas.UI.Avalonia.Commands;
 using SheetAtlas.UI.Avalonia.Managers;
 using SheetAtlas.UI.Avalonia.Managers.Files;
 using SheetAtlas.UI.Avalonia.Managers.Comparison;
+using SheetAtlas.UI.Avalonia.Managers.Navigation;
 using System.ComponentModel;
 
 namespace SheetAtlas.UI.Avalonia.ViewModels;
@@ -16,6 +17,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     private bool _disposed = false;
     private readonly ILoadedFilesManager _filesManager;
     private readonly IRowComparisonCoordinator _comparisonCoordinator;
+    private readonly ITabNavigationCoordinator _tabNavigator;
     private readonly IFilePickerService _filePickerService;
     private readonly ILogService _logger;
     private readonly IThemeManager _themeManager;
@@ -24,11 +26,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     private IFileLoadResultViewModel? _selectedFile;
     private object? _currentView;
-    private int _selectedTabIndex;
     private bool _isSidebarExpanded;
-    private bool _isFileDetailsTabVisible;
-    private bool _isSearchTabVisible;
-    private bool _isComparisonTabVisible;
     private bool _isStatusBarVisible = true;
 
     public ReadOnlyObservableCollection<IFileLoadResultViewModel> LoadedFiles => _filesManager.LoadedFiles;
@@ -63,13 +61,12 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
                 if (value != null)
                 {
                     // File selected - show and switch to File Details tab
-                    IsFileDetailsTabVisible = true;
-                    SelectedTabIndex = GetTabIndex("FileDetails");
+                    _tabNavigator.ShowFileDetailsTab();
                 }
                 else
                 {
                     // No file selected - hide File Details tab
-                    IsFileDetailsTabVisible = false;
+                    _tabNavigator.CloseFileDetailsTab();
                 }
             }
         }
@@ -81,10 +78,11 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         set => SetField(ref _currentView, value);
     }
 
+    // Delegate to TabNavigationCoordinator
     public int SelectedTabIndex
     {
-        get => _selectedTabIndex;
-        set => SetField(ref _selectedTabIndex, value);
+        get => _tabNavigator.SelectedTabIndex;
+        set => _tabNavigator.SelectedTabIndex = value;
     }
 
     public bool IsSidebarExpanded
@@ -95,41 +93,23 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     public bool IsFileDetailsTabVisible
     {
-        get => _isFileDetailsTabVisible;
-        set
-        {
-            if (SetField(ref _isFileDetailsTabVisible, value))
-            {
-                OnPropertyChanged(nameof(HasAnyTabVisible));
-            }
-        }
+        get => _tabNavigator.IsFileDetailsTabVisible;
+        set => _tabNavigator.IsFileDetailsTabVisible = value;
     }
 
     public bool IsSearchTabVisible
     {
-        get => _isSearchTabVisible;
-        set
-        {
-            if (SetField(ref _isSearchTabVisible, value))
-            {
-                OnPropertyChanged(nameof(HasAnyTabVisible));
-            }
-        }
+        get => _tabNavigator.IsSearchTabVisible;
+        set => _tabNavigator.IsSearchTabVisible = value;
     }
 
     public bool IsComparisonTabVisible
     {
-        get => _isComparisonTabVisible;
-        set
-        {
-            if (SetField(ref _isComparisonTabVisible, value))
-            {
-                OnPropertyChanged(nameof(HasAnyTabVisible));
-            }
-        }
+        get => _tabNavigator.IsComparisonTabVisible;
+        set => _tabNavigator.IsComparisonTabVisible = value;
     }
 
-    public bool HasAnyTabVisible => IsFileDetailsTabVisible || IsSearchTabVisible || IsComparisonTabVisible;
+    public bool HasAnyTabVisible => _tabNavigator.HasAnyTabVisible;
 
     public bool IsStatusBarVisible
     {
@@ -159,6 +139,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     public MainWindowViewModel(
         ILoadedFilesManager filesManager,
         IRowComparisonCoordinator comparisonCoordinator,
+        ITabNavigationCoordinator tabNavigator,
         IFilePickerService filePickerService,
         ILogService logger,
         IThemeManager themeManager,
@@ -167,22 +148,15 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     {
         _filesManager = filesManager ?? throw new ArgumentNullException(nameof(filesManager));
         _comparisonCoordinator = comparisonCoordinator ?? throw new ArgumentNullException(nameof(comparisonCoordinator));
+        _tabNavigator = tabNavigator ?? throw new ArgumentNullException(nameof(tabNavigator));
         _filePickerService = filePickerService ?? throw new ArgumentNullException(nameof(filePickerService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
         _activityLog = activityLog ?? throw new ArgumentNullException(nameof(activityLog));
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
 
-        // Initialize with no tab selected (clean start)
-        _selectedTabIndex = -1;
-
         // Initialize sidebar as collapsed (new UX)
         _isSidebarExpanded = false;
-
-        // Initialize all tabs as hidden (new UX - progressive disclosure)
-        _isFileDetailsTabVisible = false;
-        _isSearchTabVisible = false;
-        _isComparisonTabVisible = false;
 
         LoadFileCommand = new RelayCommand(async () => await LoadFileAsync());
 
@@ -213,38 +187,33 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
         ShowSearchTabCommand = new RelayCommand(() =>
         {
-            IsSearchTabVisible = true;
-            SelectedTabIndex = GetTabIndex("Search");
+            _tabNavigator.ShowSearchTab();
             return Task.CompletedTask;
         });
 
         ShowComparisonTabCommand = new RelayCommand(() =>
         {
-            IsComparisonTabVisible = true;
-            SelectedTabIndex = GetTabIndex("Comparison");
+            _tabNavigator.ShowComparisonTab();
             return Task.CompletedTask;
         });
 
         CloseFileDetailsTabCommand = new RelayCommand(() =>
         {
-            IsFileDetailsTabVisible = false;
+            _tabNavigator.CloseFileDetailsTab();
             SelectedFile = null;
-            SwitchToNextVisibleTab("FileDetails");
             return Task.CompletedTask;
         });
 
         CloseSearchTabCommand = new RelayCommand(() =>
         {
-            IsSearchTabVisible = false;
-            SwitchToNextVisibleTab("Search");
+            _tabNavigator.CloseSearchTab();
             return Task.CompletedTask;
         });
 
         CloseComparisonTabCommand = new RelayCommand(() =>
         {
-            IsComparisonTabVisible = false;
+            _tabNavigator.CloseComparisonTab();
             SelectedComparison = null;
-            SwitchToNextVisibleTab("Comparison");
             return Task.CompletedTask;
         });
 
@@ -259,6 +228,9 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         ShowDocumentationCommand = new RelayCommand(async () => await OpenDocumentationAsync());
         ViewErrorLogCommand = new RelayCommand(async () => await OpenErrorLogAsync());
 
+        // Subscribe to coordinator events
+        _tabNavigator.PropertyChanged += OnTabNavigatorPropertyChanged;
+
         // Subscribe to file manager events
         _filesManager.FileLoaded += OnFileLoaded;
         _filesManager.FileRemoved += OnFileRemoved;
@@ -268,6 +240,32 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         _comparisonCoordinator.SelectionChanged += OnComparisonSelectionChanged;
         _comparisonCoordinator.ComparisonRemoved += OnComparisonRemoved;
         _comparisonCoordinator.PropertyChanged += OnComparisonCoordinatorPropertyChanged;
+    }
+
+    private void OnTabNavigatorPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        // Propagate PropertyChanged from TabNavigationCoordinator to ViewModel
+        // so XAML bindings are updated
+        if (e.PropertyName == nameof(ITabNavigationCoordinator.SelectedTabIndex))
+        {
+            OnPropertyChanged(nameof(SelectedTabIndex));
+        }
+        else if (e.PropertyName == nameof(ITabNavigationCoordinator.IsFileDetailsTabVisible))
+        {
+            OnPropertyChanged(nameof(IsFileDetailsTabVisible));
+        }
+        else if (e.PropertyName == nameof(ITabNavigationCoordinator.IsSearchTabVisible))
+        {
+            OnPropertyChanged(nameof(IsSearchTabVisible));
+        }
+        else if (e.PropertyName == nameof(ITabNavigationCoordinator.IsComparisonTabVisible))
+        {
+            OnPropertyChanged(nameof(IsComparisonTabVisible));
+        }
+        else if (e.PropertyName == nameof(ITabNavigationCoordinator.HasAnyTabVisible))
+        {
+            OnPropertyChanged(nameof(HasAnyTabVisible));
+        }
     }
 
     private void OnComparisonCoordinatorPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -287,7 +285,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         // If Search tab is visible, switch to it; otherwise just deselect
         if (IsSearchTabVisible)
         {
-            SelectedTabIndex = GetTabIndex("Search");
+            _tabNavigator.ShowSearchTab();
         }
         else
         {
@@ -321,8 +319,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
                 TreeSearchResultsViewModel.AddSearchResults(query, results.ToList());
 
                 // Show and switch to Search tab to display results
-                IsSearchTabVisible = true;
-                SelectedTabIndex = GetTabIndex("Search");
+                _tabNavigator.ShowSearchTab();
             }
         }
     }
@@ -360,8 +357,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         if (e.NewSelection != null)
         {
             // Comparison created/selected - show and switch to Comparison tab
-            IsComparisonTabVisible = true;
-            SelectedTabIndex = GetTabIndex("Comparison");
+            _tabNavigator.ShowComparisonTab();
         }
     }
 
@@ -673,63 +669,6 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
                 "Error Opening Log"
             );
         }
-    }
-
-    /// <summary>
-    /// Returns the absolute tab index for a given tab name.
-    /// These indices correspond to the TabItem positions in MainWindow.axaml.
-    /// IMPORTANT: These are absolute indices in the XAML markup, NOT relative to visible tabs.
-    /// Avalonia TabControl uses absolute indices regardless of TabItem visibility.
-    /// </summary>
-    private int GetTabIndex(string tabName)
-    {
-        return tabName switch
-        {
-            "FileDetails" => 0,  // First TabItem in XAML
-            "Search" => 1,       // Second TabItem in XAML
-            "Comparison" => 2,   // Third TabItem in XAML
-            _ => -1              // Invalid tab name
-        };
-    }
-
-    /// <summary>
-    /// Switches to the next visible tab after closing the current one.
-    /// Uses a priority order to determine which tab to select.
-    /// If no tabs are visible, sets SelectedTabIndex to -1 (welcome screen).
-    /// </summary>
-    /// <param name="closedTabName">The name of the tab being closed (to exclude from selection)</param>
-    private void SwitchToNextVisibleTab(string closedTabName)
-    {
-        // Define priority order for tab selection
-        // Each tab type has its preferred fallback sequence
-        var tabPriorities = closedTabName switch
-        {
-            "FileDetails" => new[] { "Search", "Comparison" },
-            "Search" => new[] { "FileDetails", "Comparison" },
-            "Comparison" => new[] { "Search", "FileDetails" },
-            _ => Array.Empty<string>()
-        };
-
-        // Find first visible tab from priority list
-        foreach (var tabName in tabPriorities)
-        {
-            bool isVisible = tabName switch
-            {
-                "FileDetails" => IsFileDetailsTabVisible,
-                "Search" => IsSearchTabVisible,
-                "Comparison" => IsComparisonTabVisible,
-                _ => false
-            };
-
-            if (isVisible)
-            {
-                SelectedTabIndex = GetTabIndex(tabName);
-                return;
-            }
-        }
-
-        // No tabs visible - show welcome screen
-        SelectedTabIndex = -1;
     }
 
     public void Dispose()
