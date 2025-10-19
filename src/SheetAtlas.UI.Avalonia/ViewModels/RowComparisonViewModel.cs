@@ -8,11 +8,13 @@ using SheetAtlas.Logging.Services;
 
 namespace SheetAtlas.UI.Avalonia.ViewModels
 {
-    public class RowComparisonViewModel : ViewModelBase
+    public class RowComparisonViewModel : ViewModelBase, IDisposable
     {
         private readonly ILogService _logger;
         private readonly IThemeManager? _themeManager;
         private RowComparison? _comparison;
+
+        private bool _disposed = false;
         private ObservableCollection<RowComparisonColumnViewModel> _columns = new();
 
         public RowComparison? Comparison
@@ -84,15 +86,6 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
             }
         }
 
-        ~RowComparisonViewModel()
-        {
-            // Unsubscribe from theme changes
-            if (_themeManager != null)
-            {
-                _themeManager.ThemeChanged -= OnThemeChanged;
-            }
-        }
-
         private void RefreshColumns()
         {
             Columns.Clear();
@@ -130,10 +123,45 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
             OnPropertyChanged(nameof(RowCount));
             OnPropertyChanged(nameof(HasRows));
         }
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            if (disposing)
+            {
+                // Unsubscribe from theme changes
+                if (_themeManager != null)
+                {
+                    _themeManager.ThemeChanged -= OnThemeChanged;
+                }
+
+                // Dispose all column ViewModels
+                if (Columns != null)
+                {
+                    foreach (var column in Columns.OfType<IDisposable>())
+                    {
+                        column.Dispose();
+                    }
+                    Columns.Clear();
+                }
+
+                _comparison = null;
+            }
+
+            _disposed = true;
+        }
     }
 
-    public class RowComparisonColumnViewModel : ViewModelBase
+    public class RowComparisonColumnViewModel : ViewModelBase, IDisposable
     {
+        private bool _disposed = false;
+
         public string Header { get; }
         public int ColumnIndex { get; }
         public ObservableCollection<RowComparisonCellViewModel> Cells { get; }
@@ -197,10 +225,27 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
 
             return CellComparisonResult.CreateDifferent(currentFrequency, currentRank, totalGroups, allNonEmptyValues.Count);
         }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+            if (disposing)
+            {
+                Cells?.Clear();
+            }
+            _disposed = true;
+        }
     }
 
     public class RowComparisonCellViewModel : ViewModelBase
     {
+
         public ExcelRow SourceRow { get; }
         public int ColumnIndex { get; }
         public string Value { get; }

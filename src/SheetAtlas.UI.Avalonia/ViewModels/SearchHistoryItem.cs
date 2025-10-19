@@ -5,8 +5,9 @@ using SheetAtlas.UI.Avalonia.Commands;
 
 namespace SheetAtlas.UI.Avalonia.ViewModels;
 
-public class SearchHistoryItem : ViewModelBase
+public class SearchHistoryItem : ViewModelBase, IDisposable
 {
+    private bool _disposed = false;
     private bool _isExpanded = true;
     private ObservableCollection<FileResultGroup> _fileGroups = new();
 
@@ -107,5 +108,31 @@ public class SearchHistoryItem : ViewModelBase
         OnPropertyChanged(nameof(SelectedCount));
         OnPropertyChanged(nameof(SelectionText));
         SelectionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected void Dispose(bool disposing)
+    {
+        if (_disposed) return;
+        if (disposing)
+        {
+            // Unsubscribe from selection changed events
+            foreach (var fileGroup in FileGroups)
+            {
+                foreach (var sheetGroup in fileGroup.SheetGroups)
+                {
+                    foreach (var item in sheetGroup.Results)
+                    {
+                        item.SelectionChanged -= OnItemSelectionChanged;
+                    }
+                }
+            }
+        }
+        _disposed = true;
     }
 }

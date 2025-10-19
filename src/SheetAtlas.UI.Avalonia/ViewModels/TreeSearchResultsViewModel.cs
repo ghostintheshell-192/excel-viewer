@@ -7,11 +7,12 @@ using SheetAtlas.UI.Avalonia.Commands;
 
 namespace SheetAtlas.UI.Avalonia.ViewModels;
 
-public class TreeSearchResultsViewModel : ViewModelBase
+public class TreeSearchResultsViewModel : ViewModelBase, IDisposable
 {
     private readonly ILogService _logger;
     private readonly IRowComparisonService _rowComparisonService;
     private ObservableCollection<SearchHistoryItem> _searchHistory = new();
+    private bool _disposed;
 
     public ObservableCollection<SearchHistoryItem> SearchHistory
     {
@@ -247,5 +248,29 @@ public class TreeSearchResultsViewModel : ViewModelBase
         OnPropertyChanged(nameof(CanCompareRows));
         OnPropertyChanged(nameof(SelectedItems));
         ((RelayCommand)CompareSelectedRowsCommand).RaiseCanExecuteChanged();
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+            return;
+        if (disposing)
+        {
+            // Dispose managed resources
+            foreach (var searchItem in SearchHistory)
+            {
+                searchItem.Dispose();
+            }
+
+            SearchHistory.Clear();
+        }
+
+        _disposed = true;
     }
 }

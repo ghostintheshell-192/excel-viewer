@@ -3,10 +3,12 @@ using SheetAtlas.Core.Domain.Entities;
 
 namespace SheetAtlas.UI.Avalonia.ViewModels;
 
-public class SheetResultGroup : ViewModelBase
+public class SheetResultGroup : ViewModelBase, IDisposable
 {
+    private bool _disposed = false;
     private bool _isExpanded = false; // Collapsed by default
     private ObservableCollection<SearchResultItem> _results = new();
+    private Action? _selectionChangedCallback;
 
     public string SheetName { get; }
     public int TotalResults { get; }
@@ -39,9 +41,43 @@ public class SheetResultGroup : ViewModelBase
 
     public void SetupSelectionEvents(Action selectionChangedCallback)
     {
+        _selectionChangedCallback = selectionChangedCallback;
+
         foreach (var item in Results)
         {
-            item.SelectionChanged += (s, e) => selectionChangedCallback();
+            item.SelectionChanged += OnSelectionChanged;
+            // item.SelectionChanged += (s, e) => selectionChangedCallback();
         }
+    }
+
+    private void OnSelectionChanged(object? sender, EventArgs e)
+    {
+        _selectionChangedCallback?.Invoke();
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+            return;
+
+        if (disposing)
+        {
+            foreach (var item in Results)
+            {
+                item.SelectionChanged -= OnSelectionChanged;
+            }
+
+            Results.Clear();
+            _selectionChangedCallback = null;
+        }
+
+        // Free unmanaged resources (if any)
+
+        _disposed = true;
     }
 }

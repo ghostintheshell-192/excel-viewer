@@ -12,11 +12,13 @@ using SheetAtlas.UI.Avalonia.Commands;
 using SheetAtlas.UI.Avalonia.Managers;
 using SheetAtlas.UI.Avalonia.Managers.Files;
 using SheetAtlas.UI.Avalonia.Managers.Comparison;
+using System.ComponentModel;
 
 namespace SheetAtlas.UI.Avalonia.ViewModels;
 
-public class MainWindowViewModel : ViewModelBase
+public class MainWindowViewModel : ViewModelBase, IDisposable
 {
+    private bool _disposed = false;
     private readonly ILoadedFilesManager _filesManager;
     private readonly IRowComparisonCoordinator _comparisonCoordinator;
     private readonly IFilePickerService _filePickerService;
@@ -318,23 +320,24 @@ public class MainWindowViewModel : ViewModelBase
         // Wire up search results to tree view
         if (SearchViewModel != null)
         {
-            // Subscribe to search results changes
-            SearchViewModel.PropertyChanged += (s, e) =>
-            {
-                if (e.PropertyName == nameof(SearchViewModel.SearchResults) && TreeSearchResultsViewModel != null)
-                {
-                    var query = SearchViewModel.SearchQuery;
-                    var results = SearchViewModel.SearchResults;
-                    if (!string.IsNullOrWhiteSpace(query) && results?.Any() == true)
-                    {
-                        TreeSearchResultsViewModel.AddSearchResults(query, results.ToList());
+            SearchViewModel.PropertyChanged += OnSearchViewModelPropertyChanged;
+        }
+    }
 
-                        // Show and switch to Search tab to display results
-                        IsSearchTabVisible = true;
-                        SelectedTabIndex = GetTabIndex("Search");
-                    }
-                }
-            };
+    private void OnSearchViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(SearchViewModel.SearchResults) && TreeSearchResultsViewModel != null)
+        {
+            var query = SearchViewModel.SearchQuery;
+            var results = SearchViewModel.SearchResults;
+            if (!string.IsNullOrWhiteSpace(query) && results?.Any() == true)
+            {
+                TreeSearchResultsViewModel.AddSearchResults(query, results.ToList());
+
+                // Show and switch to Search tab to display results
+                IsSearchTabVisible = true;
+                SelectedTabIndex = GetTabIndex("Search");
+            }
         }
     }
 
@@ -741,6 +744,54 @@ public class MainWindowViewModel : ViewModelBase
 
         // No tabs visible - show welcome screen
         SelectedTabIndex = -1;
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+            return;
+
+        if (disposing)
+        {
+            // Dispose managed resources
+            _filesManager.FileLoaded -= OnFileLoaded;
+            _filesManager.FileRemoved -= OnFileRemoved;
+            _filesManager.FileLoadFailed -= OnFileLoadFailed;
+
+            _comparisonCoordinator.SelectionChanged -= OnComparisonSelectionChanged;
+            _comparisonCoordinator.ComparisonRemoved -= OnComparisonRemoved;
+            _comparisonCoordinator.PropertyChanged -= OnComparisonCoordinatorPropertyChanged;
+
+            if (TreeSearchResultsViewModel != null)
+            {
+                TreeSearchResultsViewModel.RowComparisonCreated -= OnRowComparisonCreated;
+                TreeSearchResultsViewModel.Dispose();
+            }
+
+            if (FileDetailsViewModel != null)
+            {
+                FileDetailsViewModel.RemoveFromListRequested -= OnRemoveFromListRequested;
+                FileDetailsViewModel.CleanAllDataRequested -= OnCleanAllDataRequested;
+                FileDetailsViewModel.RemoveNotificationRequested -= OnRemoveNotificationRequested;
+                FileDetailsViewModel.TryAgainRequested -= OnTryAgainRequested;
+            }
+
+            if (SearchViewModel != null)
+            {
+                SearchViewModel.PropertyChanged -= OnSearchViewModelPropertyChanged;
+                SearchViewModel.Dispose();
+            }
+
+            FileDetailsViewModel = null;
+        }
+
+        _disposed = true;
     }
 }
 
