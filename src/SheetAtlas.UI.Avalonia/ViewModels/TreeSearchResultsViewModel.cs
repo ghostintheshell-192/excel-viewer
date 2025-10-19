@@ -9,10 +9,13 @@ namespace SheetAtlas.UI.Avalonia.ViewModels;
 
 public class TreeSearchResultsViewModel : ViewModelBase, IDisposable
 {
+    private bool _disposed = false;
     private readonly ILogService _logger;
     private readonly IRowComparisonService _rowComparisonService;
     private ObservableCollection<SearchHistoryItem> _searchHistory = new();
-    private bool _disposed;
+    private List<SearchResultItem> _cachedSelectedItems = new();
+    private int _cachedSelectedCount = 0;
+
 
     public ObservableCollection<SearchHistoryItem> SearchHistory
     {
@@ -25,15 +28,19 @@ public class TreeSearchResultsViewModel : ViewModelBase, IDisposable
     public ICommand ClearSelectionCommand { get; }
 
     // Properties for UI binding
-    public IEnumerable<SearchResultItem> SelectedItems =>
-        SearchHistory
-            .SelectMany(sh => sh.FileGroups)
-            .SelectMany(fg => fg.SheetGroups)
-            .SelectMany(sg => sg.Results)
-            .Where(item => item.IsSelected && item.CanBeCompared);
+    public IReadOnlyList<SearchResultItem> SelectedItems => _cachedSelectedItems;
+    public int SelectedCount => _cachedSelectedCount;
+    public bool CanCompareRows => _cachedSelectedCount >= 2;
 
-    public int SelectedCount => SelectedItems.Count();
-    public bool CanCompareRows => SelectedCount >= 2;
+    // public IEnumerable<SearchResultItem> SelectedItems =>
+    //     SearchHistory
+    //         .SelectMany(sh => sh.FileGroups)
+    //         .SelectMany(fg => fg.SheetGroups)
+    //         .SelectMany(sg => sg.Results)
+    //         .Where(item => item.IsSelected && item.CanBeCompared);
+
+    // public int SelectedCount => SelectedItems.Count();
+    // public bool CanCompareRows => SelectedCount >= 2;
 
     // Event for notifying about row comparison creation
     public event EventHandler<RowComparison>? RowComparisonCreated;
@@ -46,6 +53,20 @@ public class TreeSearchResultsViewModel : ViewModelBase, IDisposable
         ClearHistoryCommand = new RelayCommand(() => { ClearHistory(); return Task.CompletedTask; });
         CompareSelectedRowsCommand = new RelayCommand(() => { CompareSelectedRows(); return Task.CompletedTask; }, () => CanCompareRows);
         ClearSelectionCommand = new RelayCommand(() => { ClearSelection(); return Task.CompletedTask; });
+
+        RefreshSelectionCache();
+    }
+
+    private void RefreshSelectionCache()
+    {
+        _cachedSelectedItems = SearchHistory
+            .SelectMany(sh => sh.FileGroups)
+            .SelectMany(fg => fg.SheetGroups)
+            .SelectMany(sg => sg.Results)
+            .Where(item => item.IsSelected && item.CanBeCompared)
+            .ToList();
+
+        _cachedSelectedCount = _cachedSelectedItems.Count;
     }
 
     public void AddSearchResults(string query, IReadOnlyList<SearchResult> results)
@@ -244,6 +265,7 @@ public class TreeSearchResultsViewModel : ViewModelBase, IDisposable
 
     private void NotifySelectionChanged()
     {
+        RefreshSelectionCache();   // Update cached selection state
         OnPropertyChanged(nameof(SelectedCount));
         OnPropertyChanged(nameof(CanCompareRows));
         OnPropertyChanged(nameof(SelectedItems));
