@@ -1,13 +1,8 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using SheetAtlas.Core.Domain.Entities;
-using SheetAtlas.Core.Domain.ValueObjects;
-using SheetAtlas.Core.Application.DTOs;
-using SheetAtlas.Infrastructure.External;
-using SheetAtlas.UI.Avalonia.Models.Search;
 using SheetAtlas.UI.Avalonia.Services;
 using SheetAtlas.Logging.Services;
-using Microsoft.Extensions.DependencyInjection;
 using SheetAtlas.UI.Avalonia.Commands;
 using SheetAtlas.UI.Avalonia.Managers;
 using SheetAtlas.UI.Avalonia.Managers.Files;

@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using SheetAtlas.Core.Application.DTOs;
 using SheetAtlas.Core.Domain.Entities;
 using SheetAtlas.UI.Avalonia.ViewModels;
 using SheetAtlas.Logging.Services;

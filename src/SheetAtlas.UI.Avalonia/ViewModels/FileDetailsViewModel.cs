@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
-using SheetAtlas.Core.Domain.ValueObjects;
 using SheetAtlas.Core.Application.Interfaces;
 using SheetAtlas.UI.Avalonia.Commands;
 using SheetAtlas.UI.Avalonia.Models;

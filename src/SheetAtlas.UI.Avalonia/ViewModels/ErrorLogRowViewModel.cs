@@ -1,4 +1,3 @@
-using SheetAtlas.Core.Domain.ValueObjects;
 using SheetAtlas.Logging.Models;
 
 namespace SheetAtlas.UI.Avalonia.ViewModels;

@@ -1,4 +1,3 @@
-// Enhanced RelayCommand implementation with global error handling
 using System.Windows.Input;
 using SheetAtlas.Logging.Services;
 

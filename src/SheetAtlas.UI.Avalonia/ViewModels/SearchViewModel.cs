@@ -1,7 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using SheetAtlas.Core.Domain.Entities;
-using SheetAtlas.Core.Application.Services;
 using SheetAtlas.UI.Avalonia.Managers.Search;
 using SheetAtlas.UI.Avalonia.Managers.Selection;
 using SheetAtlas.UI.Avalonia.Models.Search;
