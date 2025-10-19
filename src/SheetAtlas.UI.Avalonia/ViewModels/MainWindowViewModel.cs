@@ -149,7 +149,6 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     public ICommand CloseFileDetailsTabCommand { get; }
     public ICommand CloseSearchTabCommand { get; }
     public ICommand CloseComparisonTabCommand { get; }
-    public ICommand ShowSearchResultsCommand { get; }
     public ICommand ShowAboutCommand { get; }
     public ICommand ShowDocumentationCommand { get; }
     public ICommand ViewErrorLogCommand { get; }
@@ -253,14 +252,6 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         ToggleThemeCommand = new RelayCommand(() =>
         {
             ThemeManager.ToggleTheme();
-            return Task.CompletedTask;
-        });
-
-        ShowSearchResultsCommand = new RelayCommand(() =>
-        {
-            // Deprecated - use ShowSearchTabCommand instead
-            IsSearchTabVisible = true;
-            SelectedTabIndex = GetTabIndex("Search");
             return Task.CompletedTask;
         });
 
