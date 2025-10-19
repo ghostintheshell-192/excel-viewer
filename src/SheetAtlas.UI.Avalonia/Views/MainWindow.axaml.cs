@@ -23,10 +23,20 @@ public partial class MainWindow : Window
 
     private void OnClearSelectionClick(object? sender, RoutedEventArgs e)
     {
-        // Clear selection when clicking X button
+        // Clear selection when clicking Deselect button
         if (DataContext is MainWindowViewModel viewModel)
         {
             viewModel.SelectedFile = null;
+        }
+    }
+
+    private void OnUnloadFileClick(object? sender, RoutedEventArgs e)
+    {
+        // Unload the selected file
+        if (DataContext is MainWindowViewModel viewModel && viewModel.SelectedFile != null)
+        {
+            var fileToRemove = viewModel.SelectedFile;
+            viewModel.FileDetailsViewModel?.CleanAllDataCommand.Execute(null);
         }
     }
 

@@ -28,8 +28,14 @@ public class MainWindowViewModel : ViewModelBase
     private IFileLoadResultViewModel? _selectedFile;
     private object? _currentView;
     private int _selectedTabIndex;
+    private bool _isSidebarExpanded;
+    private bool _isFileDetailsTabVisible;
+    private bool _isSearchTabVisible;
+    private bool _isComparisonTabVisible;
+    private bool _isStatusBarVisible = true;
 
     public ReadOnlyObservableCollection<IFileLoadResultViewModel> LoadedFiles => _filesManager.LoadedFiles;
+    public bool HasLoadedFiles => LoadedFiles.Count > 0;
     public ReadOnlyObservableCollection<RowComparisonViewModel> RowComparisons => _comparisonCoordinator.RowComparisons;
 
     // Expose SelectedComparison from Coordinator for binding
@@ -56,16 +62,17 @@ public class MainWindowViewModel : ViewModelBase
                     FileDetailsViewModel.SelectedFile = value;
                 }
 
-                // Switch to appropriate tab
+                // Show/hide File Details tab based on selection
                 if (value != null)
                 {
-                    // File selected - switch to File Details tab
-                    SelectedTabIndex = 0;
+                    // File selected - show and switch to File Details tab
+                    IsFileDetailsTabVisible = true;
+                    SelectedTabIndex = GetTabIndex("FileDetails");
                 }
                 else
                 {
-                    // No file selected - switch to Search Results tab
-                    SelectedTabIndex = 1;
+                    // No file selected - hide File Details tab
+                    IsFileDetailsTabVisible = false;
                 }
             }
         }
@@ -83,9 +90,68 @@ public class MainWindowViewModel : ViewModelBase
         set => SetField(ref _selectedTabIndex, value);
     }
 
+    public bool IsSidebarExpanded
+    {
+        get => _isSidebarExpanded;
+        set => SetField(ref _isSidebarExpanded, value);
+    }
+
+    public bool IsFileDetailsTabVisible
+    {
+        get => _isFileDetailsTabVisible;
+        set
+        {
+            if (SetField(ref _isFileDetailsTabVisible, value))
+            {
+                OnPropertyChanged(nameof(HasAnyTabVisible));
+            }
+        }
+    }
+
+    public bool IsSearchTabVisible
+    {
+        get => _isSearchTabVisible;
+        set
+        {
+            if (SetField(ref _isSearchTabVisible, value))
+            {
+                OnPropertyChanged(nameof(HasAnyTabVisible));
+            }
+        }
+    }
+
+    public bool IsComparisonTabVisible
+    {
+        get => _isComparisonTabVisible;
+        set
+        {
+            if (SetField(ref _isComparisonTabVisible, value))
+            {
+                OnPropertyChanged(nameof(HasAnyTabVisible));
+            }
+        }
+    }
+
+    public bool HasAnyTabVisible => IsFileDetailsTabVisible || IsSearchTabVisible || IsComparisonTabVisible;
+
+    public bool IsStatusBarVisible
+    {
+        get => _isStatusBarVisible;
+        set => SetField(ref _isStatusBarVisible, value);
+    }
+
     public IThemeManager ThemeManager { get; }
     public ICommand LoadFileCommand { get; }
+    public ICommand UnloadAllFilesCommand { get; }
     public ICommand ToggleThemeCommand { get; }
+    public ICommand ToggleSidebarCommand { get; }
+    public ICommand ToggleStatusBarCommand { get; }
+    public ICommand ShowFileDetailsTabCommand { get; }
+    public ICommand ShowSearchTabCommand { get; }
+    public ICommand ShowComparisonTabCommand { get; }
+    public ICommand CloseFileDetailsTabCommand { get; }
+    public ICommand CloseSearchTabCommand { get; }
+    public ICommand CloseComparisonTabCommand { get; }
     public ICommand ShowSearchResultsCommand { get; }
     public ICommand ShowAboutCommand { get; }
     public ICommand ShowDocumentationCommand { get; }
@@ -111,10 +177,80 @@ public class MainWindowViewModel : ViewModelBase
         _activityLog = activityLog ?? throw new ArgumentNullException(nameof(activityLog));
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
 
-        // Initialize with Search Results tab selected
-        _selectedTabIndex = 1;
+        // Initialize with no tab selected (clean start)
+        _selectedTabIndex = -1;
+
+        // Initialize sidebar as collapsed (new UX)
+        _isSidebarExpanded = false;
+
+        // Initialize all tabs as hidden (new UX - progressive disclosure)
+        _isFileDetailsTabVisible = false;
+        _isSearchTabVisible = false;
+        _isComparisonTabVisible = false;
 
         LoadFileCommand = new RelayCommand(async () => await LoadFileAsync());
+
+        UnloadAllFilesCommand = new RelayCommand(async () => await UnloadAllFilesAsync());
+
+        ToggleSidebarCommand = new RelayCommand(() =>
+        {
+            IsSidebarExpanded = !IsSidebarExpanded;
+            return Task.CompletedTask;
+        });
+
+        ToggleStatusBarCommand = new RelayCommand(() =>
+        {
+            IsStatusBarVisible = !IsStatusBarVisible;
+            return Task.CompletedTask;
+        });
+
+        ShowFileDetailsTabCommand = new RelayCommand(() =>
+        {
+            // Select first file if none selected
+            if (SelectedFile == null && LoadedFiles.Any())
+            {
+                SelectedFile = LoadedFiles.First();
+            }
+            // File selection will automatically show FileDetails tab
+            return Task.CompletedTask;
+        });
+
+        ShowSearchTabCommand = new RelayCommand(() =>
+        {
+            IsSearchTabVisible = true;
+            SelectedTabIndex = GetTabIndex("Search");
+            return Task.CompletedTask;
+        });
+
+        ShowComparisonTabCommand = new RelayCommand(() =>
+        {
+            IsComparisonTabVisible = true;
+            SelectedTabIndex = GetTabIndex("Comparison");
+            return Task.CompletedTask;
+        });
+
+        CloseFileDetailsTabCommand = new RelayCommand(() =>
+        {
+            IsFileDetailsTabVisible = false;
+            SelectedFile = null;
+            SwitchToNextVisibleTab("FileDetails");
+            return Task.CompletedTask;
+        });
+
+        CloseSearchTabCommand = new RelayCommand(() =>
+        {
+            IsSearchTabVisible = false;
+            SwitchToNextVisibleTab("Search");
+            return Task.CompletedTask;
+        });
+
+        CloseComparisonTabCommand = new RelayCommand(() =>
+        {
+            IsComparisonTabVisible = false;
+            SelectedComparison = null;
+            SwitchToNextVisibleTab("Comparison");
+            return Task.CompletedTask;
+        });
 
         ThemeManager = themeManager;
         ToggleThemeCommand = new RelayCommand(() =>
@@ -125,7 +261,9 @@ public class MainWindowViewModel : ViewModelBase
 
         ShowSearchResultsCommand = new RelayCommand(() =>
         {
-            SelectedTabIndex = 1; // Switch to Search Results tab
+            // Deprecated - use ShowSearchTabCommand instead
+            IsSearchTabVisible = true;
+            SelectedTabIndex = GetTabIndex("Search");
             return Task.CompletedTask;
         });
 
@@ -158,8 +296,15 @@ public class MainWindowViewModel : ViewModelBase
         // Clear all selections in TreeSearchResultsViewModel
         TreeSearchResultsViewModel?.ClearSelection();
 
-        // Switch back to Search Results tab
-        SelectedTabIndex = 1;
+        // If Search tab is visible, switch to it; otherwise just deselect
+        if (IsSearchTabVisible)
+        {
+            SelectedTabIndex = GetTabIndex("Search");
+        }
+        else
+        {
+            SelectedTabIndex = -1;
+        }
 
         _logger.LogInfo("Comparison removed and selections cleared", "MainWindowViewModel");
     }
@@ -184,8 +329,9 @@ public class MainWindowViewModel : ViewModelBase
                     {
                         TreeSearchResultsViewModel.AddSearchResults(query, results.ToList());
 
-                        // Switch to Search Results tab to show results
-                        SelectedTabIndex = 1;
+                        // Show and switch to Search tab to display results
+                        IsSearchTabVisible = true;
+                        SelectedTabIndex = GetTabIndex("Search");
                     }
                 }
             };
@@ -221,12 +367,12 @@ public class MainWindowViewModel : ViewModelBase
 
     private void OnComparisonSelectionChanged(object? sender, ComparisonSelectionChangedEventArgs e)
     {
-        // Switch to comparison tab ONLY when user manually selects a comparison
-        // Do NOT switch if we're just updating an existing comparison (e.g., after file removal)
-        if (e.NewSelection != null && e.OldSelection == null)
+        // Show/hide comparison tab based on selection
+        if (e.NewSelection != null)
         {
-            // User selected a comparison for the first time (not replacing existing)
-            SelectedTabIndex = 2; // Comparison tab
+            // Comparison created/selected - show and switch to Comparison tab
+            IsComparisonTabVisible = true;
+            SelectedTabIndex = GetTabIndex("Comparison");
         }
     }
 
@@ -265,6 +411,53 @@ public class MainWindowViewModel : ViewModelBase
                 "Loading Error"
             );
         }
+    }
+
+    private async Task UnloadAllFilesAsync()
+    {
+        if (!LoadedFiles.Any())
+        {
+            return;
+        }
+
+        // Ask for confirmation
+        var confirmed = await _dialogService.ShowConfirmationAsync(
+            $"Are you sure you want to unload all {LoadedFiles.Count} file(s)?\n\n" +
+            "This will clear all data, search results, and comparisons.",
+            "Unload All Files"
+        );
+
+        if (!confirmed)
+        {
+            return;
+        }
+
+        _activityLog.LogInfo($"Unloading all {LoadedFiles.Count} file(s)...", "FileUnload");
+
+        // Clear selection first
+        SelectedFile = null;
+
+        // Clear all comparisons first
+        var comparisonsToRemove = RowComparisons.ToList();
+        foreach (var comparison in comparisonsToRemove)
+        {
+            _comparisonCoordinator.RemoveComparison(comparison);
+        }
+
+        // Clear all search results
+        TreeSearchResultsViewModel?.ClearHistory();
+        SearchViewModel?.ClearSearchCommand.Execute(null);
+
+        // Remove all files (iterate backwards to avoid collection modification issues)
+        var filesToRemove = LoadedFiles.ToList();
+        foreach (var file in filesToRemove)
+        {
+            file.Dispose();
+            _filesManager.RemoveFile(file);
+        }
+
+        _activityLog.LogInfo("All files unloaded successfully", "FileUnload");
+        _logger.LogInfo($"Unloaded {filesToRemove.Count} file(s)", "MainWindowViewModel");
     }
 
     // Event handlers for FileDetailsViewModel - delegate to FilesManager
@@ -374,11 +567,29 @@ public class MainWindowViewModel : ViewModelBase
     private void OnFileLoaded(object? sender, FileLoadedEventArgs e)
     {
         _logger.LogInfo($"File loaded: {e.File.FileName} (HasErrors: {e.HasErrors})", "MainWindowViewModel");
+
+        // Notify that HasLoadedFiles changed
+        OnPropertyChanged(nameof(HasLoadedFiles));
+
+        // Auto-open sidebar when first file is loaded
+        if (LoadedFiles.Count == 1)
+        {
+            IsSidebarExpanded = true;
+        }
     }
 
     private void OnFileRemoved(object? sender, FileRemovedEventArgs e)
     {
         _logger.LogInfo($"File removed: {e.File.FileName}", "MainWindowViewModel");
+
+        // Notify that HasLoadedFiles changed
+        OnPropertyChanged(nameof(HasLoadedFiles));
+
+        // Auto-close sidebar when last file is removed
+        if (LoadedFiles.Count == 0)
+        {
+            IsSidebarExpanded = false;
+        }
     }
 
     private void OnFileLoadFailed(object? sender, FileLoadFailedEventArgs e)
@@ -473,6 +684,63 @@ public class MainWindowViewModel : ViewModelBase
                 "Error Opening Log"
             );
         }
+    }
+
+    /// <summary>
+    /// Returns the absolute tab index for a given tab name.
+    /// These indices correspond to the TabItem positions in MainWindow.axaml.
+    /// IMPORTANT: These are absolute indices in the XAML markup, NOT relative to visible tabs.
+    /// Avalonia TabControl uses absolute indices regardless of TabItem visibility.
+    /// </summary>
+    private int GetTabIndex(string tabName)
+    {
+        return tabName switch
+        {
+            "FileDetails" => 0,  // First TabItem in XAML
+            "Search" => 1,       // Second TabItem in XAML
+            "Comparison" => 2,   // Third TabItem in XAML
+            _ => -1              // Invalid tab name
+        };
+    }
+
+    /// <summary>
+    /// Switches to the next visible tab after closing the current one.
+    /// Uses a priority order to determine which tab to select.
+    /// If no tabs are visible, sets SelectedTabIndex to -1 (welcome screen).
+    /// </summary>
+    /// <param name="closedTabName">The name of the tab being closed (to exclude from selection)</param>
+    private void SwitchToNextVisibleTab(string closedTabName)
+    {
+        // Define priority order for tab selection
+        // Each tab type has its preferred fallback sequence
+        var tabPriorities = closedTabName switch
+        {
+            "FileDetails" => new[] { "Search", "Comparison" },
+            "Search" => new[] { "FileDetails", "Comparison" },
+            "Comparison" => new[] { "Search", "FileDetails" },
+            _ => Array.Empty<string>()
+        };
+
+        // Find first visible tab from priority list
+        foreach (var tabName in tabPriorities)
+        {
+            bool isVisible = tabName switch
+            {
+                "FileDetails" => IsFileDetailsTabVisible,
+                "Search" => IsSearchTabVisible,
+                "Comparison" => IsComparisonTabVisible,
+                _ => false
+            };
+
+            if (isVisible)
+            {
+                SelectedTabIndex = GetTabIndex(tabName);
+                return;
+            }
+        }
+
+        // No tabs visible - show welcome screen
+        SelectedTabIndex = -1;
     }
 }
 
