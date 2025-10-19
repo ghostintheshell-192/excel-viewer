@@ -35,6 +35,7 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
 
         public string Title => Comparison?.Name ?? "Row Comparison";
         public int RowCount => Comparison?.Rows.Count ?? 0;
+        public bool HasRows => RowCount > 0;
         public DateTime CreatedAt => Comparison?.CreatedAt ?? DateTime.MinValue;
 
         public ICommand CloseCommand { get; }
@@ -97,7 +98,11 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
             Columns.Clear();
 
             if (Comparison == null)
+            {
+                OnPropertyChanged(nameof(RowCount));
+                OnPropertyChanged(nameof(HasRows));
                 return;
+            }
 
             var allHeaders = Comparison.GetAllColumnHeaders();
 
@@ -120,6 +125,10 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
             }
 
             _logger.LogInfo($"Created row comparison with {allHeaders.Count} columns for {Comparison.Rows.Count} rows using intelligent header mapping", "RowComparisonViewModel");
+
+            // Notify that RowCount and HasRows changed
+            OnPropertyChanged(nameof(RowCount));
+            OnPropertyChanged(nameof(HasRows));
         }
     }
 

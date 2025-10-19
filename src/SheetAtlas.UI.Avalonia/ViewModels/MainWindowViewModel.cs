@@ -32,8 +32,10 @@ public class MainWindowViewModel : ViewModelBase
     private bool _isFileDetailsTabVisible;
     private bool _isSearchTabVisible;
     private bool _isComparisonTabVisible;
+    private bool _isStatusBarVisible = true;
 
     public ReadOnlyObservableCollection<IFileLoadResultViewModel> LoadedFiles => _filesManager.LoadedFiles;
+    public bool HasLoadedFiles => LoadedFiles.Count > 0;
     public ReadOnlyObservableCollection<RowComparisonViewModel> RowComparisons => _comparisonCoordinator.RowComparisons;
 
     // Expose SelectedComparison from Coordinator for binding
@@ -132,10 +134,19 @@ public class MainWindowViewModel : ViewModelBase
 
     public bool HasAnyTabVisible => IsFileDetailsTabVisible || IsSearchTabVisible || IsComparisonTabVisible;
 
+    public bool IsStatusBarVisible
+    {
+        get => _isStatusBarVisible;
+        set => SetField(ref _isStatusBarVisible, value);
+    }
+
     public IThemeManager ThemeManager { get; }
     public ICommand LoadFileCommand { get; }
+    public ICommand UnloadAllFilesCommand { get; }
     public ICommand ToggleThemeCommand { get; }
     public ICommand ToggleSidebarCommand { get; }
+    public ICommand ToggleStatusBarCommand { get; }
+    public ICommand ShowFileDetailsTabCommand { get; }
     public ICommand ShowSearchTabCommand { get; }
     public ICommand ShowComparisonTabCommand { get; }
     public ICommand CloseFileDetailsTabCommand { get; }
@@ -179,9 +190,28 @@ public class MainWindowViewModel : ViewModelBase
 
         LoadFileCommand = new RelayCommand(async () => await LoadFileAsync());
 
+        UnloadAllFilesCommand = new RelayCommand(async () => await UnloadAllFilesAsync());
+
         ToggleSidebarCommand = new RelayCommand(() =>
         {
             IsSidebarExpanded = !IsSidebarExpanded;
+            return Task.CompletedTask;
+        });
+
+        ToggleStatusBarCommand = new RelayCommand(() =>
+        {
+            IsStatusBarVisible = !IsStatusBarVisible;
+            return Task.CompletedTask;
+        });
+
+        ShowFileDetailsTabCommand = new RelayCommand(() =>
+        {
+            // Select first file if none selected
+            if (SelectedFile == null && LoadedFiles.Any())
+            {
+                SelectedFile = LoadedFiles.First();
+            }
+            // File selection will automatically show FileDetails tab
             return Task.CompletedTask;
         });
 
@@ -383,6 +413,53 @@ public class MainWindowViewModel : ViewModelBase
         }
     }
 
+    private async Task UnloadAllFilesAsync()
+    {
+        if (!LoadedFiles.Any())
+        {
+            return;
+        }
+
+        // Ask for confirmation
+        var confirmed = await _dialogService.ShowConfirmationAsync(
+            $"Are you sure you want to unload all {LoadedFiles.Count} file(s)?\n\n" +
+            "This will clear all data, search results, and comparisons.",
+            "Unload All Files"
+        );
+
+        if (!confirmed)
+        {
+            return;
+        }
+
+        _activityLog.LogInfo($"Unloading all {LoadedFiles.Count} file(s)...", "FileUnload");
+
+        // Clear selection first
+        SelectedFile = null;
+
+        // Clear all comparisons first
+        var comparisonsToRemove = RowComparisons.ToList();
+        foreach (var comparison in comparisonsToRemove)
+        {
+            _comparisonCoordinator.RemoveComparison(comparison);
+        }
+
+        // Clear all search results
+        TreeSearchResultsViewModel?.ClearHistory();
+        SearchViewModel?.ClearSearchCommand.Execute(null);
+
+        // Remove all files (iterate backwards to avoid collection modification issues)
+        var filesToRemove = LoadedFiles.ToList();
+        foreach (var file in filesToRemove)
+        {
+            file.Dispose();
+            _filesManager.RemoveFile(file);
+        }
+
+        _activityLog.LogInfo("All files unloaded successfully", "FileUnload");
+        _logger.LogInfo($"Unloaded {filesToRemove.Count} file(s)", "MainWindowViewModel");
+    }
+
     // Event handlers for FileDetailsViewModel - delegate to FilesManager
     private void OnRemoveFromListRequested(IFileLoadResultViewModel? file) => _filesManager.RemoveFile(file);
 
@@ -490,11 +567,29 @@ public class MainWindowViewModel : ViewModelBase
     private void OnFileLoaded(object? sender, FileLoadedEventArgs e)
     {
         _logger.LogInfo($"File loaded: {e.File.FileName} (HasErrors: {e.HasErrors})", "MainWindowViewModel");
+
+        // Notify that HasLoadedFiles changed
+        OnPropertyChanged(nameof(HasLoadedFiles));
+
+        // Auto-open sidebar when first file is loaded
+        if (LoadedFiles.Count == 1)
+        {
+            IsSidebarExpanded = true;
+        }
     }
 
     private void OnFileRemoved(object? sender, FileRemovedEventArgs e)
     {
         _logger.LogInfo($"File removed: {e.File.FileName}", "MainWindowViewModel");
+
+        // Notify that HasLoadedFiles changed
+        OnPropertyChanged(nameof(HasLoadedFiles));
+
+        // Auto-close sidebar when last file is removed
+        if (LoadedFiles.Count == 0)
+        {
+            IsSidebarExpanded = false;
+        }
     }
 
     private void OnFileLoadFailed(object? sender, FileLoadFailedEventArgs e)

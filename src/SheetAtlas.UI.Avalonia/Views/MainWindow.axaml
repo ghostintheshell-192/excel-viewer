@@ -26,6 +26,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- Professional Menu Bar -->
@@ -108,18 +109,25 @@
             <MenuItem Header="_File">
                 <MenuItem Header="📁 _Load Files"
                          Command="{Binding LoadFileCommand}"/>
+                <MenuItem Header="🗑️ _Unload All Files"
+                         Command="{Binding UnloadAllFilesCommand}"
+                         IsEnabled="{Binding HasLoadedFiles}"/>
                 <Separator/>
                 <MenuItem Header="Recent Files" IsEnabled="False"/>
             </MenuItem>
 
             <!-- View Menu -->
             <MenuItem Header="_View">
+                <MenuItem Header="Show _File Details"
+                          Command="{Binding ShowFileDetailsTabCommand}"
+                          IsEnabled="{Binding HasLoadedFiles}"/>
                 <MenuItem Header="Show _Search"
                           Command="{Binding ShowSearchTabCommand}"/>
                 <MenuItem Header="Show _Comparison"
                           Command="{Binding ShowComparisonTabCommand}"/>
                 <Separator/>
-                <MenuItem Header="Show _Status Bar" IsEnabled="False"/>
+                <MenuItem Header="{Binding IsStatusBarVisible, Converter={StaticResource BoolToTextConverter}, ConverterParameter='Hide Status Bar|Show Status Bar'}"
+                          Command="{Binding ToggleStatusBarCommand}"/>
             </MenuItem>
 
             <!-- Tools Menu -->
@@ -151,19 +159,13 @@
                          InputGesture="Ctrl+T"/>
             </MenuItem>
 
-            <!-- Status area on the right -->
-            <MenuItem Header="{Binding LoadedFiles.Count, StringFormat='{}{0} files loaded'}"
-                     HorizontalAlignment="Right"
-                     Foreground="{DynamicResource SecondaryText}"
-                     FontSize="12"
-                     IsEnabled="False"/>
         </Menu>
 
         <!-- Main Content -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="{Binding IsSidebarExpanded, Converter={StaticResource BoolToSidebarWidthConverter}}"/>
-                <ColumnDefinition Width="20"/>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
@@ -174,10 +176,11 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <!-- Header with clear button -->
+                <!-- Header with action buttons -->
                 <Grid Grid.Row="0" Margin="8,8,8,8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
@@ -185,11 +188,21 @@
                               FontSize="14"
                               Foreground="{DynamicResource PrimaryText}"/>
 
-                    <Button Grid.Column="1" Content="Clear"
+                    <Button Grid.Column="1" Content="Deselect"
                             Padding="8,4"
                             FontSize="11"
-                            ToolTip.Tip="Clear selection"
+                            Margin="0,0,4,0"
+                            ToolTip.Tip="Clear file selection"
                             Click="OnClearSelectionClick"
+                            IsVisible="{Binding SelectedFile, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+
+                    <Button Grid.Column="2" Content="Unload"
+                            Padding="8,4"
+                            FontSize="11"
+                            Background="#D32F2F"
+                            Foreground="White"
+                            ToolTip.Tip="Remove selected file from list"
+                            Click="OnUnloadFileClick"
                             IsVisible="{Binding SelectedFile, Converter={x:Static ObjectConverters.IsNotNull}}"/>
                 </Grid>
 
@@ -269,7 +282,7 @@
                 </ListBox>
             </Grid>
 
-            <!-- Toggle Sidebar Bar (replaces GridSplitter) -->
+            <!-- Toggle Sidebar Bar (only visible when files are loaded) -->
             <Button Grid.Column="1"
                     Command="{Binding ToggleSidebarCommand}"
                     Background="{DynamicResource BorderColor}"
@@ -281,6 +294,8 @@
                     HorizontalContentAlignment="Center"
                     VerticalContentAlignment="Center"
                     Cursor="Hand"
+                    Width="20"
+                    IsVisible="{Binding HasLoadedFiles}"
                     ToolTip.Tip="{Binding IsSidebarExpanded, Converter={StaticResource BoolToTextConverter}, ConverterParameter='Collapse Sidebar|Expand Sidebar'}">
                 <Button.Styles>
                     <Style Selector="Button:pointerover">
@@ -484,17 +499,68 @@
                                         ToolTip.Tip="Close tab"/>
                             </StackPanel>
                         </TabItem.Header>
-                        <ContentControl Content="{Binding SelectedComparison}">
-                            <ContentControl.ContentTemplate>
-                                <DataTemplate>
-                                    <views:RowComparisonView/>
-                                </DataTemplate>
-                            </ContentControl.ContentTemplate>
-                        </ContentControl>
+
+                        <Grid>
+                            <!-- Comparison View (when comparison exists) -->
+                            <ContentControl Content="{Binding SelectedComparison}"
+                                          IsVisible="{Binding SelectedComparison, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                <ContentControl.ContentTemplate>
+                                    <DataTemplate>
+                                        <views:RowComparisonView/>
+                                    </DataTemplate>
+                                </ContentControl.ContentTemplate>
+                            </ContentControl>
+
+                            <!-- Empty State (when no comparison selected) -->
+                            <Border HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   IsVisible="{Binding SelectedComparison, Converter={x:Static ObjectConverters.IsNull}}">
+                                <StackPanel Spacing="16" HorizontalAlignment="Center">
+                                    <TextBlock Text="📊" FontSize="48" HorizontalAlignment="Center" Opacity="0.4"/>
+                                    <TextBlock Text="No comparisons yet"
+                                              FontSize="16"
+                                              FontWeight="SemiBold"
+                                              Foreground="{DynamicResource PrimaryText}"
+                                              HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Select rows from search results to compare"
+                                              FontSize="14"
+                                              Foreground="{DynamicResource SecondaryText}"
+                                              HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
                     </TabItem>
 
                 </TabControl>
             </Grid>
         </Grid>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="2"
+                Background="{DynamicResource SecondaryBackground}"
+                BorderBrush="{DynamicResource BorderColor}"
+                BorderThickness="0,1,0,0"
+                Padding="12,6"
+                Margin="0,8,0,0"
+                IsVisible="{Binding IsStatusBarVisible}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0"
+                          Text="{Binding LoadedFiles.Count, StringFormat='{}{0} files loaded'}"
+                          Foreground="{DynamicResource SecondaryText}"
+                          FontSize="12"
+                          VerticalAlignment="Center"/>
+
+                <TextBlock Grid.Column="1"
+                          Text="Ready"
+                          Foreground="{DynamicResource SecondaryText}"
+                          FontSize="12"
+                          VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
     </Grid>
 </Window>
