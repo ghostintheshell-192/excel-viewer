@@ -37,73 +37,6 @@
               Padding="8,0"
               Margin="0,0,0,8"
               Foreground="{DynamicResource PrimaryText}">
-            <Menu.Styles>
-                <!-- Base MenuItem styling -->
-                <Style Selector="MenuItem">
-                    <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
-                    <Setter Property="Background" Value="Transparent"/>
-                </Style>
-
-                <!-- Top level menu items hover - force template override -->
-                <Style Selector="MenuItem:pointerover /template/ Border#PART_LayoutRoot">
-                    <Setter Property="Background" Value="#E0E0E0"/>
-                </Style>
-                <Style Selector="MenuItem:pointerover /template/ ContentPresenter#PART_HeaderPresenter">
-                    <Setter Property="TextBlock.Foreground" Value="#333333"/>
-                </Style>
-
-                <!-- Menu items when submenu is open (selected state) -->
-                <Style Selector="MenuItem:selected /template/ Border#PART_LayoutRoot">
-                    <Setter Property="Background" Value="#E0E0E0"/>
-                </Style>
-                <Style Selector="MenuItem:selected /template/ ContentPresenter#PART_HeaderPresenter">
-                    <Setter Property="TextBlock.Foreground" Value="#333333"/>
-                </Style>
-
-                <!-- Menu items when submenu popup is open -->
-                <Style Selector="MenuItem:open /template/ Border#PART_LayoutRoot">
-                    <Setter Property="Background" Value="#E0E0E0"/>
-                </Style>
-                <Style Selector="MenuItem:open /template/ ContentPresenter#PART_HeaderPresenter">
-                    <Setter Property="TextBlock.Foreground" Value="#333333"/>
-                </Style>
-
-                <!-- Top level menu items pressed -->
-                <Style Selector="MenuItem:pressed">
-                    <Setter Property="Background" Value="{DynamicResource AccentOrange}"/>
-                    <Setter Property="Foreground" Value="White"/>
-                </Style>
-
-                <!-- Submenu container - Remove hardcoded values, let MenuFlyout resources handle it -->
-                <!-- The MenuFlyoutPresenterBackground and related resources are now defined in ThemeResources.axaml -->
-
-                <!-- Submenu items base styling -->
-                <Style Selector="MenuItem MenuItem">
-                    <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
-                    <Setter Property="Background" Value="Transparent"/>
-                    <Setter Property="Padding" Value="8,6"/>
-                    <Setter Property="Margin" Value="2"/>
-                </Style>
-
-                <!-- Submenu items hover -->
-                <Style Selector="MenuItem MenuItem:pointerover">
-                    <Setter Property="Background" Value="#E0E0E0"/>
-                    <Setter Property="Foreground" Value="#333333"/>
-                </Style>
-
-                <!-- Submenu items pressed -->
-                <Style Selector="MenuItem MenuItem:pressed">
-                    <Setter Property="Background" Value="#D0D0D0"/>
-                    <Setter Property="Foreground" Value="#333333"/>
-                </Style>
-
-                <!-- Separator styling -->
-                <Style Selector="MenuItem Separator">
-                    <Setter Property="Background" Value="{DynamicResource BorderColor}"/>
-                    <Setter Property="Height" Value="1"/>
-                    <Setter Property="Margin" Value="8,4"/>
-                </Style>
-            </Menu.Styles>
 
             <!-- File Menu -->
             <MenuItem Header="_File">
@@ -197,10 +130,9 @@
                             IsVisible="{Binding SelectedFile, Converter={x:Static ObjectConverters.IsNotNull}}"/>
 
                     <Button Grid.Column="2" Content="Unload"
+                            Classes="DangerButton"
                             Padding="8,4"
                             FontSize="11"
-                            Background="#D32F2F"
-                            Foreground="White"
                             ToolTip.Tip="Remove selected file from list"
                             Click="OnUnloadFileClick"
                             IsVisible="{Binding SelectedFile, Converter={x:Static ObjectConverters.IsNotNull}}"/>
@@ -227,7 +159,7 @@
 
                                     <!-- Status icon -->
                                     <Panel Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Center">
-                                        <TextBlock Text="⬢" FontSize="16" Foreground="#D32F2F" IsVisible="{Binding HasErrors}"/>
+                                        <TextBlock Text="⬢" FontSize="16" Foreground="{DynamicResource ErrorColor}" IsVisible="{Binding HasErrors}"/>
                                         <TextBlock Text="△" FontSize="16" Foreground="{DynamicResource AccentOrange}">
                                             <TextBlock.IsVisible>
                                                 <MultiBinding Converter="{x:Static BoolConverters.And}">
@@ -236,7 +168,7 @@
                                                 </MultiBinding>
                                             </TextBlock.IsVisible>
                                         </TextBlock>
-                                        <TextBlock Text="○" FontSize="16" Foreground="#388E3C">
+                                        <TextBlock Text="○" FontSize="16" Foreground="{DynamicResource SuccessColor}">
                                             <TextBlock.IsVisible>
                                                 <MultiBinding Converter="{x:Static BoolConverters.And}">
                                                     <Binding Path="HasErrors" Converter="{x:Static BoolConverters.Not}"/>
@@ -259,7 +191,7 @@
 
                                     <!-- Error count badge -->
                                     <Border Grid.Column="2"
-                                           Background="#FFEBEE"
+                                           Background="{DynamicResource ErrorBackground}"
                                            CornerRadius="10"
                                            Padding="6,2"
                                            Margin="4,0,4,0"
@@ -273,7 +205,7 @@
                                         <TextBlock Text="{Binding Errors.Count, StringFormat='{}{0}'}"
                                                   FontSize="10"
                                                   FontWeight="SemiBold"
-                                                  Foreground="#C62828"/>
+                                                  Foreground="{DynamicResource ErrorColor}"/>
                                     </Border>
                                 </Grid>
                             </StackPanel>
@@ -427,47 +359,34 @@
                                 <!-- Row Comparison Controls (aligned to the right) -->
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
                                     <!-- Selected rows counter -->
-                                    <Border Background="#E3F2FD"
+                                    <Border Background="{DynamicResource InfoBackground}"
                                            CornerRadius="4"
                                            Padding="8,4"
                                            IsVisible="{Binding TreeSearchResultsViewModel.CanCompareRows}">
                                         <StackPanel Orientation="Horizontal" Spacing="4">
                                             <TextBlock Text="{Binding TreeSearchResultsViewModel.SelectedCount}"
                                                       FontWeight="SemiBold"
-                                                      Foreground="#1976D2"/>
+                                                      Foreground="{DynamicResource InfoColor}"/>
                                             <TextBlock Text="selected rows"
-                                                      Foreground="#666666"/>
+                                                      Foreground="{DynamicResource SecondaryText}"/>
                                         </StackPanel>
                                     </Border>
 
                                     <!-- Compare Rows Button -->
                                     <Button Content="Compare Rows"
-                                            Background="#FF6B35"
-                                            Foreground="White"
-                                            FontWeight="SemiBold"
-                                            BorderThickness="0"
-                                            CornerRadius="4"
-                                            Padding="12,6"
+                                            Classes="CTAButton"
                                             Command="{Binding TreeSearchResultsViewModel.CompareSelectedRowsCommand}"
                                             IsEnabled="{Binding TreeSearchResultsViewModel.CanCompareRows}"/>
 
                                     <!-- Clear Selection Button -->
                                     <Button Content="Clear"
-                                            Background="#263238"
-                                            Foreground="White"
-                                            BorderThickness="0"
-                                            CornerRadius="4"
-                                            Padding="12,6"
+                                            Classes="ModernButton"
                                             FontSize="12"
                                             Command="{Binding TreeSearchResultsViewModel.ClearSelectionCommand}"/>
 
                                     <!-- Clear History Button -->
                                     <Button Content="Clear History"
-                                            Background="#263238"
-                                            Foreground="White"
-                                            BorderThickness="0"
-                                            CornerRadius="4"
-                                            Padding="12,6"
+                                            Classes="ModernButton"
                                             FontSize="12"
                                             Command="{Binding TreeSearchResultsViewModel.ClearHistoryCommand}"/>
                                 </StackPanel>

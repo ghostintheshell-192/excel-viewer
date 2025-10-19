@@ -44,6 +44,7 @@
 
     <!-- Interactive States -->
     <SolidColorBrush x:Key="HoverBackground" Color="#F1F3F5"/>
+    <SolidColorBrush x:Key="PressedBackground" Color="#DEE2E6"/>
     <SolidColorBrush x:Key="SelectedBackground" Color="#E3F2FD"/>
     <SolidColorBrush x:Key="ActiveBackground" Color="#1E3A5F" Opacity="0.1"/>
     <SolidColorBrush x:Key="FocusBorder" Color="#FF6B35"/>
@@ -211,6 +212,7 @@
 
     <!-- Interactive States -->
     <SolidColorBrush x:Key="HoverBackground" Color="#21262D"/>
+    <SolidColorBrush x:Key="PressedBackground" Color="#484F58"/>
     <SolidColorBrush x:Key="SelectedBackground" Color="#1E3A5F" Opacity="0.2"/>
     <SolidColorBrush x:Key="ActiveBackground" Color="#FF6B35" Opacity="0.15"/>
     <SolidColorBrush x:Key="FocusBorder" Color="#FF6B35"/>

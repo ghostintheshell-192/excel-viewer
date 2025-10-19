@@ -1,0 +1,67 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Base MenuItem styling -->
+    <Style Selector="MenuItem">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
+        <Setter Property="Background" Value="Transparent"/>
+    </Style>
+
+    <!-- Top level menu items hover - force template override -->
+    <Style Selector="MenuItem:pointerover /template/ Border#PART_LayoutRoot">
+        <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
+    </Style>
+    <Style Selector="MenuItem:pointerover /template/ ContentPresenter#PART_HeaderPresenter">
+        <Setter Property="TextBlock.Foreground" Value="{DynamicResource PrimaryText}"/>
+    </Style>
+
+    <!-- Menu items when submenu is open (selected state) -->
+    <Style Selector="MenuItem:selected /template/ Border#PART_LayoutRoot">
+        <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
+    </Style>
+    <Style Selector="MenuItem:selected /template/ ContentPresenter#PART_HeaderPresenter">
+        <Setter Property="TextBlock.Foreground" Value="{DynamicResource PrimaryText}"/>
+    </Style>
+
+    <!-- Menu items when submenu popup is open -->
+    <Style Selector="MenuItem:open /template/ Border#PART_LayoutRoot">
+        <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
+    </Style>
+    <Style Selector="MenuItem:open /template/ ContentPresenter#PART_HeaderPresenter">
+        <Setter Property="TextBlock.Foreground" Value="{DynamicResource PrimaryText}"/>
+    </Style>
+
+    <!-- Top level menu items pressed -->
+    <Style Selector="MenuItem:pressed">
+        <Setter Property="Background" Value="{DynamicResource AccentOrange}"/>
+        <Setter Property="Foreground" Value="White"/>
+    </Style>
+
+    <!-- Submenu items base styling -->
+    <Style Selector="MenuItem MenuItem">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Padding" Value="8,6"/>
+        <Setter Property="Margin" Value="2"/>
+    </Style>
+
+    <!-- Submenu items hover -->
+    <Style Selector="MenuItem MenuItem:pointerover">
+        <Setter Property="Background" Value="{DynamicResource HoverBackground}"/>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
+    </Style>
+
+    <!-- Submenu items pressed -->
+    <Style Selector="MenuItem MenuItem:pressed">
+        <Setter Property="Background" Value="{DynamicResource PressedBackground}"/>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
+    </Style>
+
+    <!-- Separator styling -->
+    <Style Selector="MenuItem Separator">
+        <Setter Property="Background" Value="{DynamicResource BorderColor}"/>
+        <Setter Property="Height" Value="1"/>
+        <Setter Property="Margin" Value="8,4"/>
+    </Style>
+
+</Styles>
