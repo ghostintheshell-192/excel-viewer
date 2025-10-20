@@ -260,27 +260,12 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     private void OnTabNavigatorPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        // Propagate PropertyChanged from TabNavigationCoordinator to ViewModel
-        // so XAML bindings are updated
-        if (e.PropertyName == nameof(ITabNavigationCoordinator.SelectedTabIndex))
+        // Propagate all property changes from TabNavigationCoordinator to ViewModel
+        // XAML bindings work because property names match between coordinator and ViewModel
+        // Only properties with matching names in ViewModel will trigger UI updates
+        if (!string.IsNullOrEmpty(e.PropertyName))
         {
-            OnPropertyChanged(nameof(SelectedTabIndex));
-        }
-        else if (e.PropertyName == nameof(ITabNavigationCoordinator.IsFileDetailsTabVisible))
-        {
-            OnPropertyChanged(nameof(IsFileDetailsTabVisible));
-        }
-        else if (e.PropertyName == nameof(ITabNavigationCoordinator.IsSearchTabVisible))
-        {
-            OnPropertyChanged(nameof(IsSearchTabVisible));
-        }
-        else if (e.PropertyName == nameof(ITabNavigationCoordinator.IsComparisonTabVisible))
-        {
-            OnPropertyChanged(nameof(IsComparisonTabVisible));
-        }
-        else if (e.PropertyName == nameof(ITabNavigationCoordinator.HasAnyTabVisible))
-        {
-            OnPropertyChanged(nameof(HasAnyTabVisible));
+            OnPropertyChanged(e.PropertyName);
         }
     }
 
