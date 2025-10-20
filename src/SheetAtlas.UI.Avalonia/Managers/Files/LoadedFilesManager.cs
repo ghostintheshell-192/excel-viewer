@@ -25,6 +25,15 @@ public class LoadedFilesManager : ILoadedFilesManager
 
     private readonly ObservableCollection<IFileLoadResultViewModel> _loadedFiles = new();
 
+    // Error message constants
+    private const string OutOfMemoryMessage =
+        "Insufficient memory to load selected files.\n\n" +
+        "Try to:\n" +
+        "- Close other applications\n" +
+        "- Load a lower amount of files\n" +
+        "- Restart the application";
+    private const string OutOfMemoryTitle = "Insufficient Memory";
+
     public ReadOnlyObservableCollection<IFileLoadResultViewModel> LoadedFiles { get; }
 
     public event EventHandler<FileLoadedEventArgs>? FileLoaded;
@@ -60,17 +69,6 @@ public class LoadedFilesManager : ILoadedFilesManager
         {
             var loadedExcelFiles = await _excelReaderService.LoadFilesAsync(filePaths);
 
-            if (loadedExcelFiles == null)
-            {
-                _logger.LogError("ExcelReaderService returned null result", "LoadedFilesManager");
-
-                await _dialogService.ShowErrorAsync(
-                    $"Impossible to load files.\n\n" +
-                    "Reading service gave no results.",
-                    "Loading Error");
-                return;
-            }
-
             // Process each file individually, continuing even if one fails
             var successCount = 0;
             var failureCount = 0;
@@ -105,13 +103,7 @@ public class LoadedFilesManager : ILoadedFilesManager
             // System resource exhaustion
             _logger.LogError("Out of memory while loading files", ex, "LoadedFilesManager");
 
-            await _dialogService.ShowErrorAsync(
-                "Insufficient memory to load selected files.\n\n" +
-                "Try to:\n" +
-                "- Close other applications\n" +
-                "- Load a lower amount of files\n" +
-                "- Restart the application",
-                "Insufficient Memory");
+            await _dialogService.ShowErrorAsync(OutOfMemoryMessage, OutOfMemoryTitle);
         }
         catch (Exception ex)
         {
@@ -172,7 +164,8 @@ public class LoadedFilesManager : ILoadedFilesManager
             // Attempt to reload
             var reloadedFiles = await _excelReaderService.LoadFilesAsync([filePath]);
 
-            if (reloadedFiles == null || !reloadedFiles.Any())
+            // ExcelReaderService always returns a list (never null), but check if empty
+            if (!reloadedFiles.Any())
             {
                 _logger.LogError($"Retry failed: ExcelReaderService returned no results for {filePath}", "LoadedFilesManager");
                 await _dialogService.ShowErrorAsync(
@@ -236,13 +229,7 @@ public class LoadedFilesManager : ILoadedFilesManager
         {
             _logger.LogError($"Out of memory during retry: {filePath}", ex, "LoadedFilesManager");
 
-            await _dialogService.ShowErrorAsync(
-                "Insufficient memory to load selected files.\n\n" +
-                "Try to:\n" +
-                "- Close other applications\n" +
-                "- Load a lower amount of files\n" +
-                "- Restart the application",
-                "Insufficient Memory");
+            await _dialogService.ShowErrorAsync(OutOfMemoryMessage, OutOfMemoryTitle);
         }
         catch (Exception ex)
         {
