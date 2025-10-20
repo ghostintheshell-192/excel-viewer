@@ -179,11 +179,12 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
             // This eliminates massive computational waste in DetermineComparisonResult
             var columnData = PrecomputeColumnComparisonData(allValues);
 
-            foreach (var row in rows)
+            // Reuse allValues[i] instead of calling GetCellAsStringByHeader again (eliminates duplicate calls)
+            for (int i = 0; i < rows.Count; i++)
             {
-                var cellValue = row.GetCellAsStringByHeader(header) ?? string.Empty;
+                var cellValue = allValues[i]; // Reuse already-computed value
                 var comparisonResult = DetermineComparisonResult(cellValue, columnData);
-                var cellViewModel = new RowComparisonCellViewModel(row, columnIndex, cellValue, comparisonResult);
+                var cellViewModel = new RowComparisonCellViewModel(rows[i], columnIndex, cellValue, comparisonResult);
 
                 Cells.Add(cellViewModel);
             }
