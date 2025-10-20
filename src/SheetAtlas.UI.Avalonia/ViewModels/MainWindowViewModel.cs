@@ -8,6 +8,7 @@ using SheetAtlas.UI.Avalonia.Managers;
 using SheetAtlas.UI.Avalonia.Managers.Files;
 using SheetAtlas.UI.Avalonia.Managers.Comparison;
 using SheetAtlas.UI.Avalonia.Managers.Navigation;
+using SheetAtlas.UI.Avalonia.Managers.FileDetails;
 using System.ComponentModel;
 
 namespace SheetAtlas.UI.Avalonia.ViewModels;
@@ -18,6 +19,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     private readonly ILoadedFilesManager _filesManager;
     private readonly IRowComparisonCoordinator _comparisonCoordinator;
     private readonly ITabNavigationCoordinator _tabNavigator;
+    private readonly IFileDetailsCoordinator _fileDetailsCoordinator;
     private readonly IFilePickerService _filePickerService;
     private readonly ILogService _logger;
     private readonly IThemeManager _themeManager;
@@ -28,6 +30,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     private object? _currentView;
     private bool _isSidebarExpanded;
     private bool _isStatusBarVisible = true;
+    private IFileLoadResultViewModel? _retryingFile; // File being retried - blocks auto-deselection
 
     public ReadOnlyObservableCollection<IFileLoadResultViewModel> LoadedFiles => _filesManager.LoadedFiles;
     public bool HasLoadedFiles => LoadedFiles.Count > 0;
@@ -49,8 +52,18 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         get => _selectedFile;
         set
         {
+            // Prevent auto-deselection during file retry to avoid UI flicker
+            if (value == null && _retryingFile != null)
+            {
+                // Don't update - we're in the middle of a retry, keep the old selection visually
+                return;
+            }
+
             if (SetField(ref _selectedFile, value))
             {
+                // Clear retry flag when new file is selected
+                _retryingFile = null;
+
                 // Update FileDetailsViewModel when selection changes
                 if (FileDetailsViewModel != null)
                 {
@@ -140,6 +153,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         ILoadedFilesManager filesManager,
         IRowComparisonCoordinator comparisonCoordinator,
         ITabNavigationCoordinator tabNavigator,
+        IFileDetailsCoordinator fileDetailsCoordinator,
         IFilePickerService filePickerService,
         ILogService logger,
         IThemeManager themeManager,
@@ -149,6 +163,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         _filesManager = filesManager ?? throw new ArgumentNullException(nameof(filesManager));
         _comparisonCoordinator = comparisonCoordinator ?? throw new ArgumentNullException(nameof(comparisonCoordinator));
         _tabNavigator = tabNavigator ?? throw new ArgumentNullException(nameof(tabNavigator));
+        _fileDetailsCoordinator = fileDetailsCoordinator ?? throw new ArgumentNullException(nameof(fileDetailsCoordinator));
         _filePickerService = filePickerService ?? throw new ArgumentNullException(nameof(filePickerService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _themeManager = themeManager ?? throw new ArgumentNullException(nameof(themeManager));
@@ -235,6 +250,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         _filesManager.FileLoaded += OnFileLoaded;
         _filesManager.FileRemoved += OnFileRemoved;
         _filesManager.FileLoadFailed += OnFileLoadFailed;
+        _filesManager.FileReloaded += OnFileReloaded;
 
         // Subscribe to comparison coordinator events
         _comparisonCoordinator.SelectionChanged += OnComparisonSelectionChanged;
@@ -445,107 +461,41 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         _logger.LogInfo($"Unloaded {filesToRemove.Count} file(s)", "MainWindowViewModel");
     }
 
-    // Event handlers for FileDetailsViewModel - delegate to FilesManager
-    private void OnRemoveFromListRequested(IFileLoadResultViewModel? file) => _filesManager.RemoveFile(file);
+    // Event handlers for FileDetailsViewModel - delegate to FileDetailsCoordinator
+    private void OnRemoveFromListRequested(IFileLoadResultViewModel? file) =>
+        _fileDetailsCoordinator.HandleRemoveFromList(file);
 
-    private void OnCleanAllDataRequested(IFileLoadResultViewModel? file)
-    {
-        if (file == null)
-        {
-            _logger.LogWarning("Clean all data requested with null file", "MainWindowViewModel");
-            return;
-        }
+    private void OnCleanAllDataRequested(IFileLoadResultViewModel? file) =>
+        _fileDetailsCoordinator.HandleCleanAllData(
+            file,
+            TreeSearchResultsViewModel,
+            SearchViewModel,
+            fileToCheck =>
+            {
+                // Clear selection if this file is currently selected (prevent memory leak)
+                if (SelectedFile == fileToCheck)
+                {
+                    SelectedFile = null;
+                }
+            });
 
-        _logger.LogInfo($"Clean all data requested for: {file.FileName}", "MainWindowViewModel");
-
-        // Clear selection if this file is currently selected (prevent memory leak)
-        if (SelectedFile == file)
-        {
-            SelectedFile = null;
-        }
-
-        // Remove search results that reference this file (TreeView history)
-        TreeSearchResultsViewModel?.RemoveSearchResultsForFile(file.File);
-
-        // Remove current search results that reference this file (SearchViewModel)
-        SearchViewModel?.RemoveResultsForFile(file.File);
-
-        // Remove row comparisons that reference this file
-        _comparisonCoordinator.RemoveComparisonsForFile(file.File);
-
-        // Dispose ViewModel (which disposes ExcelFile and DataTables, then nulls the reference)
-        file.Dispose();
-
-        // Finally, remove the file from the loaded files list
-        _filesManager.RemoveFile(file);
-
-        _logger.LogInfo($"Cleaned all data for file: {file.FileName}", "MainWindowViewModel");
-
-        // AGGRESSIVE CLEANUP: Force garbage collection after file removal
-        // REASON: DataTable objects (100-500 MB each) end up in Large Object Heap (LOH)
-        // ISSUE: .NET GC is lazy for Gen 2/LOH - can wait minutes before collection
-        // IMPACT: Without this, memory stays high even after Dispose() until GC decides to run
-        // TODO: When DataTable is replaced with lightweight structures, this can be removed
-        //       or changed to standard GC.Collect() without aggressive mode
-        Task.Run(() =>
-        {
-            // Enable LOH compaction for this collection cycle
-            System.Runtime.GCSettings.LargeObjectHeapCompactionMode = System.Runtime.GCLargeObjectHeapCompactionMode.CompactOnce;
-
-            // Force Gen 2 + LOH collection with compaction (blocking in background thread)
-            GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
-            GC.WaitForPendingFinalizers();
-            GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
-        });
-    }
-
-    private void OnRemoveNotificationRequested(IFileLoadResultViewModel? file) => _filesManager.RemoveFile(file);
+    private void OnRemoveNotificationRequested(IFileLoadResultViewModel? file) =>
+        _fileDetailsCoordinator.HandleRemoveNotification(file);
 
     private void OnTryAgainRequested(IFileLoadResultViewModel? file)
     {
         if (file == null)
-        {
-            _logger.LogWarning("Try again requested but file is null", "MainWindowViewModel");
             return;
-        }
 
-        // Use fire-and-forget pattern with proper error handling
-        _ = RetryLoadFileAsync(file);
-    }
+        // CRITICAL: Set retry flag BEFORE calling HandleTryAgainAsync
+        // This prevents UI flicker during file removal/reload cycle
+        // Must happen before RemoveFile is called to block Avalonia's auto-deselection
+        _retryingFile = file;
+        _logger.LogInfo($"Starting retry for: {file.FileName}, preserving selection", "MainWindowViewModel");
 
-    private async Task RetryLoadFileAsync(IFileLoadResultViewModel file)
-    {
-        try
-        {
-            _activityLog.LogInfo($"Retrying file load: {file.FileName}", "FileRetry");
-            _logger.LogInfo($"Retrying file load for: {file.FilePath}", "MainWindowViewModel");
-
-            var filePath = file.FilePath; // Save path before removal
-
-            await _filesManager.RetryLoadAsync(filePath);
-
-            // Re-select the file after retry to maintain focus
-            var reloadedFile = _filesManager.LoadedFiles.FirstOrDefault(f =>
-                f.FilePath.Equals(filePath, StringComparison.OrdinalIgnoreCase));
-
-            if (reloadedFile != null)
-            {
-                FileDetailsViewModel.SelectedFile = reloadedFile;
-            }
-
-            _activityLog.LogInfo($"Retry completed: {file.FileName}", "FileRetry");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError($"Error retrying file load: {file.FilePath}", ex, "MainWindowViewModel");
-            _activityLog.LogError($"Error reloading {file.FileName}", ex, "FileRetry");
-
-            await _dialogService.ShowErrorAsync(
-                $"Unable to reload file '{file.FileName}'.\n\n" +
-                $"Details: {ex.Message}",
-                "Reload Error"
-            );
-        }
+        // Use fire-and-forget pattern
+        // The FileReloaded event will automatically update SelectedFile when reload completes (event-driven)
+        _ = _fileDetailsCoordinator.HandleTryAgainAsync(file, _ => { /* Event-driven: OnFileReloaded handles update */ });
     }
 
     // Event handlers for FilesManager events
@@ -565,13 +515,13 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     private void OnFileRemoved(object? sender, FileRemovedEventArgs e)
     {
-        _logger.LogInfo($"File removed: {e.File.FileName}", "MainWindowViewModel");
+        _logger.LogInfo($"File removed: {e.File.FileName} (IsRetry: {e.IsRetry})", "MainWindowViewModel");
 
         // Notify that HasLoadedFiles changed
         OnPropertyChanged(nameof(HasLoadedFiles));
 
-        // Auto-close sidebar when last file is removed
-        if (LoadedFiles.Count == 0)
+        // Auto-close sidebar when last file is removed (but not during retry)
+        if (LoadedFiles.Count == 0 && !e.IsRetry)
         {
             IsSidebarExpanded = false;
         }
@@ -580,6 +530,23 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     private void OnFileLoadFailed(object? sender, FileLoadFailedEventArgs e)
     {
         _logger.LogError($"File load failed: {e.FilePath}", e.Exception, "MainWindowViewModel");
+    }
+
+    // Event handler for file reload events (event-driven architecture)
+    private void OnFileReloaded(object? sender, FileReloadedEventArgs e)
+    {
+        _logger.LogInfo($"OnFileReloaded event received for: {e.NewFile.FileName}", "MainWindowViewModel");
+
+        // If we're retrying the currently selected file, update SelectedFile to the new instance
+        // This triggers FileDetailsViewModel update automatically via the master-slave pattern
+        if (_retryingFile != null && _retryingFile.FilePath.Equals(e.FilePath, StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogInfo($"Updating SelectedFile to reloaded instance: {e.NewFile.FileName}", "MainWindowViewModel");
+
+            // Temporarily clear retry flag to allow the update, then set new file
+            _retryingFile = null;
+            SelectedFile = e.NewFile; // This propagates to FileDetailsViewModel automatically
+        }
     }
 
     private async Task ShowAboutDialogAsync()
@@ -688,6 +655,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
             _filesManager.FileLoaded -= OnFileLoaded;
             _filesManager.FileRemoved -= OnFileRemoved;
             _filesManager.FileLoadFailed -= OnFileLoadFailed;
+            _filesManager.FileReloaded -= OnFileReloaded;
 
             _comparisonCoordinator.SelectionChanged -= OnComparisonSelectionChanged;
             _comparisonCoordinator.ComparisonRemoved -= OnComparisonRemoved;

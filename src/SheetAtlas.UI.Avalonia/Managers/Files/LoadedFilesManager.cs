@@ -30,6 +30,7 @@ public class LoadedFilesManager : ILoadedFilesManager
     public event EventHandler<FileLoadedEventArgs>? FileLoaded;
     public event EventHandler<FileRemovedEventArgs>? FileRemoved;
     public event EventHandler<FileLoadFailedEventArgs>? FileLoadFailed;
+    public event EventHandler<FileReloadedEventArgs>? FileReloaded;
 
     public LoadedFilesManager(
         IExcelReaderService excelReaderService,
@@ -125,7 +126,7 @@ public class LoadedFilesManager : ILoadedFilesManager
         }
     }
 
-    public void RemoveFile(IFileLoadResultViewModel? file)
+    public void RemoveFile(IFileLoadResultViewModel? file, bool isRetry = false)
     {
         if (file == null)
         {
@@ -140,9 +141,9 @@ public class LoadedFilesManager : ILoadedFilesManager
         }
 
         _loadedFiles.Remove(file);
-        _logger.LogInfo($"Removed file: {file.FileName}", "LoadedFilesManager");
+        _logger.LogInfo($"Removed file: {file.FileName} (isRetry: {isRetry})", "LoadedFilesManager");
 
-        FileRemoved?.Invoke(this, new FileRemovedEventArgs(file));
+        FileRemoved?.Invoke(this, new FileRemovedEventArgs(file, isRetry));
     }
 
     public async Task RetryLoadAsync(string filePath)
@@ -165,7 +166,7 @@ public class LoadedFilesManager : ILoadedFilesManager
             if (existingFile != null)
             {
                 originalIndex = _loadedFiles.IndexOf(existingFile);
-                RemoveFile(existingFile);
+                RemoveFile(existingFile, isRetry: true); // Mark as retry to preserve UI selection
             }
 
             // Attempt to reload
@@ -200,6 +201,21 @@ public class LoadedFilesManager : ILoadedFilesManager
                     else
                     {
                         _logger.LogWarning($"File {reloadedFile.FilePath} reload failed", "LoadedFilesManager");
+                    }
+
+                    // CRITICAL: Wait for log to be saved to database BEFORE triggering FileReloaded event
+                    // This ensures LoadErrorHistoryAsync will read the LATEST logs when UI updates
+                    await SaveFileLogAsync(reloadedFile);
+
+                    // Trigger FileReloaded event for event-driven UI updates
+                    // Find the ViewModel that was just added to the collection
+                    var reloadedViewModel = _loadedFiles.FirstOrDefault(f =>
+                        f.FilePath.Equals(filePath, StringComparison.OrdinalIgnoreCase));
+
+                    if (reloadedViewModel != null)
+                    {
+                        FileReloaded?.Invoke(this, new FileReloadedEventArgs(reloadedViewModel, filePath));
+                        _logger.LogInfo($"FileReloaded event triggered for: {reloadedViewModel.FileName}", "LoadedFilesManager");
                     }
                 }
                 catch (Exception ex)
