@@ -175,55 +175,83 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
             // Use intelligent header-based mapping instead of positional mapping
             var allValues = rows.Select(row => row.GetCellAsStringByHeader(header) ?? string.Empty).ToList();
 
+            // PRE-COMPUTE column-level data ONCE instead of N times (N = row count)
+            // This eliminates massive computational waste in DetermineComparisonResult
+            var columnData = PrecomputeColumnComparisonData(allValues);
+
             foreach (var row in rows)
             {
                 var cellValue = row.GetCellAsStringByHeader(header) ?? string.Empty;
-                var comparisonResult = DetermineComparisonResult(cellValue, allValues);
+                var comparisonResult = DetermineComparisonResult(cellValue, columnData);
                 var cellViewModel = new RowComparisonCellViewModel(row, columnIndex, cellValue, comparisonResult);
 
                 Cells.Add(cellViewModel);
             }
         }
 
-        private static CellComparisonResult DetermineComparisonResult(string currentValue, IList<string> allValues)
+        private static ColumnComparisonData PrecomputeColumnComparisonData(IList<string> allValues)
         {
             // Normalize values first
-            var normalizedCurrentValue = (currentValue ?? "").Trim();
             var normalizedAllValues = allValues.Select(v => (v ?? "").Trim()).ToList();
-
-            var hasValue = !string.IsNullOrWhiteSpace(normalizedCurrentValue);
             var allNonEmptyValues = normalizedAllValues.Where(v => !string.IsNullOrWhiteSpace(v)).ToList();
             var distinctNonEmptyValues = allNonEmptyValues.Distinct().ToList();
+
+            // Pre-compute value groups for ranking algorithm
+            var valueGroups = allNonEmptyValues
+                .GroupBy(v => v)
+                .Select(g => new ValueGroup(g.Key, g.Count()))
+                .OrderByDescending(g => g.Count)      // Primary: Most frequent first (rank 0)
+                .ThenBy(g => g.Value)                 // Secondary: Alphabetical for determinism
+                .ToList();
+
+            return new ColumnComparisonData(
+                normalizedAllValues,
+                allNonEmptyValues,
+                distinctNonEmptyValues,
+                valueGroups,
+                allValues.Count
+            );
+        }
+
+        private record ValueGroup(string Value, int Count);
+
+        private record ColumnComparisonData(
+            List<string> NormalizedAllValues,
+            List<string> AllNonEmptyValues,
+            List<string> DistinctNonEmptyValues,
+            List<ValueGroup> ValueGroups,
+            int TotalCount
+        );
+
+        private static CellComparisonResult DetermineComparisonResult(string currentValue, ColumnComparisonData columnData)
+        {
+            // Normalize current value only (column data is already pre-computed)
+            var normalizedCurrentValue = (currentValue ?? "").Trim();
+            var hasValue = !string.IsNullOrWhiteSpace(normalizedCurrentValue);
 
             // Handle empty values
             if (!hasValue)
             {
-                return allNonEmptyValues.Any()
-                    ? CellComparisonResult.CreateMissing(allNonEmptyValues.Count)
-                    : CellComparisonResult.CreateMatch(allValues.Count, allValues.Count);
+                return columnData.AllNonEmptyValues.Any()
+                    ? CellComparisonResult.CreateMissing(columnData.AllNonEmptyValues.Count)
+                    : CellComparisonResult.CreateMatch(columnData.TotalCount, columnData.TotalCount);
             }
 
             // Handle case where all non-empty values are the same
-            if (distinctNonEmptyValues.Count <= 1)
+            if (columnData.DistinctNonEmptyValues.Count <= 1)
             {
-                return CellComparisonResult.CreateMatch(allNonEmptyValues.Count, allNonEmptyValues.Count);
+                return CellComparisonResult.CreateMatch(columnData.AllNonEmptyValues.Count, columnData.AllNonEmptyValues.Count);
             }
 
-            // Advanced logarithmic distribution algorithm for optimal visual separation
-            var valueGroups = allNonEmptyValues
-                .GroupBy(v => v)
-                .Select(g => new { Value = g.Key, Count = g.Count() })
-                .OrderByDescending(g => g.Count)      // Primary: Most frequent first (rank 0)
-                .ThenBy(g => g.Value)                 // Secondary: Alphabetical for determinism
-                .ToList();
+            // Use pre-computed value groups (no recalculation needed!)
+            var valueGroups = columnData.ValueGroups;
 
             // Find current value's rank in the sorted groups
             var currentRank = valueGroups.FindIndex(g => g.Value == normalizedCurrentValue);
             var currentFrequency = valueGroups[currentRank].Count;
             var totalGroups = valueGroups.Count;
 
-
-            return CellComparisonResult.CreateDifferent(currentFrequency, currentRank, totalGroups, allNonEmptyValues.Count);
+            return CellComparisonResult.CreateDifferent(currentFrequency, currentRank, totalGroups, columnData.AllNonEmptyValues.Count);
         }
 
         public void Dispose()
