@@ -89,13 +89,11 @@ namespace SheetAtlas.UI.Avalonia.Services
         {
             _entries.Add(entry);
 
-            // Rimuovi le più vecchie se supera il limite
             while (_entries.Count > MaxEntries)
             {
                 _entries.RemoveAt(0);
             }
 
-            // Notifica i subscribers
             EntryAdded?.Invoke(this, entry);
         }
     }

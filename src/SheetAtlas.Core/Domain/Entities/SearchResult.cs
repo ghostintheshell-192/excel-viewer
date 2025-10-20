@@ -2,15 +2,24 @@
 namespace SheetAtlas.Core.Domain.Entities
 {
     /// <summary>
-    /// Represents a search result within an Excel file
+    /// Configuration options for search operations.
     /// </summary>
     public class SearchOptions
     {
+        /// <summary>Whether the search should be case-sensitive.</summary>
         public bool CaseSensitive { get; set; }
+
+        /// <summary>Whether to match the entire cell value exactly (no partial matches).</summary>
         public bool ExactMatch { get; set; }
+
+        /// <summary>Whether to treat the search query as a regular expression.</summary>
         public bool UseRegex { get; set; }
     }
 
+    /// <summary>
+    /// Represents a single search match found within an Excel file.
+    /// Can represent a file name match, sheet name match, or cell content match.
+    /// </summary>
     public class SearchResult
     {
         public ExcelFile SourceFile { get; set; }
