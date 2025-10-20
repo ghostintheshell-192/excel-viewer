@@ -16,6 +16,7 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
 
         private bool _disposed = false;
         private ObservableCollection<RowComparisonColumnViewModel> _columns = new();
+        private List<RowComparisonCellViewModel> _allCells = new(); // Flat cache for O(n) theme refresh
 
         public RowComparison? Comparison
         {
@@ -77,12 +78,11 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
 
         private void RefreshCellColors()
         {
-            foreach (var column in Columns)
+            // Use flat cache for O(n) instead of O(n×m) nested iteration
+            // Same pattern as SearchHistoryItem - much faster on theme change
+            foreach (var cell in _allCells)
             {
-                foreach (var cell in column.Cells)
-                {
-                    cell.RefreshColors();
-                }
+                cell.RefreshColors();
             }
         }
 
@@ -116,6 +116,9 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
                 var columnViewModel = new RowComparisonColumnViewModel(header, i, Comparison.Rows);
                 Columns.Add(columnViewModel);
             }
+
+            // Populate flat cache of all cells for fast theme refresh (O(n) instead of O(n×m))
+            _allCells = Columns.SelectMany(col => col.Cells).ToList();
 
             _logger.LogInfo($"Created row comparison with {allHeaders.Count} columns for {Comparison.Rows.Count} rows using intelligent header mapping", "RowComparisonViewModel");
 
