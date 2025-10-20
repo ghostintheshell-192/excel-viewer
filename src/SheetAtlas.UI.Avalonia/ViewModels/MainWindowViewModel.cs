@@ -50,38 +50,54 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     public IFileLoadResultViewModel? SelectedFile
     {
         get => _selectedFile;
-        set
+        set => UpdateSelectedFile(value);
+    }
+
+    private void UpdateSelectedFile(IFileLoadResultViewModel? newFile)
+    {
+        // Prevent auto-deselection during file retry to avoid UI flicker
+        if (ShouldBlockDeselection(newFile))
+            return;
+
+        if (!SetField(ref _selectedFile, newFile))
+            return;
+
+        // Clear retry flag when new file is selected
+        _retryingFile = null;
+
+        // Propagate selection to FileDetailsViewModel
+        PropagateSelectionToFileDetails(newFile);
+
+        // Update tab visibility based on selection
+        UpdateFileDetailsTabVisibility(newFile);
+    }
+
+    private bool ShouldBlockDeselection(IFileLoadResultViewModel? newFile)
+    {
+        // Block deselection (null) during retry to keep old selection visible
+        // This prevents UI flicker when file is being removed/reloaded
+        return newFile == null && _retryingFile != null;
+    }
+
+    private void PropagateSelectionToFileDetails(IFileLoadResultViewModel? file)
+    {
+        if (FileDetailsViewModel != null)
         {
-            // Prevent auto-deselection during file retry to avoid UI flicker
-            if (value == null && _retryingFile != null)
-            {
-                // Don't update - we're in the middle of a retry, keep the old selection visually
-                return;
-            }
+            FileDetailsViewModel.SelectedFile = file;
+        }
+    }
 
-            if (SetField(ref _selectedFile, value))
-            {
-                // Clear retry flag when new file is selected
-                _retryingFile = null;
-
-                // Update FileDetailsViewModel when selection changes
-                if (FileDetailsViewModel != null)
-                {
-                    FileDetailsViewModel.SelectedFile = value;
-                }
-
-                // Show/hide File Details tab based on selection
-                if (value != null)
-                {
-                    // File selected - show and switch to File Details tab
-                    _tabNavigator.ShowFileDetailsTab();
-                }
-                else
-                {
-                    // No file selected - hide File Details tab
-                    _tabNavigator.CloseFileDetailsTab();
-                }
-            }
+    private void UpdateFileDetailsTabVisibility(IFileLoadResultViewModel? file)
+    {
+        if (file != null)
+        {
+            // File selected - show and switch to File Details tab
+            _tabNavigator.ShowFileDetailsTab();
+        }
+        else
+        {
+            // No file selected - hide File Details tab
+            _tabNavigator.CloseFileDetailsTab();
         }
     }
 
