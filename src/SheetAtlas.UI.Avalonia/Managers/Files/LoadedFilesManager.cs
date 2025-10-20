@@ -272,35 +272,30 @@ public class LoadedFilesManager : ILoadedFilesManager
         }
 
         // Respect Core's LoadStatus to determine handling strategy
+        bool hasErrors = excelFile.Status != LoadStatus.Success;
+
         switch (excelFile.Status)
         {
             case LoadStatus.Success:
                 // File loaded successfully - add to collection
-                AddFileToCollection(excelFile, hasErrors: false);
+                AddFileToCollectionCore(excelFile, insertIndex: null, hasErrors: false);
                 _logger.LogInfo($"File loaded successfully: {excelFile.FileName}", "LoadedFilesManager");
                 break;
 
             case LoadStatus.PartialSuccess:
                 // File loaded with warnings/errors but has usable data - add to collection
-                AddFileToCollection(excelFile, hasErrors: true);
+                AddFileToCollectionCore(excelFile, insertIndex: null, hasErrors: true);
                 _logger.LogWarning($"File loaded with errors: {excelFile.FileName} - {excelFile.Errors.Count} errors", "LoadedFilesManager");
                 break;
 
             case LoadStatus.Failed:
                 // File completely failed to load - add to collection so user can see error details
-                AddFileToCollection(excelFile, hasErrors: true);
+                AddFileToCollectionCore(excelFile, insertIndex: null, hasErrors: true);
 
                 _logger.LogError($"File failed to load: {excelFile.FileName} - {excelFile.Errors.Count} errors", "LoadedFilesManager");
 
                 // Notify listeners of the failure
-                var criticalErrors = excelFile.Errors.Where(e => e.Level == Logging.Models.LogSeverity.Critical);
-                var errorMessage = criticalErrors.Any()
-                    ? criticalErrors.First().Message
-                    : "Unknown error";
-
-                FileLoadFailed?.Invoke(this, new FileLoadFailedEventArgs(
-                    excelFile.FilePath,
-                    new InvalidOperationException(errorMessage)));
+                TriggerFileLoadFailedEvent(excelFile);
                 break;
 
             default:
@@ -317,35 +312,30 @@ public class LoadedFilesManager : ILoadedFilesManager
         // For retry, we don't check duplicates since we already removed the old entry
 
         // Respect Core's LoadStatus to determine handling strategy
+        bool hasErrors = excelFile.Status != LoadStatus.Success;
+
         switch (excelFile.Status)
         {
             case LoadStatus.Success:
                 // File loaded successfully - insert at original position
-                AddFileToCollectionAtIndex(excelFile, targetIndex, hasErrors: false);
+                AddFileToCollectionCore(excelFile, insertIndex: targetIndex, hasErrors: false);
                 _logger.LogInfo($"File reloaded successfully: {excelFile.FileName}", "LoadedFilesManager");
                 break;
 
             case LoadStatus.PartialSuccess:
                 // File loaded with warnings/errors but has usable data - insert at original position
-                AddFileToCollectionAtIndex(excelFile, targetIndex, hasErrors: true);
+                AddFileToCollectionCore(excelFile, insertIndex: targetIndex, hasErrors: true);
                 _logger.LogWarning($"File reloaded with errors: {excelFile.FileName} - {excelFile.Errors.Count} errors", "LoadedFilesManager");
                 break;
 
             case LoadStatus.Failed:
                 // File completely failed to load - insert at original position
-                AddFileToCollectionAtIndex(excelFile, targetIndex, hasErrors: true);
+                AddFileToCollectionCore(excelFile, insertIndex: targetIndex, hasErrors: true);
 
                 _logger.LogError($"File reload failed: {excelFile.FileName} - {excelFile.Errors.Count} errors", "LoadedFilesManager");
 
                 // Notify listeners of the failure
-                var criticalErrors = excelFile.Errors.Where(e => e.Level == Logging.Models.LogSeverity.Critical);
-                var errorMessage = criticalErrors.Any()
-                    ? criticalErrors.First().Message
-                    : "Unknown error";
-
-                FileLoadFailed?.Invoke(this, new FileLoadFailedEventArgs(
-                    excelFile.FilePath,
-                    new InvalidOperationException(errorMessage)));
+                TriggerFileLoadFailedEvent(excelFile);
                 break;
 
             default:
@@ -355,30 +345,32 @@ public class LoadedFilesManager : ILoadedFilesManager
     }
 
     /// <summary>
-    /// Adds a file to the collection and notifies listeners.
+    /// Triggers FileLoadFailed event with critical error message
     /// </summary>
-    private void AddFileToCollection(ExcelFile excelFile, bool hasErrors)
+    private void TriggerFileLoadFailedEvent(ExcelFile excelFile)
     {
-        var fileViewModel = new FileLoadResultViewModel(excelFile);
-        _loadedFiles.Add(fileViewModel);
+        var criticalErrors = excelFile.Errors.Where(e => e.Level == Logging.Models.LogSeverity.Critical);
+        var errorMessage = criticalErrors.Any()
+            ? criticalErrors.First().Message
+            : "Unknown error";
 
-        FileLoaded?.Invoke(this, new FileLoadedEventArgs(fileViewModel, hasErrors));
-
-        // Save structured log asynchronously (fire-and-forget)
-        _ = Task.Run(async () => await SaveFileLogAsync(excelFile));
+        FileLoadFailed?.Invoke(this, new FileLoadFailedEventArgs(
+            excelFile.FilePath,
+            new InvalidOperationException(errorMessage)));
     }
 
     /// <summary>
-    /// Adds a file to the collection at specific index (for retry scenarios)
+    /// Adds a file to the collection, optionally at a specific index.
+    /// Used by both initial load and retry scenarios.
     /// </summary>
-    private void AddFileToCollectionAtIndex(ExcelFile excelFile, int targetIndex, bool hasErrors)
+    private void AddFileToCollectionCore(ExcelFile excelFile, int? insertIndex, bool hasErrors)
     {
         var fileViewModel = new FileLoadResultViewModel(excelFile);
 
-        // Insert at original position if valid, otherwise add at end
-        if (targetIndex >= 0 && targetIndex < _loadedFiles.Count)
+        // Insert at specific index if provided and valid, otherwise add at end
+        if (insertIndex.HasValue && insertIndex.Value >= 0 && insertIndex.Value < _loadedFiles.Count)
         {
-            _loadedFiles.Insert(targetIndex, fileViewModel);
+            _loadedFiles.Insert(insertIndex.Value, fileViewModel);
         }
         else
         {
