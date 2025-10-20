@@ -271,10 +271,11 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     private void OnComparisonCoordinatorPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        // Propagate PropertyChanged from Coordinator to ViewModel
-        if (e.PropertyName == nameof(IRowComparisonCoordinator.SelectedComparison))
+        // Propagate all property changes from RowComparisonCoordinator to ViewModel
+        // XAML bindings work because property names match between coordinator and ViewModel
+        if (!string.IsNullOrEmpty(e.PropertyName))
         {
-            OnPropertyChanged(nameof(SelectedComparison));
+            OnPropertyChanged(e.PropertyName);
         }
     }
 
