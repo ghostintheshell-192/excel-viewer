@@ -189,7 +189,7 @@ public class FileDetailsViewModel : ViewModelBase
 
         // Trigger Try Again (reloads file from disk)
         // Note: LoadErrorHistoryAsync will be called automatically by UpdateDetails() when SelectedFile changes
-        TryAgainRequested?.Invoke(SelectedFile);
+        TryAgainRequested?.Invoke(this, new FileActionEventArgs(SelectedFile));
     }
 
     private async Task ExecuteClearAsync()
@@ -292,30 +292,30 @@ public class FileDetailsViewModel : ViewModelBase
     {
         _logger.LogInfo($"Remove from list requested for: {SelectedFile?.FileName}", "FileDetailsViewModel");
         // Will be handled by MainWindowViewModel
-        RemoveFromListRequested?.Invoke(SelectedFile);
+        RemoveFromListRequested?.Invoke(this, new FileActionEventArgs(SelectedFile));
     }
 
     private void ExecuteCleanAllData()
     {
         _logger.LogInfo($"Clean all data requested for: {SelectedFile?.FileName}", "FileDetailsViewModel");
-        CleanAllDataRequested?.Invoke(SelectedFile);
+        CleanAllDataRequested?.Invoke(this, new FileActionEventArgs(SelectedFile));
     }
 
     private void ExecuteRemoveNotification()
     {
         _logger.LogInfo($"Remove notification requested for: {SelectedFile?.FileName}", "FileDetailsViewModel");
-        RemoveNotificationRequested?.Invoke(SelectedFile);
+        RemoveNotificationRequested?.Invoke(this, new FileActionEventArgs(SelectedFile));
     }
 
     private void ExecuteTryAgain()
     {
         _logger.LogInfo($"Try again requested for: {SelectedFile?.FileName}", "FileDetailsViewModel");
-        TryAgainRequested?.Invoke(SelectedFile);
+        TryAgainRequested?.Invoke(this, new FileActionEventArgs(SelectedFile));
     }
 
     // Events to communicate with parent ViewModels
-    public event Action<IFileLoadResultViewModel?>? RemoveFromListRequested;
-    public event Action<IFileLoadResultViewModel?>? CleanAllDataRequested;
-    public event Action<IFileLoadResultViewModel?>? RemoveNotificationRequested;
-    public event Action<IFileLoadResultViewModel?>? TryAgainRequested;
+    public event EventHandler<FileActionEventArgs>? RemoveFromListRequested;
+    public event EventHandler<FileActionEventArgs>? CleanAllDataRequested;
+    public event EventHandler<FileActionEventArgs>? RemoveNotificationRequested;
+    public event EventHandler<FileActionEventArgs>? TryAgainRequested;
 }
