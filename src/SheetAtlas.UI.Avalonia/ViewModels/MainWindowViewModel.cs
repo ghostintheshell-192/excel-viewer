@@ -416,47 +416,57 @@ public class MainWindowViewModel : ViewModelBase
     private async Task UnloadAllFilesAsync()
     {
         if (!LoadedFiles.Any())
-        {
             return;
-        }
 
-        // Ask for confirmation
-        var confirmed = await _dialogService.ShowConfirmationAsync(
-            $"Are you sure you want to unload all {LoadedFiles.Count} file(s)?\n\n" +
-            "This will clear all data, search results, and comparisons.",
-            "Unload All Files"
-        );
-
-        if (!confirmed)
-        {
+        if (!await ConfirmUnloadAllAsync())
             return;
-        }
 
         _activityLog.LogInfo($"Unloading all {LoadedFiles.Count} file(s)...", "FileUnload");
 
-        // Clear selection first
-        SelectedFile = null;
+        ClearAllUIState();
+        RemoveAllComparisons();
+        ClearAllSearchResults();
+        RemoveAllFiles();
 
-        // Clear all comparisons first
+        _activityLog.LogInfo("All files unloaded successfully", "FileUnload");
+    }
+
+    private async Task<bool> ConfirmUnloadAllAsync()
+    {
+        return await _dialogService.ShowConfirmationAsync(
+            $"Are you sure you want to unload all {LoadedFiles.Count} file(s)?\n\n" +
+            "This will clear all data, search results, and comparisons.",
+            "Unload All Files");
+    }
+
+    private void ClearAllUIState()
+    {
+        SelectedFile = null;
+    }
+
+    private void RemoveAllComparisons()
+    {
         var comparisonsToRemove = RowComparisons.ToList();
         foreach (var comparison in comparisonsToRemove)
         {
             _comparisonCoordinator.RemoveComparison(comparison);
         }
+    }
 
-        // Clear all search results
+    private void ClearAllSearchResults()
+    {
         TreeSearchResultsViewModel?.ClearHistory();
         SearchViewModel?.ClearSearchCommand.Execute(null);
+    }
 
-        // Remove all files (iterate backwards to avoid collection modification issues)
+    private void RemoveAllFiles()
+    {
         var filesToRemove = LoadedFiles.ToList();
         foreach (var file in filesToRemove)
         {
             file.Dispose();
             _filesManager.RemoveFile(file);
         }
-
-        _activityLog.LogInfo("All files unloaded successfully", "FileUnload");
         _logger.LogInfo($"Unloaded {filesToRemove.Count} file(s)", "MainWindowViewModel");
     }
 
