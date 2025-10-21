@@ -7,7 +7,7 @@ namespace SheetAtlas.UI.Avalonia.Managers.Files;
 /// Manages the collection of loaded Excel files and their lifecycle.
 /// Handles loading, removal, and retry operations for failed loads.
 /// </summary>
-public interface ILoadedFilesManager
+public interface ILoadedFilesManager : IDisposable
 {
     /// <summary>
     /// Gets the read-only collection of currently loaded files.
@@ -36,6 +36,7 @@ public interface ILoadedFilesManager
     /// <param name="filePath">Path of the file to retry loading</param>
     /// <returns>Task representing the async operation</returns>
     Task RetryLoadAsync(string filePath);
+    void Dispose();
 
     /// <summary>
     /// Raised when a file is successfully loaded (or loaded with errors).

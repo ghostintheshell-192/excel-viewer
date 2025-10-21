@@ -16,7 +16,7 @@ namespace SheetAtlas.UI.Avalonia.Managers.Files;
 /// Manages the collection of loaded Excel files and their lifecycle.
 /// Handles loading, removal, and retry operations for failed loads.
 /// </summary>
-public class LoadedFilesManager : ILoadedFilesManager
+public class LoadedFilesManager : ILoadedFilesManager, IDisposable
 {
     private readonly IExcelReaderService _excelReaderService;
     private readonly IDialogService _dialogService;
@@ -24,6 +24,7 @@ public class LoadedFilesManager : ILoadedFilesManager
     private readonly IFileLogService _fileLogService;
 
     private readonly ObservableCollection<IFileLoadResultViewModel> _loadedFiles = new();
+    private bool _disposed;
 
     // Error message constants
     private const string OutOfMemoryMessage =
@@ -469,5 +470,29 @@ public class LoadedFilesManager : ILoadedFilesManager
         };
 
         return summary;
+    }
+
+    public void Dispose()
+    {
+        if (!_disposed)
+        {
+            // Dispose managed resources here if any
+            Dispose(true);
+            GC.SuppressFinalize(this);
+            _disposed = true;
+        }
+    }
+
+    protected void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            // Dispose managed resources here if any
+            foreach (var file in _loadedFiles)
+            {
+                file.Dispose();
+            }
+            _loadedFiles.Clear();
+        }
     }
 }

@@ -84,14 +84,20 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
             if (!await ConfirmUnloadAllAsync())
                 return;
 
-            _activityLog.LogInfo($"Unloading all {LoadedFiles.Count} file(s)...", "FileUnload");
+            var fileCount = LoadedFiles.Count;
+            _activityLog.LogInfo($"Unloading all {fileCount} file(s)...", "FileUnload");
 
-            ClearAllUIState();
-            RemoveAllComparisons();
-            ClearAllSearchResults();
-            RemoveAllFiles();
+            // Reuse the single-file cleanup logic for each file
+            // This ensures consistency: same cleanup path for single and bulk operations
+            var filesToUnload = LoadedFiles.ToList();
+            foreach (var file in filesToUnload)
+            {
+                // Call the same event handler used by the "Unload File" button
+                // This handles: selection clear, search results, comparisons, dispose, and GC
+                OnCleanAllDataRequested(file);
+            }
 
-            _activityLog.LogInfo("All files unloaded successfully", "FileUnload");
+            _activityLog.LogInfo($"All {fileCount} file(s) unloaded successfully", "FileUnload");
         }
 
         private async Task<bool> ConfirmUnloadAllAsync()
@@ -100,37 +106,6 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
                 $"Are you sure you want to unload all {LoadedFiles.Count} file(s)?\n\n" +
                 "This will clear all data, search results, and comparisons.",
                 "Unload All Files");
-        }
-
-        private void ClearAllUIState()
-        {
-            SelectedFile = null;
-        }
-
-        private void RemoveAllComparisons()
-        {
-            var comparisonsToRemove = RowComparisons.ToList();
-            foreach (var comparison in comparisonsToRemove)
-            {
-                _comparisonCoordinator.RemoveComparison(comparison);
-            }
-        }
-
-        private void ClearAllSearchResults()
-        {
-            TreeSearchResultsViewModel?.ClearHistory();
-            SearchViewModel?.ClearSearchCommand.Execute(null);
-        }
-
-        private void RemoveAllFiles()
-        {
-            var filesToRemove = LoadedFiles.ToList();
-            foreach (var file in filesToRemove)
-            {
-                file.Dispose();
-                _filesManager.RemoveFile(file);
-            }
-            _logger.LogInfo($"Unloaded {filesToRemove.Count} file(s)", "MainWindowViewModel");
         }
 
     }
