@@ -1,16 +1,17 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using SheetAtlas.UI.Avalonia.Managers.Files;
 using SheetAtlas.Logging.Services;
 using SheetAtlas.UI.Avalonia.Managers.Comparison;
 using SheetAtlas.Core.Domain.Entities;
+using System.Collections.ObjectModel;
 
 namespace SheetAtlas.UI.Avalonia.ViewModels
 {
     public partial class MainWindowViewModel
     {
+        public ReadOnlyObservableCollection<IFileLoadResultViewModel> LoadedFiles => _filesManager.LoadedFiles;
+        public ReadOnlyObservableCollection<RowComparisonViewModel> RowComparisons => _comparisonCoordinator.RowComparisons;
+        public bool HasLoadedFiles => LoadedFiles.Count > 0;
+
         public void SubscribeToEvents()
         {
             // Subscribe to file manager events
@@ -22,6 +23,16 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
             _comparisonCoordinator.SelectionChanged += OnComparisonSelectionChanged;
             _comparisonCoordinator.ComparisonRemoved += OnComparisonRemoved;
             _comparisonCoordinator.PropertyChanged += OnComparisonCoordinatorPropertyChanged;
+        }
+
+        private void UnsubscribeFromEvents()
+        {
+            _filesManager.FileLoaded -= OnFileLoaded;
+            _filesManager.FileRemoved -= OnFileRemoved;
+            _filesManager.FileLoadFailed -= OnFileLoadFailed;
+            _comparisonCoordinator.SelectionChanged -= OnComparisonSelectionChanged;
+            _comparisonCoordinator.ComparisonRemoved -= OnComparisonRemoved;
+            _comparisonCoordinator.PropertyChanged -= OnComparisonCoordinatorPropertyChanged;
         }
 
         private void OnFileLoaded(object? sender, FileLoadedEventArgs e)
@@ -83,6 +94,7 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
 
             _logger.LogInfo("Comparison removed and selections cleared", "MainWindowViewModel");
         }
+
         private void OnComparisonSelectionChanged(object? sender, ComparisonSelectionChangedEventArgs e)
         {
             // Show/hide comparison tab based on selection
@@ -136,7 +148,6 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
             // Set current selection if any
             FileDetailsViewModel.SelectedFile = SelectedFile;
         }
-
 
         public void SetTreeSearchResultsViewModel(TreeSearchResultsViewModel treeSearchResultsViewModel)
         {
