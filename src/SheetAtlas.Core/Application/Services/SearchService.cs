@@ -4,19 +4,34 @@ using SheetAtlas.Logging.Services;
 
 namespace SheetAtlas.Core.Application.Services
 {
+    /// <summary>
+    /// Service for searching within Excel files across sheets and cells.
+    /// </summary>
     public interface ISearchService
     {
+        /// <summary>
+        /// Searches for a query string across all sheets in an Excel file.
+        /// </summary>
+        /// <param name="file">The Excel file to search in</param>
+        /// <param name="query">The search query string</param>
+        /// <param name="options">Optional search configuration (case sensitivity, regex, exact match)</param>
+        /// <returns>List of search results including file names, sheet names, and cell matches</returns>
         List<SearchResult> Search(ExcelFile file, string query, SearchOptions? options = null);
+
+        /// <summary>
+        /// Searches for a query string within a specific sheet of an Excel file.
+        /// </summary>
+        /// <param name="file">The Excel file to search in</param>
+        /// <param name="sheetName">The name of the sheet to search</param>
+        /// <param name="query">The search query string</param>
+        /// <param name="options">Optional search configuration (case sensitivity, regex, exact match)</param>
+        /// <returns>List of search results found in the specified sheet</returns>
         List<SearchResult> SearchInSheet(ExcelFile file, string sheetName, string query, SearchOptions? options = null);
     }
 
-    //public class SearchOptions
-    //{
-    //    public bool CaseSensitive { get; set; }
-    //    public bool ExactMatch { get; set; }
-    //    public bool UseRegex { get; set; }
-    //}
-
+    /// <summary>
+    /// Implements search functionality for Excel files with support for various search modes.
+    /// </summary>
     public class SearchService : ISearchService
     {
         private readonly ILogService _logger;
@@ -30,11 +45,9 @@ namespace SheetAtlas.Core.Application.Services
         {
             var results = new List<SearchResult>();
 
-            // Return empty results for whitespace-only queries
             if (string.IsNullOrWhiteSpace(query))
                 return results;
 
-            // Cerca nel nome del file
             if (IsMatch(file.FileName, query, options))
             {
                 results.Add(new SearchResult(file, "", -1, -1, file.FileName)
@@ -43,10 +56,8 @@ namespace SheetAtlas.Core.Application.Services
                 });
             }
 
-            // Cerca in tutti i fogli
             foreach (var sheetName in file.GetSheetNames())
             {
-                // Cerca nel nome del foglio
                 if (IsMatch(sheetName, query, options))
                 {
                     results.Add(new SearchResult(file, sheetName, -1, -1, sheetName)
@@ -55,7 +66,6 @@ namespace SheetAtlas.Core.Application.Services
                     });
                 }
 
-                // Cerca nel contenuto del foglio
                 results.AddRange(SearchInSheet(file, sheetName, query, options));
             }
 
@@ -79,16 +89,13 @@ namespace SheetAtlas.Core.Application.Services
                     {
                         var result = new SearchResult(file, sheetName, rowIndex, colIndex, cellValue);
 
-                        // Aggiungi header di colonna come contesto
                         result.Context["ColumnHeader"] = sheet.ColumnNames[colIndex];
 
-                        // Aggiungi header di riga (prima colonna) come contesto
                         if (colIndex > 0)
                         {
                             result.Context["RowHeader"] = row[0].Value.ToString();
                         }
 
-                        // Aggiungi coordinate della cella
                         result.Context["CellCoordinates"] = $"R{rowIndex + 1}C{colIndex + 1}";
 
                         results.Add(result);
@@ -107,7 +114,6 @@ namespace SheetAtlas.Core.Application.Services
 
             try
             {
-                // Ricerca con espressioni regolari
                 if (options.UseRegex)
                 {
                     var regexOptions = options.CaseSensitive ?
@@ -116,7 +122,6 @@ namespace SheetAtlas.Core.Application.Services
                     return Regex.IsMatch(text, query, regexOptions);
                 }
 
-                // Ricerca con corrispondenza esatta
                 if (options.ExactMatch)
                 {
                     return options.CaseSensitive
@@ -124,7 +129,6 @@ namespace SheetAtlas.Core.Application.Services
                         : text.Equals(query, StringComparison.OrdinalIgnoreCase);
                 }
 
-                // Ricerca standard
                 return options.CaseSensitive
                     ? text.Contains(query)
                     : text.Contains(query, StringComparison.OrdinalIgnoreCase);

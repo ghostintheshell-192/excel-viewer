@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using SheetAtlas.Core.Application.DTOs;
 using SheetAtlas.Core.Domain.Entities;
 using SheetAtlas.UI.Avalonia.ViewModels;
 
@@ -10,7 +9,7 @@ namespace SheetAtlas.UI.Avalonia.Managers.Comparison;
 /// Manages the lifecycle of row comparison ViewModels.
 /// Handles creation, selection, and removal of row comparisons.
 /// </summary>
-public interface IRowComparisonCoordinator : INotifyPropertyChanged
+public interface IRowComparisonCoordinator : INotifyPropertyChanged, IDisposable
 {
     /// <summary>
     /// Gets the read-only collection of active row comparisons.

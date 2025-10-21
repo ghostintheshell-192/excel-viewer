@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using SheetAtlas.Core.Domain.Entities;
 using SheetAtlas.Core.Domain.ValueObjects;
 using SheetAtlas.Core.Application.Services;
-using SheetAtlas.Core.Application.Interfaces;
 using SheetAtlas.UI.Avalonia.Models.Search;
 using SheetAtlas.UI.Avalonia.ViewModels;
 using SheetAtlas.Logging.Services;

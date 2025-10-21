@@ -7,7 +7,7 @@ using SheetAtlas.UI.Avalonia.Managers.Comparison;
 
 namespace SheetAtlas.UI.Avalonia.ViewModels;
 
-public partial class MainWindowViewModel : ViewModelBase
+public partial class MainWindowViewModel : ViewModelBase, IDisposable
 {
     private readonly ILoadedFilesManager _filesManager;
     private readonly IRowComparisonCoordinator _comparisonCoordinator;
@@ -25,10 +25,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private bool _isSearchTabVisible;
     private bool _isComparisonTabVisible;
     private bool _isStatusBarVisible = true;
-
-    public ReadOnlyObservableCollection<IFileLoadResultViewModel> LoadedFiles => _filesManager.LoadedFiles;
-    public bool HasLoadedFiles => LoadedFiles.Count > 0;
-    public ReadOnlyObservableCollection<RowComparisonViewModel> RowComparisons => _comparisonCoordinator.RowComparisons;
+    private bool _disposed = false;
 
     // Expose SelectedComparison from Coordinator for binding
     public RowComparisonViewModel? SelectedComparison
@@ -167,5 +164,27 @@ public partial class MainWindowViewModel : ViewModelBase
 
     }
 
+    public void Dispose()
+    {
+        if (!_disposed)
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+            _disposed = true;
+        }
+    }
+
+    protected void Dispose(bool v)
+    {
+        if (v)
+        {
+            UnsubscribeFromEvents();
+            _filesManager.Dispose();
+            _comparisonCoordinator.Dispose();
+            SearchViewModel?.Dispose();
+            // FileDetailsViewModel?.Dispose();
+            TreeSearchResultsViewModel?.Dispose();
+        }
+    }
 }
 

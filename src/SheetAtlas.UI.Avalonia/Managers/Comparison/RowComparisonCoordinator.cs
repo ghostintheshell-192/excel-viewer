@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using SheetAtlas.Core.Application.DTOs;
 using SheetAtlas.Core.Domain.Entities;
 using SheetAtlas.UI.Avalonia.ViewModels;
 using SheetAtlas.Logging.Services;
@@ -11,7 +10,7 @@ namespace SheetAtlas.UI.Avalonia.Managers.Comparison;
 /// Coordinates the lifecycle of row comparison ViewModels.
 /// Manages creation, selection, and removal of comparisons.
 /// </summary>
-public class RowComparisonCoordinator : IRowComparisonCoordinator
+public class RowComparisonCoordinator : IRowComparisonCoordinator, IDisposable
 {
     private readonly ILogService _logger;
     private readonly ILogService _comparisonViewModelLogger;
@@ -19,6 +18,7 @@ public class RowComparisonCoordinator : IRowComparisonCoordinator
 
     private readonly ObservableCollection<RowComparisonViewModel> _rowComparisons = new();
     private RowComparisonViewModel? _selectedComparison;
+    private bool _disposed = false;
 
     public ReadOnlyObservableCollection<RowComparisonViewModel> RowComparisons { get; }
 
@@ -184,5 +184,29 @@ public class RowComparisonCoordinator : IRowComparisonCoordinator
     protected virtual void OnPropertyChanged(string propertyName)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    public void Dispose()
+    {
+        if (!_disposed)
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+            _disposed = true;
+        }
+    }
+
+    protected void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            // Dispose managed resources here
+            foreach (var comparison in _rowComparisons)
+            {
+                comparison.CloseRequested -= OnComparisonCloseRequested;
+                comparison.Dispose();
+            }
+            _rowComparisons.Clear();
+        }
     }
 }

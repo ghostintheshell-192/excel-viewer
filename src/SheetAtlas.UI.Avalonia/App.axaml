@@ -19,5 +19,7 @@
 
     <Application.Styles>
         <FluentTheme />
+        <StyleInclude Source="avares://SheetAtlas.UI.Avalonia/Styles/Buttons.axaml"/>
+        <StyleInclude Source="avares://SheetAtlas.UI.Avalonia/Styles/Menus.axaml"/>
     </Application.Styles>
 </Application>

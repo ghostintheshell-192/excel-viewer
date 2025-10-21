@@ -8,6 +8,8 @@ using SheetAtlas.UI.Avalonia.Managers.Search;
 using SheetAtlas.UI.Avalonia.Managers.Selection;
 using SheetAtlas.UI.Avalonia.Managers.Files;
 using SheetAtlas.UI.Avalonia.Managers.Comparison;
+using SheetAtlas.UI.Avalonia.Managers.Navigation;
+using SheetAtlas.UI.Avalonia.Managers.FileDetails;
 using SheetAtlas.UI.Avalonia.Models.Search;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -101,6 +103,8 @@ public partial class App : Application
                 services.AddSingleton<IThemeManager, ThemeManager>();
                 services.AddSingleton<ILoadedFilesManager, LoadedFilesManager>();
                 services.AddSingleton<IRowComparisonCoordinator, RowComparisonCoordinator>();
+                services.AddSingleton<ITabNavigationCoordinator, TabNavigationCoordinator>();
+                services.AddSingleton<IFileDetailsCoordinator, FileDetailsCoordinator>();
 
                 // Register ViewModels
                 services.AddSingleton<MainWindowViewModel>();

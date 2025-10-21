@@ -1,4 +1,3 @@
-using System;
 
 namespace SheetAtlas.Core.Application.DTOs
 {

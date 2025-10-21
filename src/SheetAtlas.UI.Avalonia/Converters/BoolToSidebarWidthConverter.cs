@@ -1,6 +1,5 @@
 using Avalonia.Controls;
 using Avalonia.Data.Converters;
-using System;
 using System.Globalization;
 
 namespace SheetAtlas.UI.Avalonia.Converters;

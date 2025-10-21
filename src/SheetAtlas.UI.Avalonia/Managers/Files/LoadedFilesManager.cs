@@ -16,7 +16,7 @@ namespace SheetAtlas.UI.Avalonia.Managers.Files;
 /// Manages the collection of loaded Excel files and their lifecycle.
 /// Handles loading, removal, and retry operations for failed loads.
 /// </summary>
-public class LoadedFilesManager : ILoadedFilesManager
+public class LoadedFilesManager : ILoadedFilesManager, IDisposable
 {
     private readonly IExcelReaderService _excelReaderService;
     private readonly IDialogService _dialogService;
@@ -24,12 +24,23 @@ public class LoadedFilesManager : ILoadedFilesManager
     private readonly IFileLogService _fileLogService;
 
     private readonly ObservableCollection<IFileLoadResultViewModel> _loadedFiles = new();
+    private bool _disposed;
+
+    // Error message constants
+    private const string OutOfMemoryMessage =
+        "Insufficient memory to load selected files.\n\n" +
+        "Try to:\n" +
+        "- Close other applications\n" +
+        "- Load a lower amount of files\n" +
+        "- Restart the application";
+    private const string OutOfMemoryTitle = "Insufficient Memory";
 
     public ReadOnlyObservableCollection<IFileLoadResultViewModel> LoadedFiles { get; }
 
     public event EventHandler<FileLoadedEventArgs>? FileLoaded;
     public event EventHandler<FileRemovedEventArgs>? FileRemoved;
     public event EventHandler<FileLoadFailedEventArgs>? FileLoadFailed;
+    public event EventHandler<FileReloadedEventArgs>? FileReloaded;
 
     public LoadedFilesManager(
         IExcelReaderService excelReaderService,
@@ -58,17 +69,6 @@ public class LoadedFilesManager : ILoadedFilesManager
         try
         {
             var loadedExcelFiles = await _excelReaderService.LoadFilesAsync(filePaths);
-
-            if (loadedExcelFiles == null)
-            {
-                _logger.LogError("ExcelReaderService returned null result", "LoadedFilesManager");
-
-                await _dialogService.ShowErrorAsync(
-                    $"Impossible to load files.\n\n" +
-                    "Reading service gave no results.",
-                    "Loading Error");
-                return;
-            }
 
             // Process each file individually, continuing even if one fails
             var successCount = 0;
@@ -104,13 +104,7 @@ public class LoadedFilesManager : ILoadedFilesManager
             // System resource exhaustion
             _logger.LogError("Out of memory while loading files", ex, "LoadedFilesManager");
 
-            await _dialogService.ShowErrorAsync(
-                "Insufficient memory to load selected files.\n\n" +
-                "Try to:\n" +
-                "- Close other applications\n" +
-                "- Load a lower amount of files\n" +
-                "- Restart the application",
-                "Insufficient Memory");
+            await _dialogService.ShowErrorAsync(OutOfMemoryMessage, OutOfMemoryTitle);
         }
         catch (Exception ex)
         {
@@ -125,7 +119,7 @@ public class LoadedFilesManager : ILoadedFilesManager
         }
     }
 
-    public void RemoveFile(IFileLoadResultViewModel? file)
+    public void RemoveFile(IFileLoadResultViewModel? file, bool isRetry = false)
     {
         if (file == null)
         {
@@ -140,9 +134,9 @@ public class LoadedFilesManager : ILoadedFilesManager
         }
 
         _loadedFiles.Remove(file);
-        _logger.LogInfo($"Removed file: {file.FileName}", "LoadedFilesManager");
+        _logger.LogInfo($"Removed file: {file.FileName} (isRetry: {isRetry})", "LoadedFilesManager");
 
-        FileRemoved?.Invoke(this, new FileRemovedEventArgs(file));
+        FileRemoved?.Invoke(this, new FileRemovedEventArgs(file, isRetry));
     }
 
     public async Task RetryLoadAsync(string filePath)
@@ -165,13 +159,14 @@ public class LoadedFilesManager : ILoadedFilesManager
             if (existingFile != null)
             {
                 originalIndex = _loadedFiles.IndexOf(existingFile);
-                RemoveFile(existingFile);
+                RemoveFile(existingFile, isRetry: true); // Mark as retry to preserve UI selection
             }
 
             // Attempt to reload
             var reloadedFiles = await _excelReaderService.LoadFilesAsync([filePath]);
 
-            if (reloadedFiles == null || !reloadedFiles.Any())
+            // ExcelReaderService always returns a list (never null), but check if empty
+            if (!reloadedFiles.Any())
             {
                 _logger.LogError($"Retry failed: ExcelReaderService returned no results for {filePath}", "LoadedFilesManager");
                 await _dialogService.ShowErrorAsync(
@@ -201,6 +196,21 @@ public class LoadedFilesManager : ILoadedFilesManager
                     {
                         _logger.LogWarning($"File {reloadedFile.FilePath} reload failed", "LoadedFilesManager");
                     }
+
+                    // CRITICAL: Wait for log to be saved to database BEFORE triggering FileReloaded event
+                    // This ensures LoadErrorHistoryAsync will read the LATEST logs when UI updates
+                    await SaveFileLogAsync(reloadedFile);
+
+                    // Trigger FileReloaded event for event-driven UI updates
+                    // Find the ViewModel that was just added to the collection
+                    var reloadedViewModel = _loadedFiles.FirstOrDefault(f =>
+                        f.FilePath.Equals(filePath, StringComparison.OrdinalIgnoreCase));
+
+                    if (reloadedViewModel != null)
+                    {
+                        FileReloaded?.Invoke(this, new FileReloadedEventArgs(reloadedViewModel, filePath));
+                        _logger.LogInfo($"FileReloaded event triggered for: {reloadedViewModel.FileName}", "LoadedFilesManager");
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -220,13 +230,7 @@ public class LoadedFilesManager : ILoadedFilesManager
         {
             _logger.LogError($"Out of memory during retry: {filePath}", ex, "LoadedFilesManager");
 
-            await _dialogService.ShowErrorAsync(
-                "Insufficient memory to load selected files.\n\n" +
-                "Try to:\n" +
-                "- Close other applications\n" +
-                "- Load a lower amount of files\n" +
-                "- Restart the application",
-                "Insufficient Memory");
+            await _dialogService.ShowErrorAsync(OutOfMemoryMessage, OutOfMemoryTitle);
         }
         catch (Exception ex)
         {
@@ -256,35 +260,30 @@ public class LoadedFilesManager : ILoadedFilesManager
         }
 
         // Respect Core's LoadStatus to determine handling strategy
+        bool hasErrors = excelFile.Status != LoadStatus.Success;
+
         switch (excelFile.Status)
         {
             case LoadStatus.Success:
                 // File loaded successfully - add to collection
-                AddFileToCollection(excelFile, hasErrors: false);
+                AddFileToCollectionCore(excelFile, insertIndex: null, hasErrors: false);
                 _logger.LogInfo($"File loaded successfully: {excelFile.FileName}", "LoadedFilesManager");
                 break;
 
             case LoadStatus.PartialSuccess:
                 // File loaded with warnings/errors but has usable data - add to collection
-                AddFileToCollection(excelFile, hasErrors: true);
+                AddFileToCollectionCore(excelFile, insertIndex: null, hasErrors: true);
                 _logger.LogWarning($"File loaded with errors: {excelFile.FileName} - {excelFile.Errors.Count} errors", "LoadedFilesManager");
                 break;
 
             case LoadStatus.Failed:
                 // File completely failed to load - add to collection so user can see error details
-                AddFileToCollection(excelFile, hasErrors: true);
+                AddFileToCollectionCore(excelFile, insertIndex: null, hasErrors: true);
 
                 _logger.LogError($"File failed to load: {excelFile.FileName} - {excelFile.Errors.Count} errors", "LoadedFilesManager");
 
                 // Notify listeners of the failure
-                var criticalErrors = excelFile.Errors.Where(e => e.Level == Logging.Models.LogSeverity.Critical);
-                var errorMessage = criticalErrors.Any()
-                    ? criticalErrors.First().Message
-                    : "Unknown error";
-
-                FileLoadFailed?.Invoke(this, new FileLoadFailedEventArgs(
-                    excelFile.FilePath,
-                    new InvalidOperationException(errorMessage)));
+                TriggerFileLoadFailedEvent(excelFile);
                 break;
 
             default:
@@ -301,35 +300,30 @@ public class LoadedFilesManager : ILoadedFilesManager
         // For retry, we don't check duplicates since we already removed the old entry
 
         // Respect Core's LoadStatus to determine handling strategy
+        bool hasErrors = excelFile.Status != LoadStatus.Success;
+
         switch (excelFile.Status)
         {
             case LoadStatus.Success:
                 // File loaded successfully - insert at original position
-                AddFileToCollectionAtIndex(excelFile, targetIndex, hasErrors: false);
+                AddFileToCollectionCore(excelFile, insertIndex: targetIndex, hasErrors: false);
                 _logger.LogInfo($"File reloaded successfully: {excelFile.FileName}", "LoadedFilesManager");
                 break;
 
             case LoadStatus.PartialSuccess:
                 // File loaded with warnings/errors but has usable data - insert at original position
-                AddFileToCollectionAtIndex(excelFile, targetIndex, hasErrors: true);
+                AddFileToCollectionCore(excelFile, insertIndex: targetIndex, hasErrors: true);
                 _logger.LogWarning($"File reloaded with errors: {excelFile.FileName} - {excelFile.Errors.Count} errors", "LoadedFilesManager");
                 break;
 
             case LoadStatus.Failed:
                 // File completely failed to load - insert at original position
-                AddFileToCollectionAtIndex(excelFile, targetIndex, hasErrors: true);
+                AddFileToCollectionCore(excelFile, insertIndex: targetIndex, hasErrors: true);
 
                 _logger.LogError($"File reload failed: {excelFile.FileName} - {excelFile.Errors.Count} errors", "LoadedFilesManager");
 
                 // Notify listeners of the failure
-                var criticalErrors = excelFile.Errors.Where(e => e.Level == Logging.Models.LogSeverity.Critical);
-                var errorMessage = criticalErrors.Any()
-                    ? criticalErrors.First().Message
-                    : "Unknown error";
-
-                FileLoadFailed?.Invoke(this, new FileLoadFailedEventArgs(
-                    excelFile.FilePath,
-                    new InvalidOperationException(errorMessage)));
+                TriggerFileLoadFailedEvent(excelFile);
                 break;
 
             default:
@@ -339,30 +333,32 @@ public class LoadedFilesManager : ILoadedFilesManager
     }
 
     /// <summary>
-    /// Adds a file to the collection and notifies listeners.
+    /// Triggers FileLoadFailed event with critical error message
     /// </summary>
-    private void AddFileToCollection(ExcelFile excelFile, bool hasErrors)
+    private void TriggerFileLoadFailedEvent(ExcelFile excelFile)
     {
-        var fileViewModel = new FileLoadResultViewModel(excelFile);
-        _loadedFiles.Add(fileViewModel);
+        var criticalErrors = excelFile.Errors.Where(e => e.Level == Logging.Models.LogSeverity.Critical);
+        var errorMessage = criticalErrors.Any()
+            ? criticalErrors.First().Message
+            : "Unknown error";
 
-        FileLoaded?.Invoke(this, new FileLoadedEventArgs(fileViewModel, hasErrors));
-
-        // Save structured log asynchronously (fire-and-forget)
-        _ = Task.Run(async () => await SaveFileLogAsync(excelFile));
+        FileLoadFailed?.Invoke(this, new FileLoadFailedEventArgs(
+            excelFile.FilePath,
+            new InvalidOperationException(errorMessage)));
     }
 
     /// <summary>
-    /// Adds a file to the collection at specific index (for retry scenarios)
+    /// Adds a file to the collection, optionally at a specific index.
+    /// Used by both initial load and retry scenarios.
     /// </summary>
-    private void AddFileToCollectionAtIndex(ExcelFile excelFile, int targetIndex, bool hasErrors)
+    private void AddFileToCollectionCore(ExcelFile excelFile, int? insertIndex, bool hasErrors)
     {
         var fileViewModel = new FileLoadResultViewModel(excelFile);
 
-        // Insert at original position if valid, otherwise add at end
-        if (targetIndex >= 0 && targetIndex < _loadedFiles.Count)
+        // Insert at specific index if provided and valid, otherwise add at end
+        if (insertIndex.HasValue && insertIndex.Value >= 0 && insertIndex.Value < _loadedFiles.Count)
         {
-            _loadedFiles.Insert(targetIndex, fileViewModel);
+            _loadedFiles.Insert(insertIndex.Value, fileViewModel);
         }
         else
         {
@@ -474,5 +470,29 @@ public class LoadedFilesManager : ILoadedFilesManager
         };
 
         return summary;
+    }
+
+    public void Dispose()
+    {
+        if (!_disposed)
+        {
+            // Dispose managed resources here if any
+            Dispose(true);
+            GC.SuppressFinalize(this);
+            _disposed = true;
+        }
+    }
+
+    protected void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            // Dispose managed resources here if any
+            foreach (var file in _loadedFiles)
+            {
+                file.Dispose();
+            }
+            _loadedFiles.Clear();
+        }
     }
 }

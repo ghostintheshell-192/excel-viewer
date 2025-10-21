@@ -7,7 +7,7 @@ namespace SheetAtlas.UI.Avalonia.Managers.Files;
 /// Manages the collection of loaded Excel files and their lifecycle.
 /// Handles loading, removal, and retry operations for failed loads.
 /// </summary>
-public interface ILoadedFilesManager
+public interface ILoadedFilesManager : IDisposable
 {
     /// <summary>
     /// Gets the read-only collection of currently loaded files.
@@ -26,7 +26,8 @@ public interface ILoadedFilesManager
     /// Removes a file from the loaded files collection.
     /// </summary>
     /// <param name="file">The file to remove</param>
-    void RemoveFile(IFileLoadResultViewModel? file);
+    /// <param name="isRetry">True if this removal is part of a retry operation (preserves UI selection)</param>
+    void RemoveFile(IFileLoadResultViewModel? file, bool isRetry = false);
 
     /// <summary>
     /// Retries loading a file that previously failed.
@@ -35,6 +36,7 @@ public interface ILoadedFilesManager
     /// <param name="filePath">Path of the file to retry loading</param>
     /// <returns>Task representing the async operation</returns>
     Task RetryLoadAsync(string filePath);
+    void Dispose();
 
     /// <summary>
     /// Raised when a file is successfully loaded (or loaded with errors).
@@ -50,6 +52,11 @@ public interface ILoadedFilesManager
     /// Raised when a file load operation fails completely.
     /// </summary>
     event EventHandler<FileLoadFailedEventArgs>? FileLoadFailed;
+
+    /// <summary>
+    /// Raised when a file is reloaded (during retry operation).
+    /// </summary>
+    event EventHandler<FileReloadedEventArgs>? FileReloaded;
 }
 
 /// <summary>
@@ -74,9 +81,16 @@ public class FileRemovedEventArgs : EventArgs
 {
     public IFileLoadResultViewModel File { get; }
 
-    public FileRemovedEventArgs(IFileLoadResultViewModel file)
+    /// <summary>
+    /// Indicates whether this removal is part of a retry operation.
+    /// When true, UI should preserve selection state to avoid flickering.
+    /// </summary>
+    public bool IsRetry { get; }
+
+    public FileRemovedEventArgs(IFileLoadResultViewModel file, bool isRetry = false)
     {
         File = file;
+        IsRetry = isRetry;
     }
 }
 
@@ -92,5 +106,20 @@ public class FileLoadFailedEventArgs : EventArgs
     {
         FilePath = filePath;
         Exception = exception;
+    }
+}
+
+/// <summary>
+/// Event args for file reloaded event (during retry).
+/// </summary>
+public class FileReloadedEventArgs : EventArgs
+{
+    public IFileLoadResultViewModel NewFile { get; }
+    public string FilePath { get; }
+
+    public FileReloadedEventArgs(IFileLoadResultViewModel newFile, string filePath)
+    {
+        NewFile = newFile;
+        FilePath = filePath;
     }
 }

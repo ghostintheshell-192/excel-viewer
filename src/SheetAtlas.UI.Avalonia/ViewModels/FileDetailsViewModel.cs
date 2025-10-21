@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
-using SheetAtlas.Core.Domain.ValueObjects;
 using SheetAtlas.Core.Application.Interfaces;
 using SheetAtlas.UI.Avalonia.Commands;
 using SheetAtlas.UI.Avalonia.Models;
@@ -49,7 +48,9 @@ public class FileDetailsViewModel : ViewModelBase
     public ICommand RetryCommand { get; }
     public ICommand ClearCommand { get; }
 
-    public FileDetailsViewModel(ILogService logger, IFileLogService fileLogService)
+    public FileDetailsViewModel(
+        ILogService logger,
+        IFileLogService fileLogService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _fileLogService = fileLogService ?? throw new ArgumentNullException(nameof(fileLogService));
