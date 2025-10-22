@@ -2,6 +2,8 @@ using SheetAtlas.Core.Domain.Entities;
 using SheetAtlas.Core.Domain.ValueObjects;
 using SheetAtlas.Core.Application.Interfaces;
 using SheetAtlas.Logging.Services;
+using SheetAtlas.Core.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace SheetAtlas.Infrastructure.External
 {
@@ -21,26 +23,45 @@ namespace SheetAtlas.Infrastructure.External
     {
         private readonly IEnumerable<IFileFormatReader> _readers;
         private readonly ILogService _logger;
+        private readonly AppSettings _settings;
 
         public ExcelReaderService(
             IEnumerable<IFileFormatReader> readers,
-            ILogService logger)
+            ILogService logger,
+            IOptions<AppSettings> settings)
         {
             _readers = readers ?? throw new ArgumentNullException(nameof(readers));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _settings = settings?.Value ?? throw new ArgumentNullException(nameof(settings));
         }
 
         public async Task<List<ExcelFile>> LoadFilesAsync(IEnumerable<string> filePaths, CancellationToken cancellationToken = default)
         {
-            var results = new List<ExcelFile>();
+            var filePathList = filePaths.ToList();
+            if (filePathList.Count == 0)
+                return new List<ExcelFile>();
 
-            foreach (var filePath in filePaths)
+            // Load concurrency setting from configuration (appsettings.json)
+            // Default: 5 concurrent file loads
+            // Configurable for different system capabilities
+            var maxConcurrency = _settings.Performance.MaxConcurrentFileLoads;
+
+            using var semaphore = new SemaphoreSlim(maxConcurrency, maxConcurrency);
+            var tasks = filePathList.Select(async filePath =>
             {
-                var file = await LoadFileAsync(filePath, cancellationToken);
-                results.Add(file);
-            }
+                await semaphore.WaitAsync(cancellationToken);
+                try
+                {
+                    return await LoadFileAsync(filePath, cancellationToken);
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            });
 
-            return results;
+            var results = await Task.WhenAll(tasks);
+            return results.ToList();
         }
 
         public async Task<ExcelFile> LoadFileAsync(string filePath, CancellationToken cancellationToken = default)

@@ -8,6 +8,8 @@ using FluentAssertions;
 using Moq;
 using SheetAtlas.Logging.Models;
 using SheetAtlas.Logging.Services;
+using SheetAtlas.Core.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace SheetAtlas.Tests.Services
 {
@@ -259,7 +261,15 @@ namespace SheetAtlas.Tests.Services
             var openXmlReader = new OpenXmlFileReader(readerLogger.Object, cellParser, mergedCellProcessor, cellValueReader);
             var readers = new List<IFileFormatReader> { openXmlReader };
 
-            return new ExcelReaderService(readers, serviceLogger.Object);
+            // Create settings mock
+            var settings = new AppSettings
+            {
+                Performance = new PerformanceSettings { MaxConcurrentFileLoads = 5 }
+            };
+            var settingsMock = new Mock<IOptions<AppSettings>>();
+            settingsMock.Setup(s => s.Value).Returns(settings);
+
+            return new ExcelReaderService(readers, serviceLogger.Object, settingsMock.Object);
         }
 
         private static string GetTestDataPath()
