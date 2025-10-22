@@ -18,6 +18,7 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
             _filesManager.FileLoaded += OnFileLoaded;
             _filesManager.FileRemoved += OnFileRemoved;
             _filesManager.FileLoadFailed += OnFileLoadFailed;
+            _filesManager.FileReloaded += OnFileReloaded;
 
             // Subscribe to comparison coordinator events
             _comparisonCoordinator.SelectionChanged += OnComparisonSelectionChanged;
@@ -30,6 +31,7 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
             _filesManager.FileLoaded -= OnFileLoaded;
             _filesManager.FileRemoved -= OnFileRemoved;
             _filesManager.FileLoadFailed -= OnFileLoadFailed;
+            _filesManager.FileReloaded -= OnFileReloaded;
             _comparisonCoordinator.SelectionChanged -= OnComparisonSelectionChanged;
             _comparisonCoordinator.ComparisonRemoved -= OnComparisonRemoved;
             _comparisonCoordinator.PropertyChanged -= OnComparisonCoordinatorPropertyChanged;
@@ -65,15 +67,30 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
             }
         }
 
+        private void OnFileReloaded(object? sender, FileReloadedEventArgs e)
+        {
+            _logger.LogInfo($"File reloaded: {e.NewFile.FileName}", "MainWindowViewModel");
+
+            // Auto-select the reloaded file to show updated details
+            SelectedFile = e.NewFile;
+
+            // Show File Details tab to display the updated log
+            IsFileDetailsTabVisible = true;
+            SelectedTabIndex = GetTabIndex("FileDetails");
+        }
+
         private void OnFileRemoved(object? sender, FileRemovedEventArgs e)
         {
-            _logger.LogInfo($"File removed: {e.File.FileName}", "MainWindowViewModel");
+            _logger.LogInfo($"File removed: {e.File.FileName} (isRetry: {e.IsRetry})", "MainWindowViewModel");
 
-            // Notify that HasLoadedFiles changed
             OnPropertyChanged(nameof(HasLoadedFiles));
 
-            // Auto-close sidebar when last file is removed
-            if (LoadedFiles.Count == 0)
+            if (!e.IsRetry && SelectedFile == e.File)
+            {
+                SelectedFile = null;
+            }
+
+            if (LoadedFiles.Count == 0 && !e.IsRetry)
             {
                 IsSidebarExpanded = false;
             }

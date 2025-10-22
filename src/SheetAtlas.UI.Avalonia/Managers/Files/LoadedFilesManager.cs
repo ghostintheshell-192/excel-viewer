@@ -159,10 +159,8 @@ public class LoadedFilesManager : ILoadedFilesManager, IDisposable
             if (existingFile != null)
             {
                 originalIndex = _loadedFiles.IndexOf(existingFile);
-                RemoveFile(existingFile, isRetry: true); // Mark as retry to preserve UI selection
             }
 
-            // Attempt to reload
             var reloadedFiles = await _excelReaderService.LoadFilesAsync([filePath]);
 
             // ExcelReaderService always returns a list (never null), but check if empty
@@ -181,7 +179,14 @@ public class LoadedFilesManager : ILoadedFilesManager, IDisposable
             {
                 try
                 {
-                    // Process file but insert at original position instead of appending
+                    // Save log before UI update to minimize flicker
+                    await SaveFileLogAsync(reloadedFile);
+
+                    if (existingFile != null)
+                    {
+                        RemoveFile(existingFile, isRetry: true);
+                    }
+
                     await ProcessLoadedFileAtIndexAsync(reloadedFile, originalIndex);
 
                     if (reloadedFile.Status == LoadStatus.Success)
@@ -197,12 +202,6 @@ public class LoadedFilesManager : ILoadedFilesManager, IDisposable
                         _logger.LogWarning($"File {reloadedFile.FilePath} reload failed", "LoadedFilesManager");
                     }
 
-                    // CRITICAL: Wait for log to be saved to database BEFORE triggering FileReloaded event
-                    // This ensures LoadErrorHistoryAsync will read the LATEST logs when UI updates
-                    await SaveFileLogAsync(reloadedFile);
-
-                    // Trigger FileReloaded event for event-driven UI updates
-                    // Find the ViewModel that was just added to the collection
                     var reloadedViewModel = _loadedFiles.FirstOrDefault(f =>
                         f.FilePath.Equals(filePath, StringComparison.OrdinalIgnoreCase));
 
@@ -266,19 +265,19 @@ public class LoadedFilesManager : ILoadedFilesManager, IDisposable
         {
             case LoadStatus.Success:
                 // File loaded successfully - add to collection
-                AddFileToCollectionCore(excelFile, insertIndex: null, hasErrors: false);
+                await AddFileToCollectionCore(excelFile, insertIndex: null, hasErrors: false);
                 _logger.LogInfo($"File loaded successfully: {excelFile.FileName}", "LoadedFilesManager");
                 break;
 
             case LoadStatus.PartialSuccess:
                 // File loaded with warnings/errors but has usable data - add to collection
-                AddFileToCollectionCore(excelFile, insertIndex: null, hasErrors: true);
+                await AddFileToCollectionCore(excelFile, insertIndex: null, hasErrors: true);
                 _logger.LogWarning($"File loaded with errors: {excelFile.FileName} - {excelFile.Errors.Count} errors", "LoadedFilesManager");
                 break;
 
             case LoadStatus.Failed:
                 // File completely failed to load - add to collection so user can see error details
-                AddFileToCollectionCore(excelFile, insertIndex: null, hasErrors: true);
+                await AddFileToCollectionCore(excelFile, insertIndex: null, hasErrors: true);
 
                 _logger.LogError($"File failed to load: {excelFile.FileName} - {excelFile.Errors.Count} errors", "LoadedFilesManager");
 
@@ -294,35 +293,27 @@ public class LoadedFilesManager : ILoadedFilesManager, IDisposable
 
     /// <summary>
     /// Processes a loaded Excel file and inserts it at specific index (for retry scenarios)
+    /// NOTE: Log saving is done by the caller (RetryFileLoadAsync) BEFORE calling this method
     /// </summary>
     private async Task ProcessLoadedFileAtIndexAsync(ExcelFile excelFile, int targetIndex)
     {
-        // For retry, we don't check duplicates since we already removed the old entry
-
-        // Respect Core's LoadStatus to determine handling strategy
         bool hasErrors = excelFile.Status != LoadStatus.Success;
 
         switch (excelFile.Status)
         {
             case LoadStatus.Success:
-                // File loaded successfully - insert at original position
-                AddFileToCollectionCore(excelFile, insertIndex: targetIndex, hasErrors: false);
+                await AddFileToCollectionCore(excelFile, insertIndex: targetIndex, hasErrors: false, skipLogSave: true);
                 _logger.LogInfo($"File reloaded successfully: {excelFile.FileName}", "LoadedFilesManager");
                 break;
 
             case LoadStatus.PartialSuccess:
-                // File loaded with warnings/errors but has usable data - insert at original position
-                AddFileToCollectionCore(excelFile, insertIndex: targetIndex, hasErrors: true);
+                await AddFileToCollectionCore(excelFile, insertIndex: targetIndex, hasErrors: true, skipLogSave: true);
                 _logger.LogWarning($"File reloaded with errors: {excelFile.FileName} - {excelFile.Errors.Count} errors", "LoadedFilesManager");
                 break;
 
             case LoadStatus.Failed:
-                // File completely failed to load - insert at original position
-                AddFileToCollectionCore(excelFile, insertIndex: targetIndex, hasErrors: true);
-
+                await AddFileToCollectionCore(excelFile, insertIndex: targetIndex, hasErrors: true, skipLogSave: true);
                 _logger.LogError($"File reload failed: {excelFile.FileName} - {excelFile.Errors.Count} errors", "LoadedFilesManager");
-
-                // Notify listeners of the failure
                 TriggerFileLoadFailedEvent(excelFile);
                 break;
 
@@ -351,11 +342,11 @@ public class LoadedFilesManager : ILoadedFilesManager, IDisposable
     /// Adds a file to the collection, optionally at a specific index.
     /// Used by both initial load and retry scenarios.
     /// </summary>
-    private void AddFileToCollectionCore(ExcelFile excelFile, int? insertIndex, bool hasErrors)
+    /// <param name="skipLogSave">If true, skips saving the log (used when log was already saved before calling this method)</param>
+    private async Task AddFileToCollectionCore(ExcelFile excelFile, int? insertIndex, bool hasErrors, bool skipLogSave = false)
     {
         var fileViewModel = new FileLoadResultViewModel(excelFile);
 
-        // Insert at specific index if provided and valid, otherwise add at end
         if (insertIndex.HasValue && insertIndex.Value >= 0 && insertIndex.Value < _loadedFiles.Count)
         {
             _loadedFiles.Insert(insertIndex.Value, fileViewModel);
@@ -365,10 +356,12 @@ public class LoadedFilesManager : ILoadedFilesManager, IDisposable
             _loadedFiles.Add(fileViewModel);
         }
 
-        FileLoaded?.Invoke(this, new FileLoadedEventArgs(fileViewModel, hasErrors));
+        if (!skipLogSave)
+        {
+            await SaveFileLogAsync(excelFile);
+        }
 
-        // Save structured log asynchronously (fire-and-forget)
-        _ = Task.Run(async () => await SaveFileLogAsync(excelFile));
+        FileLoaded?.Invoke(this, new FileLoadedEventArgs(fileViewModel, hasErrors));
     }
 
     /// <summary>
