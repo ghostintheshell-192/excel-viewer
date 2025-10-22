@@ -34,6 +34,13 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
             _comparisonCoordinator.ComparisonRemoved -= OnComparisonRemoved;
             _comparisonCoordinator.PropertyChanged -= OnComparisonCoordinatorPropertyChanged;
 
+            // Unsubscribe from SearchViewModel PropertyChanged to prevent memory leak
+            if (SearchViewModel != null && _searchViewModelPropertyChangedHandler != null)
+            {
+                SearchViewModel.PropertyChanged -= _searchViewModelPropertyChangedHandler;
+                _searchViewModelPropertyChangedHandler = null;
+            }
+
             // Unsubscribe from FileDetailsViewModel events to prevent memory leak
             if (FileDetailsViewModel != null)
             {
@@ -124,8 +131,8 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
             // Wire up search results to tree view
             if (SearchViewModel != null)
             {
-                // Subscribe to search results changes
-                SearchViewModel.PropertyChanged += (s, e) =>
+                // Store handler as field to enable proper cleanup
+                _searchViewModelPropertyChangedHandler = (s, e) =>
                 {
                     if (e.PropertyName == nameof(SearchViewModel.SearchResults) && TreeSearchResultsViewModel != null)
                     {
@@ -141,6 +148,9 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
                         }
                     }
                 };
+
+                // Subscribe to search results changes
+                SearchViewModel.PropertyChanged += _searchViewModelPropertyChangedHandler;
             }
         }
 
