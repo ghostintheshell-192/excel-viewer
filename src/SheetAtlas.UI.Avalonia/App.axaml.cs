@@ -20,6 +20,7 @@ using SheetAtlas.Infrastructure.External;
 using SheetAtlas.Infrastructure.External.Readers;
 using SheetAtlas.UI.Avalonia.Managers;
 using SheetAtlas.Logging.Services;
+using SheetAtlas.Core.Configuration;
 
 namespace SheetAtlas.UI.Avalonia;
 
@@ -72,6 +73,9 @@ public partial class App : Application
         return Host.CreateDefaultBuilder()
             .ConfigureServices((context, services) =>
             {
+                // Register configuration
+                services.Configure<AppSettings>(context.Configuration.GetSection("AppSettings"));
+
                 // Register Core services
                 services.AddSingleton<ICellReferenceParser, CellReferenceParser>();
                 services.AddSingleton<ICellValueReader, CellValueReader>();
