@@ -94,7 +94,7 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
             {
                 // Call the same event handler used by the "Unload File" button
                 // This handles: selection clear, search results, comparisons, dispose, and GC
-                OnCleanAllDataRequested(file);
+                OnCleanAllDataRequested(this, new FileActionEventArgs(file));
             }
 
             _activityLog.LogInfo($"All {fileCount} file(s) unloaded successfully", "FileUnload");

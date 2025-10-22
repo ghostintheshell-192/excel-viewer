@@ -33,6 +33,15 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
             _comparisonCoordinator.SelectionChanged -= OnComparisonSelectionChanged;
             _comparisonCoordinator.ComparisonRemoved -= OnComparisonRemoved;
             _comparisonCoordinator.PropertyChanged -= OnComparisonCoordinatorPropertyChanged;
+
+            // Unsubscribe from FileDetailsViewModel events to prevent memory leak
+            if (FileDetailsViewModel != null)
+            {
+                FileDetailsViewModel.RemoveFromListRequested -= OnRemoveFromListRequested;
+                FileDetailsViewModel.CleanAllDataRequested -= OnCleanAllDataRequested;
+                FileDetailsViewModel.RemoveNotificationRequested -= OnRemoveNotificationRequested;
+                FileDetailsViewModel.TryAgainRequested -= OnTryAgainRequested;
+            }
         }
 
         private void OnFileLoaded(object? sender, FileLoadedEventArgs e)
@@ -163,10 +172,11 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
         }
 
         // Event handlers for FileDetailsViewModel - delegate to FilesManager
-        private void OnRemoveFromListRequested(IFileLoadResultViewModel? file) => _filesManager.RemoveFile(file);
+        private void OnRemoveFromListRequested(object? sender, FileActionEventArgs e) => _filesManager.RemoveFile(e.File);
 
-        private void OnCleanAllDataRequested(IFileLoadResultViewModel? file)
+        private void OnCleanAllDataRequested(object? sender, FileActionEventArgs e)
         {
+            var file = e.File;
             if (file == null)
             {
                 _logger.LogWarning("Clean all data requested with null file", "MainWindowViewModel");
@@ -216,10 +226,11 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
             });
         }
 
-        private void OnRemoveNotificationRequested(IFileLoadResultViewModel? file) => _filesManager.RemoveFile(file);
+        private void OnRemoveNotificationRequested(object? sender, FileActionEventArgs e) => _filesManager.RemoveFile(e.File);
 
-        private void OnTryAgainRequested(IFileLoadResultViewModel? file)
+        private void OnTryAgainRequested(object? sender, FileActionEventArgs e)
         {
+            var file = e.File;
             if (file == null)
             {
                 _logger.LogWarning("Try again requested but file is null", "MainWindowViewModel");
