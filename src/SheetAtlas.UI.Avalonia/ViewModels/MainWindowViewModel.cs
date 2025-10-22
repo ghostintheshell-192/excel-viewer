@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using SheetAtlas.UI.Avalonia.Services;
 using SheetAtlas.Logging.Services;
 using SheetAtlas.UI.Avalonia.Managers;
@@ -26,6 +27,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private bool _isComparisonTabVisible;
     private bool _isStatusBarVisible = true;
     private bool _disposed = false;
+
+    // Event handlers stored as fields for proper cleanup
+    private PropertyChangedEventHandler? _searchViewModelPropertyChangedHandler;
 
     // Expose SelectedComparison from Coordinator for binding
     public RowComparisonViewModel? SelectedComparison
