@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SheetAtlas Features - Advanced Excel Search, Comparison & Analysis Tool</title>
+    <meta name="description" content="Explore SheetAtlas features: multi-file Excel search with regex, row comparison with intelligent column mapping, 100% offline processing, and cross-platform support for Windows, Linux, macOS.">
+    <meta name="keywords" content="excel search regex, compare excel rows, offline excel tool, excel column mapping, cross-platform excel viewer">
+    <meta name="author" content="SheetAtlas Team">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="SheetAtlas Features - Powerful Excel Analysis Tools">
+    <meta property="og:description" content="Advanced Excel search, intelligent row comparison, and offline data analysis. Learn how SheetAtlas helps you work with spreadsheet data efficiently.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://ghostintheshell-192.github.io/sheet-atlas/features.html">
+    <meta property="og:image" content="https://ghostintheshell-192.github.io/sheet-atlas/images/treeview-dark.png">
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://ghostintheshell-192.github.io/sheet-atlas/features.html">
+    <meta name="robots" content="index, follow">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/features.css">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a href="index.html">
+                    <img src="assets/logo.svg" alt="SheetAtlas" class="logo">
+                    <span class="brand-name">SheetAtlas</span>
+                </a>
+            </div>
+
+            <button class="mobile-menu-toggle" aria-label="Toggle menu" aria-expanded="false">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+
+            <div class="nav-links">
+                <a href="index.html#features">Overview</a>
+                <a href="features.html" class="active">Details</a>
+                <a href="download.html">Download</a>
+                <a href="screenshots.html">Screenshots</a>
+                <a href="https://github.com/ghostintheshell-192/sheet-atlas" target="_blank" class="github-link">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                    GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero" style="padding-top: 100px; padding-bottom: 50px;">
+        <div class="container">
+            <div class="hero-content" style="text-align: center;">
+                <h1>Powerful Features for Excel Analysis</h1>
+                <p class="hero-subtitle" style="max-width: 800px; margin: 0 auto 2rem;">
+                    SheetAtlas combines advanced search capabilities, intelligent row comparison, and privacy-first offline processing into a single cross-platform tool. Discover how each feature helps you work more efficiently with Excel data.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 1: Multi-File Loading -->
+    <section class="features">
+        <div class="container">
+            <div class="feature-detail">
+                <div class="feature-detail-content">
+                    <div class="feature-icon icon-excel" style="font-size: 2rem; margin-bottom: 1rem;">XLS</div>
+                    <h2>Multi-File Support & Intelligent Loading</h2>
+                    <p>Load multiple Excel files (.xlsx, .xls) and CSV files simultaneously. SheetAtlas handles all your spreadsheets in one workspace, making it easy to search and compare data across different sources.</p>
+
+                    <h3 style="margin-top: 2rem;">Key Capabilities</h3>
+                    <ul style="line-height: 1.8; color: var(--text-secondary);">
+                        <li><strong>Multiple formats:</strong> Support for .xlsx (Excel 2007+), .xls (Excel 97-2003), and .csv files</li>
+                        <li><strong>Batch loading:</strong> Load multiple files at once using file picker or drag-and-drop</li>
+                        <li><strong>All sheets accessible:</strong> Every worksheet in your Excel files is available for search and analysis</li>
+                        <li><strong>Merged cells support:</strong> Correctly handles merged cells without data corruption</li>
+                        <li><strong>CSV delimiter detection:</strong> Automatically detects comma, semicolon, tab, and pipe delimiters</li>
+                        <li><strong>Error handling:</strong> Graceful handling of corrupted or password-protected files with clear error messages</li>
+                    </ul>
+
+                    <h3 style="margin-top: 2rem;">Use Cases</h3>
+                    <ul style="line-height: 1.8; color: var(--text-secondary);">
+                        <li>Compare data across multiple Excel reports from different sources</li>
+                        <li>Search for specific values in dozens of spreadsheet files</li>
+                        <li>Analyze CSV exports from different systems side-by-side</li>
+                        <li>Find discrepancies in multi-sheet workbooks</li>
+                    </ul>
+                </div>
+                <div class="feature-detail-image">
+                    <img src="images/main-dark.png" alt="SheetAtlas interface showing multiple loaded Excel files" loading="lazy" style="border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);">
+                    <p style="text-align: center; color: var(--text-muted); margin-top: 1rem; font-size: 0.875rem;">
+                        Multiple Excel files loaded and ready for search and comparison
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 2: Advanced Search -->
+    <section class="features" style="background-color: var(--bg-secondary);">
+        <div class="container">
+            <div class="feature-detail" style="flex-direction: row-reverse;">
+                <div class="feature-detail-content">
+                    <div class="feature-icon icon-search" style="font-size: 2rem; margin-bottom: 1rem;">FIND</div>
+                    <h2>Advanced Search with Regex Support</h2>
+                    <p>Search across all loaded files, worksheets, and cells with powerful pattern matching. The tree-view results make it easy to navigate findings organized by file, sheet, row, and column.</p>
+
+                    <h3 style="margin-top: 2rem;">Search Options</h3>
+                    <ul style="line-height: 1.8; color: var(--text-secondary);">
+                        <li><strong>Case-sensitive matching:</strong> Toggle case sensitivity for precise or flexible searches</li>
+                        <li><strong>Exact match mode:</strong> Find cells that exactly match your search term (no partial matches)</li>
+                        <li><strong>Regular expressions:</strong> Use powerful regex patterns for complex search criteria</li>
+                        <li><strong>Multi-file search:</strong> Search across all loaded files simultaneously</li>
+                        <li><strong>Sheet filtering:</strong> Limit search to specific worksheets if needed</li>
+                    </ul>
+
+                    <h3 style="margin-top: 2rem;">Regex Examples</h3>
+                    <ul style="line-height: 1.8; color: var(--text-secondary); font-family: monospace; font-size: 0.9rem;">
+                        <li><code>\d{4}-\d{2}-\d{2}</code> → Find dates in YYYY-MM-DD format</li>
+                        <li><code>[A-Z]{2}\d{6}</code> → Find IDs like AB123456</li>
+                        <li><code>^(error|warning|fail)</code> → Find cells starting with error keywords</li>
+                        <li><code>\b\d{1,3}(,\d{3})*(\.\d{2})?\b</code> → Find formatted numbers</li>
+                    </ul>
+
+                    <h3 style="margin-top: 2rem;">Tree View Results</h3>
+                    <p>Search results are organized hierarchically: File → Sheet → Row → Column. Expand nodes to drill down, click to jump directly to matching cells. Perfect for understanding the context of your findings.</p>
+                </div>
+                <div class="feature-detail-image">
+                    <img src="images/treeview-dark.png" alt="Search results displayed in hierarchical tree view" loading="lazy" style="border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);">
+                    <p style="text-align: center; color: var(--text-muted); margin-top: 1rem; font-size: 0.875rem;">
+                        Tree-organized search results showing matches across files and sheets
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 3: Row Comparison -->
+    <section class="features">
+        <div class="container">
+            <div class="feature-detail">
+                <div class="feature-detail-content">
+                    <div class="feature-icon icon-compare" style="font-size: 2rem; margin-bottom: 1rem;">DIFF</div>
+                    <h2>Intelligent Row Comparison</h2>
+                    <p>Compare rows from different Excel files with automatic column header mapping. SheetAtlas highlights differences and similarities, making it easy to spot data discrepancies even when column orders differ.</p>
+
+                    <h3 style="margin-top: 2rem;">Smart Features</h3>
+                    <ul style="line-height: 1.8; color: var(--text-secondary);">
+                        <li><strong>Column mapping:</strong> Automatically matches columns by header name, not position</li>
+                        <li><strong>Visual highlighting:</strong> Differences clearly shown in red, missing values marked, matching cells remain neutral</li>
+                        <li><strong>Side-by-side view:</strong> Compare rows from two different files in a split-panel interface</li>
+                        <li><strong>Handle missing columns:</strong> Gracefully shows when a column exists in one file but not the other</li>
+                        <li><strong>Data type awareness:</strong> Intelligent comparison respects numeric vs. text values</li>
+                    </ul>
+
+                    <h3 style="margin-top: 2rem;">Common Use Cases</h3>
+                    <ul style="line-height: 1.8; color: var(--text-secondary);">
+                        <li>Compare before/after versions of data exports</li>
+                        <li>Verify data migration between different systems</li>
+                        <li>Audit changes in financial reports or inventory lists</li>
+                        <li>Find discrepancies in customer records from different sources</li>
+                        <li>Reconcile data where column order has changed</li>
+                    </ul>
+
+                    <h3 style="margin-top: 2rem;">Why Column Mapping Matters</h3>
+                    <p>Traditional Excel comparison tools fail when column order changes. SheetAtlas maps columns by header name, so you can compare "Customer Name" to "Customer Name" even if one is in column A and the other in column F. This is essential for real-world data comparison.</p>
+                </div>
+                <div class="feature-detail-image">
+                    <img src="images/comparison-dark.png" alt="Row comparison showing differences highlighted in red with intelligent column mapping" loading="lazy" style="border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);">
+                    <p style="text-align: center; color: var(--text-muted); margin-top: 1rem; font-size: 0.875rem;">
+                        Side-by-side row comparison with intelligent column mapping and visual diff highlighting
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 4: Privacy & Offline Processing -->
+    <section class="features" style="background-color: var(--bg-secondary);">
+        <div class="container">
+            <div class="section-header">
+                <h2>100% Offline Processing - Your Data Stays Private</h2>
+                <p>Complete data privacy with no cloud dependencies</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon icon-privacy">SAFE</div>
+                    <h3>No Cloud Upload</h3>
+                    <p>All Excel file processing happens locally on your computer. SheetAtlas never sends your data to external servers or cloud services. Your sensitive information remains under your complete control.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon icon-privacy">OFF</div>
+                    <h3>No Internet Required</h3>
+                    <p>Once installed, SheetAtlas works completely offline. No internet connection needed for any functionality. Perfect for secure environments, air-gapped systems, or working on confidential data.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon icon-privacy">LOG</div>
+                    <h3>No Telemetry</h3>
+                    <p>SheetAtlas doesn't track your usage, collect analytics, or phone home. No hidden telemetry, no usage statistics, no data collection. What you do with your files is your business alone.</p>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 2rem;">
+                <p style="max-width: 800px; margin: 0 auto; color: var(--text-secondary); line-height: 1.8;">
+                    <strong>Ideal for sensitive data:</strong> Finance departments, healthcare organizations, legal firms, defense contractors, and anyone handling confidential information can use SheetAtlas with confidence. Your Excel files are processed entirely on your local machine with zero external dependencies.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 5: Cross-Platform & Modern UI -->
+    <section class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>Cross-Platform with Modern Interface</h2>
+                <p>Native performance on Windows, Linux, and macOS</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon icon-platform">OS</div>
+                    <h3>Built with .NET 8</h3>
+                    <p>Powered by modern .NET 8 framework for excellent performance and reliability. Self-contained deployment means no additional runtimes required - everything you need is included in the installer.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon icon-ui">UI</div>
+                    <h3>Avalonia UI Framework</h3>
+                    <p>Clean, responsive interface built with Avalonia UI. Native look and feel on each platform while maintaining consistent functionality. Fluent Design inspired aesthetics for a modern user experience.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon icon-ui">THEME</div>
+                    <h3>Light & Dark Themes</h3>
+                    <p>Full support for light and dark color schemes. Toggle themes based on your preference or system settings. Reduces eye strain during extended analysis sessions.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature Scope Table -->
+    <section class="documentation">
+        <div class="container">
+            <div class="section-header">
+                <h2>What SheetAtlas Does (and Doesn't Do)</h2>
+                <p>Understanding our focus: data search and comparison, not editing</p>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; margin: 2rem 0;">
+                    <thead>
+                        <tr style="background-color: var(--primary-color); color: white;">
+                            <th style="padding: 1rem; text-align: left; border: 1px solid var(--gray-300);">Feature</th>
+                            <th style="padding: 1rem; text-align: center; border: 1px solid var(--gray-300); width: 120px;">SheetAtlas</th>
+                            <th style="padding: 1rem; text-align: left; border: 1px solid var(--gray-300);">Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody style="color: var(--text-secondary);">
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--gray-300);"><strong>Multi-file search</strong></td>
+                            <td style="padding: 0.75rem; text-align: center; border: 1px solid var(--gray-300); color: var(--success-color);">Yes</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--gray-300);">Search across multiple Excel files simultaneously</td>
+                        </tr>
+                        <tr style="background-color: var(--bg-secondary);">
+                            <td style="padding: 0.75rem; border: 1px solid var(--gray-300);"><strong>Regex support</strong></td>
+                            <td style="padding: 0.75rem; text-align: center; border: 1px solid var(--gray-300); color: var(--success-color);">Yes</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--gray-300);">Advanced pattern matching for complex queries</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--gray-300);"><strong>Row comparison</strong></td>
+                            <td style="padding: 0.75rem; text-align: center; border: 1px solid var(--gray-300); color: var(--success-color);">Yes</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--gray-300);">With intelligent column mapping across different file structures</td>
+                        </tr>
+                        <tr style="background-color: var(--bg-secondary);">
+                            <td style="padding: 0.75rem; border: 1px solid var(--gray-300);"><strong>100% offline</strong></td>
+                            <td style="padding: 0.75rem; text-align: center; border: 1px solid var(--gray-300); color: var(--success-color);">Yes</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--gray-300);">All processing happens locally, no cloud upload required</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--gray-300);"><strong>Cross-platform</strong></td>
+                            <td style="padding: 0.75rem; text-align: center; border: 1px solid var(--gray-300); color: var(--success-color);">Yes</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--gray-300);">Windows, Linux, and macOS support</td>
+                        </tr>
+                        <tr style="background-color: var(--bg-secondary);">
+                            <td style="padding: 0.75rem; border: 1px solid var(--gray-300);"><strong>Free & open source</strong></td>
+                            <td style="padding: 0.75rem; text-align: center; border: 1px solid var(--gray-300); color: var(--success-color);">Yes</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--gray-300);">MIT license, fully open source</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--gray-300);"><strong>Cell editing</strong></td>
+                            <td style="padding: 0.75rem; text-align: center; border: 1px solid var(--gray-300); color: var(--danger-color);">No</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--gray-300);">Read-only tool - use Excel for editing</td>
+                        </tr>
+                        <tr style="background-color: var(--bg-secondary);">
+                            <td style="padding: 0.75rem; border: 1px solid var(--gray-300);"><strong>Formula calculation</strong></td>
+                            <td style="padding: 0.75rem; text-align: center; border: 1px solid var(--gray-300); color: var(--danger-color);">No</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--gray-300);">Shows calculated values, not formulas</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--gray-300);"><strong>Charts and graphs</strong></td>
+                            <td style="padding: 0.75rem; text-align: center; border: 1px solid var(--gray-300); color: var(--danger-color);">No</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--gray-300);">Focus on data comparison, not visualization</td>
+                        </tr>
+                        <tr style="background-color: var(--bg-secondary);">
+                            <td style="padding: 0.75rem; border: 1px solid var(--gray-300);"><strong>Pivot tables</strong></td>
+                            <td style="padding: 0.75rem; text-align: center; border: 1px solid var(--gray-300); color: var(--danger-color);">No</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--gray-300);">Use Excel for data aggregation and pivot tables</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="margin-top: 2rem; padding: 1.5rem; background-color: var(--bg-secondary); border-radius: var(--radius-lg);">
+                <p style="color: var(--text-secondary); line-height: 1.8; margin: 0;">
+                    <strong>SheetAtlas complements Excel</strong> - it's designed for scenarios where you need to find data across multiple files or compare rows between different spreadsheets. For editing, formulas, charts, and other Excel features, continue using Excel or your preferred spreadsheet software.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="download-section">
+        <div class="container" style="text-align: center;">
+            <h2 style="margin-bottom: 1rem;">Ready to Try SheetAtlas?</h2>
+            <p style="max-width: 600px; margin: 0 auto 2rem; color: var(--text-secondary);">
+                Download for free and start analyzing your Excel files with advanced search and comparison tools. No registration required, no cloud upload, 100% private.
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="download.html" class="btn btn-primary">Download Now</a>
+                <a href="screenshots.html" class="btn btn-secondary">View Screenshots</a>
+                <a href="https://github.com/ghostintheshell-192/sheet-atlas" target="_blank" class="btn btn-secondary">View Source Code</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-brand">
+                        <img src="assets/logo.svg" alt="SheetAtlas" class="footer-logo">
+                        <span class="footer-brand-name">SheetAtlas</span>
+                    </div>
+                    <p class="footer-description">Excel analysis tools with complete data privacy and offline processing.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Product</h4>
+                    <ul class="footer-links">
+                        <li><a href="index.html#features">Overview</a></li>
+                        <li><a href="features.html">Details</a></li>
+                        <li><a href="download.html">Download</a></li>
+                        <li><a href="screenshots.html">Screenshots</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <ul class="footer-links">
+                        <li><a href="https://github.com/ghostintheshell-192/sheet-atlas#quick-start">Quick Start</a></li>
+                        <li><a href="https://github.com/ghostintheshell-192/sheet-atlas#development">Developer Guide</a></li>
+                        <li><a href="https://github.com/ghostintheshell-192/sheet-atlas/releases">All Releases</a></li>
+                        <li><a href="https://github.com/ghostintheshell-192/sheet-atlas#contributing">Contributing</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Community</h4>
+                    <ul class="footer-links">
+                        <li><a href="https://github.com/ghostintheshell-192/sheet-atlas">GitHub</a></li>
+                        <li><a href="https://github.com/ghostintheshell-192/sheet-atlas/issues">Issues</a></li>
+                        <li><a href="https://github.com/ghostintheshell-192/sheet-atlas/discussions">Discussions</a></li>
+                        <li><a href="https://github.com/ghostintheshell-192/sheet-atlas/blob/main/LICENSE">License</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 SheetAtlas. Released under the <a href="https://github.com/ghostintheshell-192/sheet-atlas/blob/main/LICENSE">MIT License</a>.</p>
+                <p>Developed with ❤️ and <a href="https://claude.ai/claude-code" target="_blank" rel="noopener">Claude Code</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="scripts/main.js"></script>
+</body>
+</html>

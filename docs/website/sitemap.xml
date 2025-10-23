@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Homepage -->
+  <url>
+    <loc>https://ghostintheshell-192.github.io/sheet-atlas/</loc>
+    <lastmod>2025-10-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Download Page -->
+  <url>
+    <loc>https://ghostintheshell-192.github.io/sheet-atlas/download.html</loc>
+    <lastmod>2025-10-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Features Page -->
+  <url>
+    <loc>https://ghostintheshell-192.github.io/sheet-atlas/features.html</loc>
+    <lastmod>2025-10-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Screenshots Gallery -->
+  <url>
+    <loc>https://ghostintheshell-192.github.io/sheet-atlas/screenshots.html</loc>
+    <lastmod>2025-10-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- GitHub Repository (external reference) -->
+  <url>
+    <loc>https://github.com/ghostintheshell-192/sheet-atlas</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+</urlset>

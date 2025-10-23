@@ -374,8 +374,9 @@ jobs:
           export RELEASE_STATUS_TEXT
           export ALPHA_BANNER
 
-          # Generate index.html from template
+          # Generate index.html and download.html from templates
           envsubst < docs/website/index.html.template > docs/website/index.html
+          envsubst < docs/website/download.html.template > docs/website/download.html
 
           echo "Website generated for version ${VERSION}"
           echo "- VERSION: ${VERSION}"
@@ -385,7 +386,7 @@ jobs:
 
       - name: Commit and push website update
         run: |
-          git add docs/website/index.html
+          git add docs/website/index.html docs/website/download.html
 
           if git diff --staged --quiet; then
             echo "No changes to commit"
@@ -394,7 +395,7 @@ jobs:
 
           git commit -m "docs: update website for release ${{ github.ref_name }}
 
-          Auto-generated from index.html.template
+          Auto-generated from templates (index.html.template, download.html.template)
 
           🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
