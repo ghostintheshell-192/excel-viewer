@@ -8,6 +8,8 @@ using SheetAtlas.UI.Avalonia.Managers.Search;
 using SheetAtlas.UI.Avalonia.Managers.Selection;
 using SheetAtlas.UI.Avalonia.Managers.Files;
 using SheetAtlas.UI.Avalonia.Managers.Comparison;
+using SheetAtlas.UI.Avalonia.Managers.Navigation;
+using SheetAtlas.UI.Avalonia.Managers.FileDetails;
 using SheetAtlas.UI.Avalonia.Models.Search;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -17,6 +19,8 @@ using SheetAtlas.Core.Application.Interfaces;
 using SheetAtlas.Infrastructure.External;
 using SheetAtlas.Infrastructure.External.Readers;
 using SheetAtlas.UI.Avalonia.Managers;
+using SheetAtlas.Logging.Services;
+using SheetAtlas.Core.Configuration;
 
 namespace SheetAtlas.UI.Avalonia;
 
@@ -33,6 +37,9 @@ public partial class App : Application
     {
         // Create and configure the host
         _host = CreateHostBuilder().Build();
+
+        // Initialize LogService immediately to create log directory
+        _ = _host.Services.GetRequiredService<ILogService>();
 
         // Initialize theme manager
         var themeManager = _host.Services.GetRequiredService<IThemeManager>();
@@ -66,6 +73,9 @@ public partial class App : Application
         return Host.CreateDefaultBuilder()
             .ConfigureServices((context, services) =>
             {
+                // Register configuration
+                services.Configure<AppSettings>(context.Configuration.GetSection("AppSettings"));
+
                 // Register Core services
                 services.AddSingleton<ICellReferenceParser, CellReferenceParser>();
                 services.AddSingleton<ICellValueReader, CellValueReader>();
@@ -80,11 +90,13 @@ public partial class App : Application
                 services.AddSingleton<ISearchService, SearchService>();
                 services.AddSingleton<IRowComparisonService, RowComparisonService>();
                 services.AddSingleton<IExceptionHandler, ExceptionHandler>();
+                services.AddSingleton<IFileLogService, FileLogService>();
 
                 // Register Avalonia-specific services
                 services.AddSingleton<IDialogService, AvaloniaDialogService>();
                 services.AddSingleton<IFilePickerService, AvaloniaFilePickerService>();
                 services.AddSingleton<IErrorNotificationService, ErrorNotificationService>();
+                services.AddSingleton<ILogService, LogService>();
                 services.AddSingleton<IActivityLogService, ActivityLogService>();
 
 
@@ -95,6 +107,8 @@ public partial class App : Application
                 services.AddSingleton<IThemeManager, ThemeManager>();
                 services.AddSingleton<ILoadedFilesManager, LoadedFilesManager>();
                 services.AddSingleton<IRowComparisonCoordinator, RowComparisonCoordinator>();
+                services.AddSingleton<ITabNavigationCoordinator, TabNavigationCoordinator>();
+                services.AddSingleton<IFileDetailsCoordinator, FileDetailsCoordinator>();
 
                 // Register ViewModels
                 services.AddSingleton<MainWindowViewModel>();

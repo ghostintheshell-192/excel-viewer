@@ -139,6 +139,67 @@ a:hover {
     color: var(--primary-dark);
 }
 
+/* Lists */
+ul, ol {
+    margin-bottom: var(--space-lg);
+    padding-left: var(--space-xl);
+    line-height: 1.8;
+    color: var(--text-secondary);
+}
+
+ul li, ol li {
+    margin-bottom: var(--space-sm);
+}
+
+ol {
+    counter-reset: item;
+    list-style: none;
+    padding-left: 0;
+}
+
+ol li {
+    counter-increment: item;
+    position: relative;
+    padding-left: 2.5rem;
+}
+
+ol li::before {
+    content: counter(item) ".";
+    position: absolute;
+    left: 0;
+    font-weight: 600;
+    color: var(--primary-color);
+    min-width: 2rem;
+}
+
+ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+ul li {
+    position: relative;
+    padding-left: 1.5rem;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+    margin-left: 0.5rem;
+    border-left: 3px solid var(--primary-color);
+    transition: all var(--transition-fast);
+    cursor: default;
+}
+
+ul li:hover {
+    background-color: var(--gray-50);
+    border-left-color: var(--accent-color);
+    padding-left: 1.75rem;
+}
+
+/* Nested lists */
+ul ul, ol ol, ul ol, ol ul {
+    margin-top: var(--space-sm);
+    margin-bottom: var(--space-sm);
+}
+
 /* Buttons */
 .btn {
     display: inline-flex;

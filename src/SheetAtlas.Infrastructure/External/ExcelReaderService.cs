@@ -1,7 +1,9 @@
 using SheetAtlas.Core.Domain.Entities;
 using SheetAtlas.Core.Domain.ValueObjects;
 using SheetAtlas.Core.Application.Interfaces;
-using Microsoft.Extensions.Logging;
+using SheetAtlas.Logging.Services;
+using SheetAtlas.Core.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace SheetAtlas.Infrastructure.External
 {
@@ -20,27 +22,46 @@ namespace SheetAtlas.Infrastructure.External
     public class ExcelReaderService : IExcelReaderService
     {
         private readonly IEnumerable<IFileFormatReader> _readers;
-        private readonly ILogger<ExcelReaderService> _logger;
+        private readonly ILogService _logger;
+        private readonly AppSettings _settings;
 
         public ExcelReaderService(
             IEnumerable<IFileFormatReader> readers,
-            ILogger<ExcelReaderService> logger)
+            ILogService logger,
+            IOptions<AppSettings> settings)
         {
             _readers = readers ?? throw new ArgumentNullException(nameof(readers));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _settings = settings?.Value ?? throw new ArgumentNullException(nameof(settings));
         }
 
         public async Task<List<ExcelFile>> LoadFilesAsync(IEnumerable<string> filePaths, CancellationToken cancellationToken = default)
         {
-            var results = new List<ExcelFile>();
+            var filePathList = filePaths.ToList();
+            if (filePathList.Count == 0)
+                return new List<ExcelFile>();
 
-            foreach (var filePath in filePaths)
+            // Load concurrency setting from configuration (appsettings.json)
+            // Default: 5 concurrent file loads
+            // Configurable for different system capabilities
+            var maxConcurrency = _settings.Performance.MaxConcurrentFileLoads;
+
+            using var semaphore = new SemaphoreSlim(maxConcurrency, maxConcurrency);
+            var tasks = filePathList.Select(async filePath =>
             {
-                var file = await LoadFileAsync(filePath, cancellationToken);
-                results.Add(file);
-            }
+                await semaphore.WaitAsync(cancellationToken);
+                try
+                {
+                    return await LoadFileAsync(filePath, cancellationToken);
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            });
 
-            return results;
+            var results = await Task.WhenAll(tasks);
+            return results.ToList();
         }
 
         public async Task<ExcelFile> LoadFileAsync(string filePath, CancellationToken cancellationToken = default)
@@ -50,14 +71,14 @@ namespace SheetAtlas.Infrastructure.External
                 throw new ArgumentNullException(nameof(filePath));
 
             var extension = Path.GetExtension(filePath)?.ToLowerInvariant();
-            _logger.LogInformation("Loading file {FilePath} with extension {Extension}", filePath, extension);
+            _logger.LogInfo($"Loading file {filePath} with extension {extension}", "ExcelReaderService");
 
             // Find appropriate reader based on file extension
             var reader = _readers.FirstOrDefault(r => r.SupportedExtensions.Contains(extension));
 
             if (reader == null)
             {
-                _logger.LogWarning("No reader found for extension {Extension}", extension);
+                _logger.LogWarning($"No reader found for extension {extension}", "ExcelReaderService");
 
                 var supportedFormats = string.Join(", ",
                     _readers.SelectMany(r => r.SupportedExtensions).Distinct().OrderBy(e => e));
@@ -72,8 +93,7 @@ namespace SheetAtlas.Infrastructure.External
                     new Dictionary<string, SASheetData>(), errors);
             }
 
-            _logger.LogDebug("Using {ReaderType} for {Extension}",
-                reader.GetType().Name, extension);
+            _logger.LogInfo($"Using {reader.GetType().Name} for {extension}", "ExcelReaderService");
 
             // Delegate to format-specific reader
             return await reader.ReadAsync(filePath, cancellationToken);

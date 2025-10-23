@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SheetAtlas - Search Excel Files & Compare Data | Free Windows Tool</title>
     <meta name="description" content="Search across multiple Excel files and compare matching rows. Free Windows tool for .xlsx, .xls, CSV with advanced search and row comparison. 100% offline, no cloud upload required.">
-    <meta name="keywords" content="compare excel files, excel diff tool, excel file comparison, xlsx viewer, compare spreadsheets, excel comparison tool, find differences excel, excel search tool, compare two excel files, excel data comparison, spreadsheet diff, excel file viewer, .xlsx comparison, csv comparison tool, excel analysis software, windows excel tool, free excel comparison, offline excel viewer">
+    <meta name="keywords" content="excel comparison tool, compare excel files, offline excel diff, row comparison, regex search excel">
     <meta name="author" content="SheetAtlas Team">
     <meta name="google-site-verification" content="cInm__1Sri-AmNKuAlRD4hmpvKxIvHX_-mOdpRFsdDs" />
 
@@ -14,13 +14,13 @@
     <meta property="og:description" content="Free Windows tool to search across Excel files and compare matching rows. Find data quickly, analyze differences. 100% offline.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://ghostintheshell-192.github.io/sheet-atlas/">
-    <meta property="og:image" content="https://ghostintheshell-192.github.io/sheet-atlas/images/main-gui-page-light.png">
+    <meta property="og:image" content="https://ghostintheshell-192.github.io/sheet-atlas/images/treeview-dark.png">
 
     <!-- Twitter Card Tags -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="SheetAtlas - Search & Compare Excel Data">
     <meta name="twitter:description" content="Free Windows tool to search across Excel files and compare matching rows. 100% offline processing.">
-    <meta name="twitter:image" content="https://ghostintheshell-192.github.io/sheet-atlas/images/main-gui-page-light.png">
+    <meta name="twitter:image" content="https://ghostintheshell-192.github.io/sheet-atlas/images/treeview-dark.png">
 
     <!-- Additional SEO -->
     <link rel="canonical" href="https://ghostintheshell-192.github.io/sheet-atlas/">
@@ -51,7 +51,7 @@
         "priceCurrency": "USD"
       },
       "description": "Search across multiple Excel files and compare matching rows. Free Windows tool with advanced search capabilities for .xlsx, .xls, and CSV files. 100% offline processing.",
-      "screenshot": "https://ghostintheshell-192.github.io/sheet-atlas/images/main-gui-page-light.png",
+      "screenshot": "https://ghostintheshell-192.github.io/sheet-atlas/images/treeview-dark.png",
       "softwareVersion": "0.2.0",
       "author": {
         "@type": "Organization",
@@ -92,9 +92,10 @@
             </button>
 
             <div class="nav-links">
-                <a href="#features">Features</a>
-                <a href="#about">About</a>
-                <a href="#docs">Documentation</a>
+                <a href="#features">Overview</a>
+                <a href="features.html">Details</a>
+                <a href="download.html">Download</a>
+                <a href="screenshots.html">Screenshots</a>
                 <a href="https://github.com/ghostintheshell-192/sheet-atlas" target="_blank" class="github-link">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
@@ -125,7 +126,7 @@
                 </div>
                 <div class="hero-image">
                     <div class="app-screenshot">
-                        <img src="images/main-gui-page-light.png" alt="SheetAtlas main interface" class="hero-screenshot">
+                        <img src="images/treeview-dark.png" alt="SheetAtlas search results organized in hierarchical tree view across multiple Excel files" class="hero-screenshot">
                     </div>
                 </div>
             </div>
@@ -177,53 +178,26 @@
                 <div class="feature-card">
                     <div class="feature-icon icon-excel">XLS</div>
                     <h3>Multi-Format Support</h3>
-                    <p>Load multiple spreadsheet files (.xlsx, .xls, .csv) simultaneously. View all sheets and data with intelligent error handling, support for merged cells, and automatic CSV delimiter detection.</p>
+                    <p>Load multiple Excel (.xlsx, .xls) and CSV files simultaneously with intelligent error handling and merged cell support.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon icon-search">FIND</div>
                     <h3>Advanced Search</h3>
-                    <p>Search across all loaded files, sheets, and cell content. Supports case-sensitive matching, exact matches, and powerful regex patterns with organized tree-view results.</p>
+                    <p>Search across all files with regex support, case-sensitive matching, and tree-organized results.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon icon-compare">DIFF</div>
                     <h3>Row Comparison</h3>
-                    <p>Compare rows from different Excel files with intelligent column header mapping. Visual highlighting shows differences and similarities at a glance.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon icon-ui">UI</div>
-                    <h3>Modern Interface</h3>
-                    <p>Clean, responsive interface with Fluent Design. Light and dark theme support for comfortable viewing in any environment.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon icon-platform">OS</div>
-                    <h3>Cross-Platform</h3>
-                    <p>Native performance on Windows, Linux, and macOS. Built with <a href="https://dotnet.microsoft.com/en-us/download/dotnet/8.0" target="_blank" rel="noopener">.NET 8</a> and <a href="https://avaloniaui.net/" target="_blank" rel="noopener">Avalonia UI</a> for consistent experience across all platforms.</p>
+                    <p>Compare rows with intelligent column mapping that works even when columns are in different order.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon icon-privacy">SAFE</div>
                     <h3>Privacy First</h3>
-                    <p>100% local processing with no cloud dependencies. Your data stays on your machine, ideal for sensitive information.</p>
+                    <p>100% offline processing. Your data never leaves your computer, ideal for sensitive information.</p>
                 </div>
             </div>
-        </div>
-    </section>
-
-    <!-- Screenshots Section -->
-    <section class="screenshots">
-        <div class="container">
-            <div class="section-header">
-                <h2>See SheetAtlas in Action</h2>
-                <p>Clean interface designed for productivity</p>
-            </div>
-            <div class="screenshot-gallery">
-                <div class="screenshot-item">
-                    <img src="images/search-tree-view-light.png" alt="Search results in tree view" class="screenshot">
-                    <div class="screenshot-caption">Advanced search with tree-organized results across multiple files</div>
-                </div>
-                <div class="screenshot-item">
-                    <img src="images/comparison-view-light.png" alt="Row comparison interface" class="screenshot">
-                    <div class="screenshot-caption">Side-by-side row comparison with column mapping and highlighting</div>
-                </div>
+            <div style="text-align: center; margin-top: 2rem;">
+                <a href="features.html" class="btn btn-secondary">Explore All Features</a>
             </div>
         </div>
     </section>
@@ -256,36 +230,30 @@
         </div>
     </section>
 
-    <!-- Documentation Section -->
+    <!-- Get Started Section -->
     <section id="docs" class="documentation">
         <div class="container">
             <div class="section-header">
-                <h2>Documentation & Support</h2>
-                <p>Everything you need to get started and master SheetAtlas</p>
+                <h2>Get Started</h2>
+                <p>Everything you need to start using SheetAtlas</p>
             </div>
             <div class="docs-grid">
                 <div class="doc-card">
-                    <div class="doc-icon icon-start">START</div>
-                    <h3>Quick Start Guide</h3>
-                    <p>Get up and running with SheetAtlas in minutes. Learn the basics of loading files, searching, and creating comparisons.</p>
-                    <a href="https://github.com/ghostintheshell-192/sheet-atlas#quick-start" class="doc-link">Read Guide →</a>
+                    <div class="doc-icon icon-start">DOWNLOAD</div>
+                    <h3>Download & Install</h3>
+                    <p>Get the latest version for your platform with installation instructions and system requirements.</p>
+                    <a href="download.html" class="doc-link">Download Page →</a>
                 </div>
                 <div class="doc-card">
                     <div class="doc-icon icon-docs">DOCS</div>
-                    <h3>User Manual</h3>
-                    <p>Comprehensive documentation covering all features, advanced usage patterns, and troubleshooting tips.</p>
-                    <a href="https://github.com/ghostintheshell-192/sheet-atlas/tree/main/docs" class="doc-link">View Docs →</a>
-                </div>
-                <div class="doc-card">
-                    <div class="doc-icon icon-dev-guide">BUILD</div>
-                    <h3>Developer Guide</h3>
-                    <p>Want to contribute or build from source? Learn about the architecture, development setup, and contribution guidelines.</p>
-                    <a href="https://github.com/ghostintheshell-192/sheet-atlas#development" class="doc-link">Developer Info →</a>
+                    <h3>Documentation</h3>
+                    <p>Quick start guide, feature documentation, and troubleshooting on GitHub.</p>
+                    <a href="https://github.com/ghostintheshell-192/sheet-atlas#quick-start" class="doc-link">View Docs →</a>
                 </div>
                 <div class="doc-card">
                     <div class="doc-icon icon-support">HELP</div>
-                    <h3>Community Support</h3>
-                    <p>Get help from the community, report bugs, request features, and stay updated with the latest developments.</p>
+                    <h3>Support</h3>
+                    <p>Report bugs, request features, or get help from the community.</p>
                     <a href="https://github.com/ghostintheshell-192/sheet-atlas/issues" class="doc-link">Get Support →</a>
                 </div>
             </div>
@@ -306,10 +274,10 @@
                 <div class="footer-section">
                     <h4>Product</h4>
                     <ul class="footer-links">
-                        <li><a href="#features">Features</a></li>
-                        <li><a href="#about">About</a></li>
-                        <li><a href="https://github.com/ghostintheshell-192/sheet-atlas">Source Code</a></li>
-                        <li><a href="https://github.com/ghostintheshell-192/sheet-atlas#roadmap">Roadmap</a></li>
+                        <li><a href="#features">Overview</a></li>
+                        <li><a href="features.html">Details</a></li>
+                        <li><a href="download.html">Download</a></li>
+                        <li><a href="screenshots.html">Screenshots</a></li>
                     </ul>
                 </div>
                 <div class="footer-section">

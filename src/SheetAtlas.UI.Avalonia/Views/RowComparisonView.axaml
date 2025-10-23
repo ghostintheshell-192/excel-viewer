@@ -18,9 +18,9 @@
     </UserControl.Resources>
 
     <Grid>
-        <!-- Comparison Content with Header -->
+        <!-- Comparison Content with Header (only visible when there are rows) -->
         <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
-                     IsVisible="{Binding RowCount}">
+                     IsVisible="{Binding HasRows}">
             <Grid Grid.IsSharedSizeScope="True">
                 <Grid.ColumnDefinitions>
                     <!-- Row Info Column -->
@@ -168,16 +168,22 @@
             </Grid>
         </ScrollViewer>
 
-        <!-- Empty State -->
-        <StackPanel HorizontalAlignment="Center"
-                   VerticalAlignment="Center"
-                   IsVisible="{Binding !RowCount}">
-            <TextBlock Text="📊" FontSize="32" HorizontalAlignment="Center" Opacity="0.3"/>
-            <TextBlock Text="No rows to compare"
-                      FontStyle="Italic"
-                      Foreground="Gray"
-                      HorizontalAlignment="Center"
-                      Margin="0,8,0,0"/>
-        </StackPanel>
+        <!-- Empty State (shown when no rows) -->
+        <Border HorizontalAlignment="Center"
+               VerticalAlignment="Center"
+               IsVisible="{Binding HasRows, Converter={x:Static BoolConverters.Not}}">
+            <StackPanel Spacing="16" HorizontalAlignment="Center">
+                <TextBlock Text="📊" FontSize="48" HorizontalAlignment="Center" Opacity="0.4"/>
+                <TextBlock Text="No comparisons yet"
+                          FontSize="16"
+                          FontWeight="SemiBold"
+                          Foreground="{DynamicResource PrimaryText}"
+                          HorizontalAlignment="Center"/>
+                <TextBlock Text="Select rows from search results to compare"
+                          FontSize="14"
+                          Foreground="{DynamicResource SecondaryText}"
+                          HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
     </Grid>
 </UserControl>

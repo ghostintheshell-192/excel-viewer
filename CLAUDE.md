@@ -270,6 +270,45 @@ git push origin main --tags
 - **Atomic Commits**: One logical change per commit
 - **Code Reviews**: All changes reviewed before merge
 
+### Release Process
+
+SheetAtlas uses an **automated release pipeline** via GitHub Actions:
+
+**Creating a Release**:
+```bash
+# Option 1: Use release-changelog.yml workflow (recommended)
+# - Run via GitHub Actions UI
+# - Generates CHANGELOG.md and creates tag
+
+# Option 2: Manual tag
+git tag v0.3.0
+git push origin v0.3.0
+```
+
+**What Happens Automatically**:
+1. **Parallel Builds**: Windows (.exe), Linux (.tar.gz + .deb), macOS (.tar.gz)
+2. **Prerelease Detection**: v0.x → prerelease, v1.x+ → stable (automatic)
+3. **GitHub Release**: Created with all artifacts and CHANGELOG
+4. **Website Update**: index.html regenerated from template, committed to main
+5. **GitHub Pages Deploy**: Website deployed automatically
+
+**Key Files**:
+- `.github/workflows/release.yml` - Unified release pipeline
+- `docs/website/index.html.template` - Website template with version placeholders
+- `docs/RELEASE_PROCESS.md` - Detailed release documentation
+
+**Versioning**: Semantic Versioning (SemVer)
+- v0.x.x → Pre-release/Alpha
+- v1.x.x+ → Stable/Production
+
+**Artifacts**: Version-agnostic naming for `/latest/` compatibility
+- `SheetAtlas-Setup-win-x64.exe` (Windows installer via Inno Setup)
+- `SheetAtlas-linux-x64.tar.gz` (Linux tarball)
+- `SheetAtlas-linux-x64.deb` (Debian package)
+- `SheetAtlas-macos-x64.tar.gz` (macOS tarball, unsigned)
+
+For complete details, see `docs/RELEASE_PROCESS.md`.
+
 ---
 
 ## Quick Start Commands
@@ -292,6 +331,6 @@ dotnet format --verify-no-changes
 
 *This document defines the development standards and guidelines for the SheetAtlas project. All team members should follow these conventions to ensure consistent, maintainable, and professional code quality.*
 
-**Last Updated**: September 2025
-**Version**: 1.0
-**Next Review**: October 2025
+**Last Updated**: October 2025
+**Version**: 1.1
+**Next Review**: December 2025

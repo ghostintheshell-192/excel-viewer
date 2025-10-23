@@ -39,5 +39,8 @@
   },
 
   // Recommended extensions reminder
-  "extensions.ignoreRecommendations": false
+  "extensions.ignoreRecommendations": false,
+  "cSpell.words": [
+    "Avalonia"
+  ]
 }

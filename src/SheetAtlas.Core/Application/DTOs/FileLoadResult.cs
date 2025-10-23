@@ -1,5 +1,6 @@
 using SheetAtlas.Core.Domain.Entities;
 using SheetAtlas.Core.Domain.ValueObjects;
+using SheetAtlas.Logging.Models;
 
 namespace SheetAtlas.Core.Application.DTOs
 {
@@ -19,11 +20,11 @@ namespace SheetAtlas.Core.Application.DTOs
             Errors = (errors ?? new List<ExcelError>()).AsReadOnly();
         }
 
-        public bool HasErrors => Errors.Any(e => e.Level == ErrorLevel.Error || e.Level == ErrorLevel.Critical);
+        public bool HasErrors => Errors.Any(e => e.Level == LogSeverity.Error || e.Level == LogSeverity.Critical);
 
-        public bool HasWarnings => Errors.Any(e => e.Level == ErrorLevel.Warning);
+        public bool HasWarnings => Errors.Any(e => e.Level == LogSeverity.Warning);
 
-        public bool HasCriticalErrors => Errors.Any(e => e.Level == ErrorLevel.Critical);
+        public bool HasCriticalErrors => Errors.Any(e => e.Level == LogSeverity.Critical);
 
         public bool IsSuccessful => Status == LoadStatus.Success;
 

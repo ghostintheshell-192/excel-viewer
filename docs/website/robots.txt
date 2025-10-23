@@ -1,0 +1,18 @@
+# SheetAtlas - Robots.txt
+# Allow all search engines to crawl the site
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://ghostintheshell-192.github.io/sheet-atlas/sitemap.xml
+
+# Disallow crawling of unnecessary directories (optional, for performance)
+# These directories don't need to be indexed by search engines
+Disallow: /scripts/
+Disallow: /styles/
+
+# Allow crawling of important resources
+Allow: /images/
+Allow: /assets/
+Allow: /*.html

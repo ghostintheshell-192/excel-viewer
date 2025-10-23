@@ -1,10 +1,12 @@
 using SheetAtlas.Core.Domain.Entities;
 using SheetAtlas.Core.Domain.ValueObjects;
 using SheetAtlas.Core.Application.Interfaces;
-using Microsoft.Extensions.Logging;
+using SheetAtlas.Logging.Services;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using SheetAtlas.Logging.Models;
+using System.Xml;
 
 namespace SheetAtlas.Infrastructure.External.Readers
 {
@@ -13,13 +15,13 @@ namespace SheetAtlas.Infrastructure.External.Readers
     /// </summary>
     public class OpenXmlFileReader : IFileFormatReader
     {
-        private readonly ILogger<OpenXmlFileReader> _logger;
+        private readonly ILogService _logger;
         private readonly ICellReferenceParser _cellParser;
         private readonly IMergedCellProcessor _mergedCellProcessor;
         private readonly ICellValueReader _cellValueReader;
 
         public OpenXmlFileReader(
-            ILogger<OpenXmlFileReader> logger,
+            ILogService logger,
             ICellReferenceParser cellParser,
             IMergedCellProcessor mergedCellProcessor,
             ICellValueReader cellValueReader)
@@ -51,12 +53,12 @@ namespace SheetAtlas.Infrastructure.External.Readers
 
                     if (workbookPart == null)
                     {
-                        errors.Add(ExcelError.Critical("File", "File corrotto: workbook part mancante"));
+                        errors.Add(ExcelError.Critical("Workbook", $"Workbook part missing in {Path.GetFileName(filePath)}"));
                         return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
                     }
 
                     var sheetElements = GetSheets(workbookPart);
-                    _logger.LogInformation("Reading Excel file with {SheetCount} sheets", sheetElements.Count());
+                    _logger.LogInfo($"Reading Excel file with {sheetElements.Count()} sheets", "OpenXmlFileReader");
 
                     foreach (var sheet in sheetElements)
                     {
@@ -92,24 +94,30 @@ namespace SheetAtlas.Infrastructure.External.Readers
                             // Skip empty sheets (no columns means no meaningful data)
                             if (sheetData == null)
                             {
-                                errors.Add(ExcelError.Warning(sheetName, "Sheet is empty (no columns), skipping"));
-                                _logger.LogWarning("Sheet {SheetName} is empty, skipping", sheetName);
+                                errors.Add(ExcelError.Info("File", $"Sheet '{sheetName}' is empty and was skipped"));
+                                _logger.LogInfo($"Sheet {sheetName} is empty, skipping", "OpenXmlFileReader");
                                 continue;
                             }
 
                             sheets[sheetName] = sheetData;
-                            _logger.LogDebug("Sheet {SheetName} read successfully", sheetName);
+                            _logger.LogInfo($"Sheet {sheetName} read successfully", "OpenXmlFileReader");
                         }
                         catch (InvalidCastException ex)
                         {
-                            // GetPartById potrebbe ritornare un tipo diverso
-                            _logger.LogError(ex, "Invalid sheet part type for {SheetName}", sheetName);
+                            // GetPartById could return different type
+                            _logger.LogError($"Invalid sheet part type for {sheetName}", ex, "OpenXmlFileReader");
                             errors.Add(ExcelError.SheetError(sheetName, $"Invalid sheet structure", ex));
+                        }
+                        catch (XmlException ex)
+                        {
+                            // XML parsing errors: malformed XML in worksheet
+                            _logger.LogError($"Malformed XML in sheet {sheetName}", ex, "OpenXmlFileReader");
+                            errors.Add(ExcelError.SheetError(sheetName, $"Sheet contains invalid XML: {ex.Message}", ex));
                         }
                         catch (OpenXmlPackageException ex)
                         {
-                            // Errori specifici OpenXML per singoli sheet
-                            _logger.LogError(ex, "Corrupted sheet {SheetName}", sheetName);
+                            // OpenXML-specific errors for single sheet
+                            _logger.LogError($"Corrupted sheet {sheetName}", ex, "OpenXmlFileReader");
                             errors.Add(ExcelError.SheetError(sheetName, $"Sheet corrupted: {ex.Message}", ex));
                         }
                     }
@@ -118,42 +126,39 @@ namespace SheetAtlas.Infrastructure.External.Readers
                     return new ExcelFile(filePath, status, sheets, errors);
                 }, cancellationToken);
             }
-            catch (ArgumentNullException ex)
-            {
-                // Questo NON dovrebbe mai succedere in produzione, ma catch per sicurezza
-                _logger.LogError(ex, "Null filepath passed to ReadAsync");
-                throw; // Rilancia - è un bug di programmazione
-            }
             catch (OperationCanceledException)
             {
-                _logger.LogInformation("File read cancelled: {Path}", filePath);
+                _logger.LogInfo($"File read cancelled: {filePath}", "OpenXmlFileReader");
                 throw; // Propagate cancellation
             }
             catch (FileFormatException ex)
             {
-                // File format errors: .xls files, corrupted packages, unsupported formats
-                _logger.LogError(ex, "Unsupported or corrupted file format: {Path}", filePath);
-                errors.Add(ExcelError.Critical("File", $"Unsupported file format (.xls files are not supported, use .xlsx): {ex.Message}", ex));
+                // Corrupted .xlsx file
+                _logger.LogError($"Corrupted file format: {filePath}", ex, "OpenXmlFileReader");
+                errors.Add(ExcelError.Critical("File",
+                    $"Corrupted or invalid .xlsx file: {ex.Message}",
+                    ex));
                 return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
             }
+
             catch (IOException ex)
             {
                 // File I/O errors: locked, permission denied, network issues
-                _logger.LogError(ex, "I/O error reading Excel file: {Path}", filePath);
+                _logger.LogError($"I/O error reading Excel file: {filePath}", ex, "OpenXmlFileReader");
                 errors.Add(ExcelError.Critical("File", $"Cannot access file: {ex.Message}", ex));
                 return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
             }
             catch (InvalidOperationException ex)
             {
                 // OpenXml-specific errors: corrupted file structure
-                _logger.LogError(ex, "Invalid Excel file format: {Path}", filePath);
+                _logger.LogError($"Invalid Excel file format: {filePath}", ex, "OpenXmlFileReader");
                 errors.Add(ExcelError.Critical("File", $"Invalid Excel file: {ex.Message}", ex));
                 return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
             }
             catch (OpenXmlPackageException ex)
             {
                 // OpenXml package errors: file corrupted or not a valid Excel file
-                _logger.LogError(ex, "Excel file is corrupted or invalid: {Path}", filePath);
+                _logger.LogError($"Excel file is corrupted or invalid: {filePath}", ex, "OpenXmlFileReader");
                 errors.Add(ExcelError.Critical("File", $"Corrupted Excel file: {ex.Message}", ex));
                 return new ExcelFile(filePath, LoadStatus.Failed, sheets, errors);
             }
@@ -179,7 +184,7 @@ namespace SheetAtlas.Infrastructure.External.Readers
             // If no headers found, return null - caller will handle as empty sheet
             if (!headerColumns.Any())
             {
-                _logger.LogWarning("Sheet {SheetName} has no header row", sheetName);
+                _logger.LogWarning($"Sheet {sheetName} has no header row", "OpenXmlFileReader");
                 return null;
             }
 
@@ -315,7 +320,7 @@ namespace SheetAtlas.Infrastructure.External.Readers
 
         private LoadStatus DetermineLoadStatus(Dictionary<string, SASheetData> sheets, List<ExcelError> errors)
         {
-            var hasErrors = errors.Any(e => e.Level == ErrorLevel.Error || e.Level == ErrorLevel.Critical);
+            var hasErrors = errors.Any(e => e.Level == LogSeverity.Error || e.Level == LogSeverity.Critical);
 
             if (!hasErrors)
                 return LoadStatus.Success;

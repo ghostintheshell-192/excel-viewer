@@ -1,5 +1,6 @@
 using SheetAtlas.Core.Domain.Entities;
 using SheetAtlas.Core.Domain.ValueObjects;
+using SheetAtlas.Logging.Models;
 
 namespace SheetAtlas.UI.Avalonia.ViewModels;
 
@@ -13,11 +14,12 @@ public interface IFileLoadResultViewModel : IDisposable
     bool HasCriticalErrors { get; }
     IReadOnlyList<ExcelError> Errors { get; }
     ExcelFile? File { get; }
+    bool IsExpanded { get; set; }
 }
 
 public interface IExcelErrorViewModel
 {
-    ErrorLevel Level { get; }
+    LogSeverity Level { get; }
     string Message { get; }
     string Context { get; }
     CellReference? Location { get; }

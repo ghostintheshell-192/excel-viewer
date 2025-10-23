@@ -4,16 +4,19 @@ using SheetAtlas.Core.Domain.Entities;
 using SheetAtlas.UI.Avalonia.Commands;
 using SheetAtlas.UI.Avalonia.Models;
 using SheetAtlas.UI.Avalonia.Managers;
-using Microsoft.Extensions.Logging;
+using SheetAtlas.Logging.Services;
 
 namespace SheetAtlas.UI.Avalonia.ViewModels
 {
-    public class RowComparisonViewModel : ViewModelBase
+    public class RowComparisonViewModel : ViewModelBase, IDisposable
     {
-        private readonly ILogger<RowComparisonViewModel> _logger;
+        private readonly ILogService _logger;
         private readonly IThemeManager? _themeManager;
         private RowComparison? _comparison;
+
+        private bool _disposed = false;
         private ObservableCollection<RowComparisonColumnViewModel> _columns = new();
+        private List<RowComparisonCellViewModel> _allCells = new(); // Flat cache for O(n) theme refresh
 
         public RowComparison? Comparison
         {
@@ -35,13 +38,14 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
 
         public string Title => Comparison?.Name ?? "Row Comparison";
         public int RowCount => Comparison?.Rows.Count ?? 0;
+        public bool HasRows => RowCount > 0;
         public DateTime CreatedAt => Comparison?.CreatedAt ?? DateTime.MinValue;
 
         public ICommand CloseCommand { get; }
 
         public event EventHandler? CloseRequested;
 
-        public RowComparisonViewModel(ILogger<RowComparisonViewModel> logger, IThemeManager? themeManager = null)
+        public RowComparisonViewModel(ILogService logger, IThemeManager? themeManager = null)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _themeManager = themeManager;
@@ -59,7 +63,7 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
             }
         }
 
-        public RowComparisonViewModel(RowComparison comparison, ILogger<RowComparisonViewModel> logger, IThemeManager? themeManager = null)
+        public RowComparisonViewModel(RowComparison comparison, ILogService logger, IThemeManager? themeManager = null)
             : this(logger, themeManager)
         {
             Comparison = comparison;
@@ -69,26 +73,16 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
         {
             // Force re-evaluation of all cell background bindings
             RefreshCellColors();
-            _logger.LogInformation("Refreshed cell colors for theme: {Theme}", newTheme);
+            _logger.LogInfo($"Refreshed cell colors for theme: {newTheme}", "RowComparisonViewModel");
         }
 
         private void RefreshCellColors()
         {
-            foreach (var column in Columns)
+            // Use flat cache for O(n) instead of O(n×m) nested iteration
+            // Same pattern as SearchHistoryItem - much faster on theme change
+            foreach (var cell in _allCells)
             {
-                foreach (var cell in column.Cells)
-                {
-                    cell.RefreshColors();
-                }
-            }
-        }
-
-        ~RowComparisonViewModel()
-        {
-            // Unsubscribe from theme changes
-            if (_themeManager != null)
-            {
-                _themeManager.ThemeChanged -= OnThemeChanged;
+                cell.RefreshColors();
             }
         }
 
@@ -97,18 +91,21 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
             Columns.Clear();
 
             if (Comparison == null)
+            {
+                OnPropertyChanged(nameof(RowCount));
+                OnPropertyChanged(nameof(HasRows));
                 return;
+            }
 
             var allHeaders = Comparison.GetAllColumnHeaders();
 
             // Log warnings if any structural issues were detected
             if (Comparison.Warnings.Any())
             {
-                _logger.LogWarning("Row comparison detected {WarningCount} structural inconsistencies in column headers", Comparison.Warnings.Count);
+                _logger.LogWarning($"Row comparison detected {Comparison.Warnings.Count} structural inconsistencies in column headers", "RowComparisonViewModel");
                 foreach (var warning in Comparison.Warnings)
                 {
-                    _logger.LogWarning("Column '{ColumnName}': {Message} (Files: {Files})",
-                        warning.ColumnName, warning.Message, string.Join(", ", warning.AffectedFiles));
+                    _logger.LogWarning($"Column '{warning.ColumnName}': {warning.Message} (Files: {string.Join(", ", warning.AffectedFiles)})", "RowComparisonViewModel");
                 }
             }
 
@@ -120,13 +117,54 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
                 Columns.Add(columnViewModel);
             }
 
-            _logger.LogInformation("Created row comparison with {ColumnCount} columns for {RowCount} rows using intelligent header mapping",
-                allHeaders.Count, Comparison.Rows.Count);
+            // Populate flat cache of all cells for fast theme refresh (O(n) instead of O(n×m))
+            _allCells = Columns.SelectMany(col => col.Cells).ToList();
+
+            _logger.LogInfo($"Created row comparison with {allHeaders.Count} columns for {Comparison.Rows.Count} rows using intelligent header mapping", "RowComparisonViewModel");
+
+            // Notify that RowCount and HasRows changed
+            OnPropertyChanged(nameof(RowCount));
+            OnPropertyChanged(nameof(HasRows));
+        }
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            if (disposing)
+            {
+                // Unsubscribe from theme changes
+                if (_themeManager != null)
+                {
+                    _themeManager.ThemeChanged -= OnThemeChanged;
+                }
+
+                // Dispose all column ViewModels
+                if (Columns != null)
+                {
+                    foreach (var column in Columns.OfType<IDisposable>())
+                    {
+                        column.Dispose();
+                    }
+                    Columns.Clear();
+                }
+
+                _comparison = null;
+            }
+
+            _disposed = true;
         }
     }
 
-    public class RowComparisonColumnViewModel : ViewModelBase
+    public class RowComparisonColumnViewModel : ViewModelBase, IDisposable
     {
+        private bool _disposed = false;
+
         public string Header { get; }
         public int ColumnIndex { get; }
         public ObservableCollection<RowComparisonCellViewModel> Cells { get; }
@@ -140,60 +178,106 @@ namespace SheetAtlas.UI.Avalonia.ViewModels
             // Use intelligent header-based mapping instead of positional mapping
             var allValues = rows.Select(row => row.GetCellAsStringByHeader(header) ?? string.Empty).ToList();
 
-            foreach (var row in rows)
+            // PRE-COMPUTE column-level data ONCE instead of N times (N = row count)
+            // This eliminates massive computational waste in DetermineComparisonResult
+            var columnData = PrecomputeColumnComparisonData(allValues);
+
+            // Reuse allValues[i] instead of calling GetCellAsStringByHeader again (eliminates duplicate calls)
+            for (int i = 0; i < rows.Count; i++)
             {
-                var cellValue = row.GetCellAsStringByHeader(header) ?? string.Empty;
-                var comparisonResult = DetermineComparisonResult(cellValue, allValues);
-                var cellViewModel = new RowComparisonCellViewModel(row, columnIndex, cellValue, comparisonResult);
+                var cellValue = allValues[i]; // Reuse already-computed value
+                var comparisonResult = DetermineComparisonResult(cellValue, columnData);
+                var cellViewModel = new RowComparisonCellViewModel(rows[i], columnIndex, cellValue, comparisonResult);
 
                 Cells.Add(cellViewModel);
             }
         }
 
-        private static CellComparisonResult DetermineComparisonResult(string currentValue, IList<string> allValues)
+        private static ColumnComparisonData PrecomputeColumnComparisonData(IList<string> allValues)
         {
             // Normalize values first
-            var normalizedCurrentValue = (currentValue ?? "").Trim();
             var normalizedAllValues = allValues.Select(v => (v ?? "").Trim()).ToList();
-
-            var hasValue = !string.IsNullOrWhiteSpace(normalizedCurrentValue);
             var allNonEmptyValues = normalizedAllValues.Where(v => !string.IsNullOrWhiteSpace(v)).ToList();
             var distinctNonEmptyValues = allNonEmptyValues.Distinct().ToList();
+
+            // Pre-compute value groups for ranking algorithm
+            var valueGroups = allNonEmptyValues
+                .GroupBy(v => v)
+                .Select(g => new ValueGroup(g.Key, g.Count()))
+                .OrderByDescending(g => g.Count)      // Primary: Most frequent first (rank 0)
+                .ThenBy(g => g.Value)                 // Secondary: Alphabetical for determinism
+                .ToList();
+
+            return new ColumnComparisonData(
+                normalizedAllValues,
+                allNonEmptyValues,
+                distinctNonEmptyValues,
+                valueGroups,
+                allValues.Count
+            );
+        }
+
+        private record ValueGroup(string Value, int Count);
+
+        private record ColumnComparisonData(
+            List<string> NormalizedAllValues,
+            List<string> AllNonEmptyValues,
+            List<string> DistinctNonEmptyValues,
+            List<ValueGroup> ValueGroups,
+            int TotalCount
+        );
+
+        private static CellComparisonResult DetermineComparisonResult(string currentValue, ColumnComparisonData columnData)
+        {
+            // Normalize current value only (column data is already pre-computed)
+            var normalizedCurrentValue = (currentValue ?? "").Trim();
+            var hasValue = !string.IsNullOrWhiteSpace(normalizedCurrentValue);
 
             // Handle empty values
             if (!hasValue)
             {
-                return allNonEmptyValues.Any()
-                    ? CellComparisonResult.CreateMissing(allNonEmptyValues.Count)
-                    : CellComparisonResult.CreateMatch(allValues.Count, allValues.Count);
+                return columnData.AllNonEmptyValues.Any()
+                    ? CellComparisonResult.CreateMissing(columnData.AllNonEmptyValues.Count)
+                    : CellComparisonResult.CreateMatch(columnData.TotalCount, columnData.TotalCount);
             }
 
             // Handle case where all non-empty values are the same
-            if (distinctNonEmptyValues.Count <= 1)
+            if (columnData.DistinctNonEmptyValues.Count <= 1)
             {
-                return CellComparisonResult.CreateMatch(allNonEmptyValues.Count, allNonEmptyValues.Count);
+                return CellComparisonResult.CreateMatch(columnData.AllNonEmptyValues.Count, columnData.AllNonEmptyValues.Count);
             }
 
-            // Advanced logarithmic distribution algorithm for optimal visual separation
-            var valueGroups = allNonEmptyValues
-                .GroupBy(v => v)
-                .Select(g => new { Value = g.Key, Count = g.Count() })
-                .OrderByDescending(g => g.Count)      // Primary: Most frequent first (rank 0)
-                .ThenBy(g => g.Value)                 // Secondary: Alphabetical for determinism
-                .ToList();
+            // Use pre-computed value groups (no recalculation needed!)
+            var valueGroups = columnData.ValueGroups;
 
             // Find current value's rank in the sorted groups
             var currentRank = valueGroups.FindIndex(g => g.Value == normalizedCurrentValue);
             var currentFrequency = valueGroups[currentRank].Count;
             var totalGroups = valueGroups.Count;
 
+            return CellComparisonResult.CreateDifferent(currentFrequency, currentRank, totalGroups, columnData.AllNonEmptyValues.Count);
+        }
 
-            return CellComparisonResult.CreateDifferent(currentFrequency, currentRank, totalGroups, allNonEmptyValues.Count);
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+            if (disposing)
+            {
+                Cells?.Clear();
+            }
+            _disposed = true;
         }
     }
 
     public class RowComparisonCellViewModel : ViewModelBase
     {
+
         public ExcelRow SourceRow { get; }
         public int ColumnIndex { get; }
         public string Value { get; }

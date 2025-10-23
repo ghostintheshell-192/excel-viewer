@@ -1,0 +1,42 @@
+/* =============================================
+   SheetAtlas Features Page Styles
+   Styles specific to features.html
+   ============================================= */
+
+/* Feature Detail Layout */
+.feature-detail {
+    display: flex;
+    gap: 3rem;
+    align-items: flex-start;
+    margin: 3rem 0;
+    flex-wrap: wrap;
+}
+
+.feature-detail-content {
+    flex: 1;
+    min-width: 300px;
+}
+
+.feature-detail-image {
+    flex: 1;
+    min-width: 300px;
+}
+
+.feature-detail-image img {
+    width: 100%;
+    height: auto;
+}
+
+@media (max-width: 768px) {
+    .feature-detail {
+        flex-direction: column;
+    }
+}
+
+/* Code Blocks */
+code {
+    background-color: var(--gray-100);
+    padding: 0.2rem 0.4rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.9em;
+}

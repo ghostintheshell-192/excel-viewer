@@ -1,0 +1,54 @@
+/* =============================================
+   SheetAtlas Screenshots Page Styles
+   Styles specific to screenshots.html
+   ============================================= */
+
+/* Screenshot Categories */
+.screenshot-category {
+    margin-bottom: 3rem;
+}
+
+.screenshot-item {
+    margin-bottom: 2rem;
+}
+
+/* Screenshot Interaction */
+.screenshot {
+    cursor: zoom-in;
+    transition: transform var(--transition-medium);
+}
+
+.screenshot:hover {
+    transform: scale(1.02);
+}
+
+/* Optional: Lightbox styles (for future enhancement) */
+/*
+.lightbox {
+    position: fixed;
+    z-index: 9999;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lightbox-content {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+}
+
+.lightbox-close {
+    position: absolute;
+    top: 20px;
+    right: 40px;
+    font-size: 40px;
+    color: white;
+    cursor: pointer;
+}
+*/

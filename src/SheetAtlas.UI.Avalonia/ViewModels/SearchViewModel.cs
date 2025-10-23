@@ -1,21 +1,20 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using SheetAtlas.Core.Domain.Entities;
-using SheetAtlas.Core.Application.Services;
 using SheetAtlas.UI.Avalonia.Managers.Search;
 using SheetAtlas.UI.Avalonia.Managers.Selection;
 using SheetAtlas.UI.Avalonia.Models.Search;
-using Microsoft.Extensions.Logging;
+using SheetAtlas.Logging.Services;
 using Avalonia.Threading;
 using SheetAtlas.UI.Avalonia.Commands;
 
 namespace SheetAtlas.UI.Avalonia.ViewModels;
 
-public class SearchViewModel : ViewModelBase
+public class SearchViewModel : ViewModelBase, IDisposable
 {
     private readonly ISearchResultsManager _searchResultsManager;
     private readonly ISelectionManager _selectionManager;
-    private readonly ILogger<SearchViewModel> _logger;
+    private readonly ILogService _logger;
 
     private string _searchQuery = string.Empty;
     private bool _caseSensitive;
@@ -23,6 +22,7 @@ public class SearchViewModel : ViewModelBase
     private bool _useRegexSearch;
     private bool _isDropDownOpen;
     private ObservableCollection<string> _searchSuggestions = new();
+    private bool _disposed;
 
     public string SearchQuery
     {
@@ -110,36 +110,43 @@ public class SearchViewModel : ViewModelBase
     public SearchViewModel(
         ISearchResultsManager searchResultsManager,
         ISelectionManager selectionManager,
-        ILogger<SearchViewModel> logger)
+        ILogService logger)
     {
         _searchResultsManager = searchResultsManager ?? throw new ArgumentNullException(nameof(searchResultsManager));
         _selectionManager = selectionManager ?? throw new ArgumentNullException(nameof(selectionManager));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
+        _searchResultsManager.ResultsChanged += OnResultsChanged;
+        _searchResultsManager.SuggestionsChanged += OnSuggestionsChanged;
+        _searchResultsManager.GroupedResultsUpdated += OnGroupedResultsUpdated;
+        _selectionManager.SelectionChanged += OnSelectionChanged;
+        _selectionManager.VisibilityChanged += OnVisibilityChanged;
+
+
         // Wire up events from managers to notify UI of changes
-        _searchResultsManager.ResultsChanged += (s, e) =>
-        {
-            base.OnPropertyChanged(nameof(SearchResults));
-            base.OnPropertyChanged(nameof(GroupedResults));
-        };
+        // _searchResultsManager.ResultsChanged += (s, e) =>
+        // {
+        //     base.OnPropertyChanged(nameof(SearchResults));
+        //     base.OnPropertyChanged(nameof(GroupedResults));
+        // };
 
-        _searchResultsManager.SuggestionsChanged += (s, e) =>
-        {
-            base.OnPropertyChanged(nameof(Suggestions));
-            UpdateSearchSuggestions();
-        };
+        // _searchResultsManager.SuggestionsChanged += (s, e) =>
+        // {
+        //     base.OnPropertyChanged(nameof(Suggestions));
+        //     UpdateSearchSuggestions();
+        // };
 
-        _searchResultsManager.GroupedResultsUpdated += (s, e) =>
-            _selectionManager.UpdateGroupedResults(e.GroupedResults);
+        // _searchResultsManager.GroupedResultsUpdated += (s, e) =>
+        //     _selectionManager.UpdateGroupedResults(e.GroupedResults);
 
-        _selectionManager.SelectionChanged += (s, e) =>
-        {
-            base.OnPropertyChanged(nameof(SelectedCells));
-            base.OnPropertyChanged(nameof(SelectedSheets));
-        };
+        // _selectionManager.SelectionChanged += (s, e) =>
+        // {
+        //     base.OnPropertyChanged(nameof(SelectedCells));
+        //     base.OnPropertyChanged(nameof(SelectedSheets));
+        // };
 
-        _selectionManager.VisibilityChanged += (s, e) =>
-            base.OnPropertyChanged(nameof(GroupedResults));
+        // _selectionManager.VisibilityChanged += (s, e) =>
+        //     base.OnPropertyChanged(nameof(GroupedResults));
 
         // Initialize commands
         SearchCommand = new RelayCommand(async () => await PerformSearchAsync(SearchQuery), () => !string.IsNullOrWhiteSpace(SearchQuery));
@@ -155,6 +162,34 @@ public class SearchViewModel : ViewModelBase
         ShowOnlyFileCommand = new RelayCommand<IFileLoadResultViewModel>(
             (IFileLoadResultViewModel file) => _selectionManager.ShowOnlyFile(file));
         ClearSelectionsCommand = new RelayCommand(() => Task.Run(() => _selectionManager.ClearSelections()));
+    }
+
+    private void OnVisibilityChanged(object? sender, EventArgs e)
+    {
+        base.OnPropertyChanged(nameof(GroupedResults));
+    }
+
+    private void OnSelectionChanged(object? sender, EventArgs e)
+    {
+        base.OnPropertyChanged(nameof(SelectedCells));
+        base.OnPropertyChanged(nameof(SelectedSheets));
+    }
+
+    private void OnGroupedResultsUpdated(object? sender, GroupedResultsEventArgs e)
+    {
+        _selectionManager.UpdateGroupedResults(e.GroupedResults);
+    }
+
+    private void OnSuggestionsChanged(object? sender, EventArgs e)
+    {
+        base.OnPropertyChanged(nameof(Suggestions));
+        UpdateSearchSuggestions();
+    }
+
+    private void OnResultsChanged(object? sender, EventArgs e)
+    {
+        base.OnPropertyChanged(nameof(SearchResults));
+        base.OnPropertyChanged(nameof(GroupedResults));
     }
 
     public void Initialize(ReadOnlyObservableCollection<IFileLoadResultViewModel> loadedFiles)
@@ -211,11 +246,9 @@ public class SearchViewModel : ViewModelBase
         catch (Exception ex)
         {
             // Log but don't crash - clearing results is not critical
-            _logger.LogError(ex, "Error clearing search results");
+            _logger.LogError("Error clearing search results", ex, "SearchViewModel");
         }
     }
-
-
     private void UpdateSearchSuggestions()
     {
         SearchSuggestions.Clear();
@@ -272,7 +305,7 @@ public class SearchViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in OnTextChanged with text: '{Text}'", text);
+            _logger.LogError($"Error in OnTextChanged with text: '{text}'", ex, "SearchViewModel");
             SearchSuggestions.Clear();
             IsDropDownOpen = false;
         }
@@ -283,5 +316,29 @@ public class SearchViewModel : ViewModelBase
         IsDropDownOpen = false;
         SearchQuery = query;
         _ = PerformSearchAsync(query);
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+            return;
+
+        if (disposing)
+        {
+            // Currently, there are no managed resources to dispose
+            _searchResultsManager.ResultsChanged -= OnResultsChanged;
+            _searchResultsManager.SuggestionsChanged -= OnSuggestionsChanged;
+            _searchResultsManager.GroupedResultsUpdated -= OnGroupedResultsUpdated;
+            _selectionManager.SelectionChanged -= OnSelectionChanged;
+            _selectionManager.VisibilityChanged -= OnVisibilityChanged;
+        }
+
+        _disposed = true;
     }
 }

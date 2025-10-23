@@ -1,16 +1,44 @@
 using SheetAtlas.Core.Domain.ValueObjects;
+using SheetAtlas.Logging.Models;
 
 namespace SheetAtlas.Core.Domain.Entities
 {
+    /// <summary>
+    /// Represents a loaded Excel file with its sheets, load status, and any errors encountered.
+    /// Implements IDisposable to properly release memory used by sheet data.
+    /// </summary>
     public class ExcelFile : IDisposable
     {
         private bool _disposed = false;
 
+        /// <summary>
+        /// Absolute file path of the Excel file.
+        /// </summary>
         public string FilePath { get; }
+
+        /// <summary>
+        /// File name without path (e.g., "report.xlsx").
+        /// </summary>
         public string FileName => Path.GetFileName(FilePath);
+
+        /// <summary>
+        /// Load status indicating success, partial success, or failure.
+        /// </summary>
         public LoadStatus Status { get; }
+
+        /// <summary>
+        /// UTC timestamp when the file was loaded.
+        /// </summary>
         public DateTime LoadedAt { get; }
+
+        /// <summary>
+        /// Dictionary of sheets keyed by sheet name.
+        /// </summary>
         public IReadOnlyDictionary<string, SASheetData> Sheets { get; }
+
+        /// <summary>
+        /// List of errors and warnings encountered during file loading.
+        /// </summary>
         public IReadOnlyList<ExcelError> Errors { get; }
 
         public ExcelFile(string filePath, LoadStatus status, Dictionary<string, SASheetData> sheets, List<ExcelError> errors)
@@ -22,22 +50,40 @@ namespace SheetAtlas.Core.Domain.Entities
             LoadedAt = DateTime.UtcNow;
         }
 
+        /// <summary>
+        /// Retrieves a sheet by name, or null if not found.
+        /// </summary>
         public SASheetData? GetSheet(string sheetName)
         {
             return Sheets.TryGetValue(sheetName, out var sheet) ? sheet : null;
         }
 
-        public bool HasErrors => Errors.Any(e => e.Level == ErrorLevel.Error || e.Level == ErrorLevel.Critical);
+        /// <summary>
+        /// True if there are any errors with severity Error or Critical.
+        /// </summary>
+        public bool HasErrors => Errors.Any(e => e.Level == LogSeverity.Error || e.Level == LogSeverity.Critical);
 
-        public bool HasWarnings => Errors.Any(e => e.Level == ErrorLevel.Warning);
+        /// <summary>
+        /// True if there are any warnings.
+        /// </summary>
+        public bool HasWarnings => Errors.Any(e => e.Level == LogSeverity.Warning);
 
-        public bool HasCriticalErrors => Errors.Any(e => e.Level == ErrorLevel.Critical);
+        /// <summary>
+        /// True if there are any critical errors that prevented full file loading.
+        /// </summary>
+        public bool HasCriticalErrors => Errors.Any(e => e.Level == LogSeverity.Critical);
 
-        public IEnumerable<ExcelError> GetErrorsByLevel(ErrorLevel level)
+        /// <summary>
+        /// Filters errors by severity level.
+        /// </summary>
+        public IEnumerable<ExcelError> GetErrorsByLevel(LogSeverity level)
         {
             return Errors.Where(e => e.Level == level);
         }
 
+        /// <summary>
+        /// Returns all sheet names in this file.
+        /// </summary>
         public IEnumerable<string> GetSheetNames()
         {
             return Sheets.Keys;

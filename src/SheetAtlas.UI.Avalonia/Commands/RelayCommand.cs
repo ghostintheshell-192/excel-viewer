@@ -1,6 +1,5 @@
-// Enhanced RelayCommand implementation with global error handling
 using System.Windows.Input;
-using Microsoft.Extensions.Logging;
+using SheetAtlas.Logging.Services;
 
 namespace SheetAtlas.UI.Avalonia.Commands
 {
@@ -12,7 +11,7 @@ namespace SheetAtlas.UI.Avalonia.Commands
     {
         private readonly Func<Task> _execute;
         private readonly Func<bool>? _canExecute;
-        private readonly ILogger? _logger;
+        private readonly ILogService? _logger;
         private readonly Func<Exception, Task>? _errorHandler;
 
         /// <summary>
@@ -25,7 +24,7 @@ namespace SheetAtlas.UI.Avalonia.Commands
         public RelayCommand(
             Func<Task> execute,
             Func<bool>? canExecute = null,
-            ILogger? logger = null,
+            ILogService? logger = null,
             Func<Exception, Task>? errorHandler = null)
         {
             _execute = execute ?? throw new ArgumentNullException(nameof(execute));
@@ -50,13 +49,13 @@ namespace SheetAtlas.UI.Avalonia.Commands
             catch (OperationCanceledException)
             {
                 // User cancelled - this is normal operation, just log at info level
-                _logger?.LogInformation("Command execution cancelled by user");
+                _logger?.LogInfo("Command execution cancelled by user", "RelayCommand");
                 // Don't show error to user - cancellation is expected behavior
             }
             catch (Exception ex)
             {
                 // Log the error
-                _logger?.LogError(ex, "Unhandled exception in command execution");
+                _logger?.LogError("Unhandled exception in command execution", ex, "RelayCommand");
 
                 // Use custom error handler if provided, otherwise just log
                 if (_errorHandler != null)
@@ -68,7 +67,7 @@ namespace SheetAtlas.UI.Avalonia.Commands
                     catch (Exception handlerEx)
                     {
                         // Error handler itself failed - just log, don't crash
-                        _logger?.LogError(handlerEx, "Error handler failed while handling exception");
+                        _logger?.LogError("Error handler failed while handling exception", handlerEx, "RelayCommand");
                     }
                 }
 
@@ -90,13 +89,13 @@ namespace SheetAtlas.UI.Avalonia.Commands
     {
         private readonly Action<T> _execute;
         private readonly Func<T, bool>? _canExecute;
-        private readonly ILogger? _logger;
+        private readonly ILogService? _logger;
         private readonly Action<Exception>? _errorHandler;
 
         public RelayCommand(
             Action<T> execute,
             Func<T, bool>? canExecute = null,
-            ILogger? logger = null,
+            ILogService? logger = null,
             Action<Exception>? errorHandler = null)
         {
             _execute = execute ?? throw new ArgumentNullException(nameof(execute));
@@ -120,11 +119,11 @@ namespace SheetAtlas.UI.Avalonia.Commands
             }
             catch (OperationCanceledException)
             {
-                _logger?.LogInformation("Command execution cancelled by user");
+                _logger?.LogInfo("Command execution cancelled by user", "RelayCommand<T>");
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Unhandled exception in generic command execution");
+                _logger?.LogError("Unhandled exception in generic command execution", ex, "RelayCommand<T>");
 
                 if (_errorHandler != null)
                 {
@@ -134,7 +133,7 @@ namespace SheetAtlas.UI.Avalonia.Commands
                     }
                     catch (Exception handlerEx)
                     {
-                        _logger?.LogError(handlerEx, "Error handler failed in generic command");
+                        _logger?.LogError("Error handler failed in generic command", handlerEx, "RelayCommand<T>");
                     }
                 }
             }

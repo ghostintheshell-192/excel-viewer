@@ -1,16 +1,19 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
-using SheetAtlas.Core.Domain.ValueObjects;
+using SheetAtlas.Core.Application.Interfaces;
 using SheetAtlas.UI.Avalonia.Commands;
 using SheetAtlas.UI.Avalonia.Models;
-using Microsoft.Extensions.Logging;
+using SheetAtlas.Logging.Services;
+using SheetAtlas.Logging.Models;
 
 namespace SheetAtlas.UI.Avalonia.ViewModels;
 
 public class FileDetailsViewModel : ViewModelBase
 {
-    private readonly ILogger<FileDetailsViewModel> _logger;
+    private readonly ILogService _logger;
+    private readonly IFileLogService _fileLogService;
     private IFileLoadResultViewModel? _selectedFile;
+    private bool _isLoadingHistory;
 
     public IFileLoadResultViewModel? SelectedFile
     {
@@ -25,66 +28,64 @@ public class FileDetailsViewModel : ViewModelBase
     }
 
     public ObservableCollection<FileDetailProperty> Properties { get; } = new();
-    public ObservableCollection<FileDetailAction> Actions { get; } = new();
+    public ObservableCollection<ErrorLogRowViewModel> ErrorLogs { get; } = new();
+
+    public bool IsLoadingHistory
+    {
+        get => _isLoadingHistory;
+        set => SetField(ref _isLoadingHistory, value);
+    }
+
+    // Basic information properties (for direct binding)
+    public string FilePath => SelectedFile?.FilePath ?? string.Empty;
+    public string FileSize => SelectedFile != null ? FormatFileSize(SelectedFile.FilePath) : string.Empty;
+    public bool HasErrorLogs => ErrorLogs.Count > 0;
 
     public ICommand RemoveFromListCommand { get; }
     public ICommand CleanAllDataCommand { get; }
     public ICommand RemoveNotificationCommand { get; }
     public ICommand TryAgainCommand { get; }
-    public ICommand ViewSheetsCommand { get; }
+    public ICommand RetryCommand { get; }
+    public ICommand ClearCommand { get; }
 
-    public FileDetailsViewModel(ILogger<FileDetailsViewModel> logger)
+    public FileDetailsViewModel(
+        ILogService logger,
+        IFileLogService fileLogService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _fileLogService = fileLogService ?? throw new ArgumentNullException(nameof(fileLogService));
 
         RemoveFromListCommand = new RelayCommand(() => { ExecuteRemoveFromList(); return Task.CompletedTask; });
         CleanAllDataCommand = new RelayCommand(() => { ExecuteCleanAllData(); return Task.CompletedTask; });
         RemoveNotificationCommand = new RelayCommand(() => { ExecuteRemoveNotification(); return Task.CompletedTask; });
         TryAgainCommand = new RelayCommand(() => { ExecuteTryAgain(); return Task.CompletedTask; });
-        ViewSheetsCommand = new RelayCommand(() => { ExecuteViewSheets(); return Task.CompletedTask; });
+        ViewErrorLogCommand = new RelayCommand(OpenErrorLogAsync);
+        RetryCommand = new RelayCommand(ExecuteRetryAsync);
+        ClearCommand = new RelayCommand(ExecuteClearAsync);
     }
 
     private void UpdateDetails()
     {
         Properties.Clear();
-        Actions.Clear();
+        ErrorLogs.Clear();
 
         if (SelectedFile == null) return;
 
-        // Basic file properties
-        Properties.Add(new FileDetailProperty("File Name", SelectedFile.FileName));
-        Properties.Add(new FileDetailProperty("Status", SelectedFile.Status.ToString()));
-        Properties.Add(new FileDetailProperty("File Path", TruncatePath(SelectedFile.FilePath, 50)));
-        Properties.Add(new FileDetailProperty("File Size", FormatFileSize(SelectedFile.FilePath)));
-        Properties.Add(new FileDetailProperty("Format", GetFileFormat(SelectedFile.FilePath)));
+        // Notify property changes for basic info bindings
+        OnPropertyChanged(nameof(FilePath));
+        OnPropertyChanged(nameof(FileSize));
 
-        // Add separator
-        Properties.Add(new FileDetailProperty("", ""));
-
-        // Status-specific details
-        switch (SelectedFile.Status)
-        {
-            case LoadStatus.Success:
-                AddSuccessDetails();
-                AddSuccessActions();
-                break;
-
-            case LoadStatus.Failed:
-                AddFailedDetails();
-                AddFailedActions();
-                break;
-
-            case LoadStatus.PartialSuccess:
-                AddPartialSuccessDetails();
-                AddPartialSuccessActions();
-                break;
-        }
+        // Load error history asynchronously
+        _ = LoadErrorHistoryAsync();
     }
 
     private void AddSuccessDetails()
     {
-        Properties.Add(new FileDetailProperty("Content", ""));
+        Properties.Add(new FileDetailProperty("Load Results", ""));
         Properties.Add(new FileDetailProperty("", ""));
+
+        Properties.Add(new FileDetailProperty("Status", "Success"));
+        Properties.Add(new FileDetailProperty("Warnings", "No problems detected"));
 
         if (SelectedFile?.File?.Sheets != null)
         {
@@ -93,86 +94,154 @@ public class FileDetailsViewModel : ViewModelBase
                 sheetNames += $" (+{SelectedFile.File.Sheets.Count - 3} more)";
 
             Properties.Add(new FileDetailProperty("Sheets", $"{SelectedFile.File.Sheets.Count} ({sheetNames})"));
-
-            var totalRows = SelectedFile.File.Sheets.Values.Sum(sheet => sheet.RowCount);
-            var totalCols = SelectedFile.File.Sheets.Values.Max(sheet => sheet.ColumnCount);
-
-            Properties.Add(new FileDetailProperty("Total Rows", totalRows.ToString()));
-            Properties.Add(new FileDetailProperty("Total Cols", totalCols.ToString()));
-        }
-
-        Properties.Add(new FileDetailProperty("Data Status", "Searchable"));
-    }
-
-    private void AddFailedDetails()
-    {
-        Properties.Add(new FileDetailProperty("Load Results", ""));
-        Properties.Add(new FileDetailProperty("", ""));
-
-        if (SelectedFile?.File?.Errors?.Any() == true)
-        {
-            var error = SelectedFile.File.Errors.First();
-            Properties.Add(new FileDetailProperty("Error Type", GetErrorType(error)));
-            Properties.Add(new FileDetailProperty("Details", TruncateText(error.Message, 60)));
-
-            if (error.Message.Contains("corrupted data") || error.Message.Contains("FileFormatException"))
-            {
-                Properties.Add(new FileDetailProperty("Suggestion", "Convert to .xlsx format"));
-            }
-        }
-        else
-        {
-            Properties.Add(new FileDetailProperty("Error Type", "Unknown Error"));
-            Properties.Add(new FileDetailProperty("Details", "No specific error details available"));
         }
     }
 
     private void AddPartialSuccessDetails()
     {
         Properties.Add(new FileDetailProperty("Load Results", ""));
-        Properties.Add(new FileDetailProperty("", ""));
+
+        // Add separator with optional action link
+        var separator = new FileDetailProperty("", "");
+        if (SelectedFile?.File?.Errors?.Any() == true)
+        {
+            separator.ActionText = "View Error Log";
+            separator.ActionCommand = ViewErrorLogCommand;
+        }
+        Properties.Add(separator);
 
         Properties.Add(new FileDetailProperty("Status", "Partially Loaded"));
 
         if (SelectedFile?.File?.Errors?.Any() == true)
         {
-            Properties.Add(new FileDetailProperty("Warnings", $"{SelectedFile.File.Errors.Count} issues found"));
+            var errorCount = SelectedFile.File.Errors.Count;
+            var issueWord = errorCount == 1 ? "issue" : "issues";
+            Properties.Add(new FileDetailProperty("Warnings", $"{errorCount} {issueWord} detected"));
         }
 
-        if (SelectedFile?.File?.Sheets != null)
+        if (SelectedFile?.File?.Sheets != null && SelectedFile.File.Sheets.Count > 0)
         {
-            Properties.Add(new FileDetailProperty("Sheets Loaded", SelectedFile.File.Sheets.Count.ToString()));
+            var sheetNames = string.Join(", ", SelectedFile.File.Sheets.Keys);
+            Properties.Add(new FileDetailProperty("Sheets", $"{SelectedFile.File.Sheets.Count} ({sheetNames})"));
         }
     }
 
-    private void AddSuccessActions()
+    public ICommand ViewErrorLogCommand { get; }
+
+    private async Task LoadErrorHistoryAsync()
     {
-        Actions.Add(new FileDetailAction("Remove from List", RemoveFromListCommand, "Remove file from the loaded files list"));
-        Actions.Add(new FileDetailAction("Clean All Data", CleanAllDataCommand, "Remove file and clean all associated data"));
-        Actions.Add(new FileDetailAction("View Sheets", ViewSheetsCommand, "View detailed sheet information"));
+        if (SelectedFile == null || IsLoadingHistory)
+            return;
+
+        IsLoadingHistory = true;
+
+        try
+        {
+            var logEntries = await _fileLogService.GetFileLogHistoryAsync(SelectedFile.FilePath);
+
+            ErrorLogs.Clear();
+
+            // Flatten all errors from all attempts into a single list
+            foreach (var entry in logEntries.OrderByDescending(e => e.LoadAttempt.Timestamp))
+            {
+                // If no errors, add a success row
+                if (entry.Errors == null || entry.Errors.Count == 0)
+                {
+                    ErrorLogs.Add(new ErrorLogRowViewModel(
+                        timestamp: entry.LoadAttempt.Timestamp,
+                        logLevel: LogSeverity.Info,
+                        message: "File loaded successfully"
+                    ));
+                }
+                else
+                {
+                    // Add all errors from this attempt
+                    foreach (var error in entry.Errors)
+                    {
+                        ErrorLogs.Add(new ErrorLogRowViewModel(
+                            timestamp: error.Timestamp,
+                            logLevel: error.Level,
+                            message: error.Message
+                        ));
+                    }
+                }
+            }
+
+            OnPropertyChanged(nameof(HasErrorLogs));
+            _logger.LogInfo($"Loaded {ErrorLogs.Count} error log entries for file: {SelectedFile.FileName}", "FileDetailsViewModel");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Failed to load error history for file: {SelectedFile?.FileName}", ex, "FileDetailsViewModel");
+        }
+        finally
+        {
+            IsLoadingHistory = false;
+            OnPropertyChanged(nameof(HasErrorLogs));
+        }
     }
 
-    private void AddFailedActions()
+    private async Task ExecuteRetryAsync()
     {
-        Actions.Add(new FileDetailAction("Remove Notification", RemoveNotificationCommand, "Remove failed file notification"));
-        Actions.Add(new FileDetailAction("Try Again", TryAgainCommand, "Attempt to reload the file"));
+        if (SelectedFile == null) return;
+
+        _logger.LogInfo($"Retry requested for file: {SelectedFile.FileName}", "FileDetailsViewModel");
+
+        // Trigger Try Again (reloads file from disk)
+        // Note: LoadErrorHistoryAsync will be called automatically by UpdateDetails() when SelectedFile changes
+        TryAgainRequested?.Invoke(this, new FileActionEventArgs(SelectedFile));
     }
 
-    private void AddPartialSuccessActions()
+    private async Task ExecuteClearAsync()
     {
-        Actions.Add(new FileDetailAction("Remove from List", RemoveFromListCommand, "Remove file from the loaded files list"));
-        Actions.Add(new FileDetailAction("View Details", ViewSheetsCommand, "View what was loaded successfully"));
+        if (SelectedFile == null) return;
+
+        _logger.LogInfo($"Clear logs requested for file: {SelectedFile.FileName}", "FileDetailsViewModel");
+
+        try
+        {
+            // Delete all JSON log files for this file
+            await _fileLogService.DeleteFileLogsAsync(SelectedFile.FilePath);
+
+            // Refresh error history to show empty state
+            ErrorLogs.Clear();
+            OnPropertyChanged(nameof(HasErrorLogs));
+
+            _logger.LogInfo($"Logs cleared successfully for file: {SelectedFile.FileName}", "FileDetailsViewModel");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Failed to clear logs for file: {SelectedFile.FileName}", ex, "FileDetailsViewModel");
+        }
     }
 
-    private string GetErrorType(ExcelError error)
+    private async Task OpenErrorLogAsync()
     {
-        if (error.Message.Contains("FileFormatException") || error.Message.Contains("corrupted"))
-            return "Format Not Supported";
-        if (error.Message.Contains("access") || error.Message.Contains("permission"))
-            return "Access Denied";
-        if (error.Message.Contains("not found"))
-            return "File Not Found";
-        return "Load Error";
+        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var logDirectory = Path.Combine(appDataPath, "SheetAtlas", "Logs");
+        var logFile = Path.Combine(logDirectory, string.Format("app-{0:yyyy-MM-dd}.log", DateTime.Now));
+
+        if (!File.Exists(logFile))
+        {
+            _logger.LogInfo("Error log viewer opened - no log file found", "FileDetailsViewModel");
+            return;
+        }
+
+        try
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = logFile,
+                UseShellExecute = true
+            };
+            System.Diagnostics.Process.Start(psi);
+
+            _logger.LogInfo($"Opened error log file: {logFile}", "FileDetailsViewModel");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Failed to open error log file", ex, "FileDetailsViewModel");
+        }
     }
 
     private string GetFileFormat(string filePath)
@@ -221,39 +290,32 @@ public class FileDetailsViewModel : ViewModelBase
     // Action handlers - these will be implemented to communicate with MainWindowViewModel
     private void ExecuteRemoveFromList()
     {
-        _logger.LogInformation("Remove from list requested for: {FileName}", SelectedFile?.FileName);
+        _logger.LogInfo($"Remove from list requested for: {SelectedFile?.FileName}", "FileDetailsViewModel");
         // Will be handled by MainWindowViewModel
-        RemoveFromListRequested?.Invoke(SelectedFile);
+        RemoveFromListRequested?.Invoke(this, new FileActionEventArgs(SelectedFile));
     }
 
     private void ExecuteCleanAllData()
     {
-        _logger.LogInformation("Clean all data requested for: {FileName}", SelectedFile?.FileName);
-        CleanAllDataRequested?.Invoke(SelectedFile);
+        _logger.LogInfo($"Clean all data requested for: {SelectedFile?.FileName}", "FileDetailsViewModel");
+        CleanAllDataRequested?.Invoke(this, new FileActionEventArgs(SelectedFile));
     }
 
     private void ExecuteRemoveNotification()
     {
-        _logger.LogInformation("Remove notification requested for: {FileName}", SelectedFile?.FileName);
-        RemoveNotificationRequested?.Invoke(SelectedFile);
+        _logger.LogInfo($"Remove notification requested for: {SelectedFile?.FileName}", "FileDetailsViewModel");
+        RemoveNotificationRequested?.Invoke(this, new FileActionEventArgs(SelectedFile));
     }
 
     private void ExecuteTryAgain()
     {
-        _logger.LogInformation("Try again requested for: {FileName}", SelectedFile?.FileName);
-        TryAgainRequested?.Invoke(SelectedFile);
-    }
-
-    private void ExecuteViewSheets()
-    {
-        _logger.LogInformation("View sheets requested for: {FileName}", SelectedFile?.FileName);
-        ViewSheetsRequested?.Invoke(SelectedFile);
+        _logger.LogInfo($"Try again requested for: {SelectedFile?.FileName}", "FileDetailsViewModel");
+        TryAgainRequested?.Invoke(this, new FileActionEventArgs(SelectedFile));
     }
 
     // Events to communicate with parent ViewModels
-    public event Action<IFileLoadResultViewModel?>? RemoveFromListRequested;
-    public event Action<IFileLoadResultViewModel?>? CleanAllDataRequested;
-    public event Action<IFileLoadResultViewModel?>? RemoveNotificationRequested;
-    public event Action<IFileLoadResultViewModel?>? TryAgainRequested;
-    public event Action<IFileLoadResultViewModel?>? ViewSheetsRequested;
+    public event EventHandler<FileActionEventArgs>? RemoveFromListRequested;
+    public event EventHandler<FileActionEventArgs>? CleanAllDataRequested;
+    public event EventHandler<FileActionEventArgs>? RemoveNotificationRequested;
+    public event EventHandler<FileActionEventArgs>? TryAgainRequested;
 }

@@ -1,9 +1,13 @@
+using System.Windows.Input;
+
 namespace SheetAtlas.UI.Avalonia.Models;
 
 public class FileDetailProperty
 {
     public string Key { get; set; }
     public string Value { get; set; }
+    public ICommand? ActionCommand { get; set; }
+    public string? ActionText { get; set; }
 
     public FileDetailProperty(string key, string value)
     {
@@ -12,6 +16,6 @@ public class FileDetailProperty
     }
 
     public bool IsSeparator => string.IsNullOrEmpty(Key) && string.IsNullOrEmpty(Value);
-    public bool IsHeader => !string.IsNullOrEmpty(Key) && string.IsNullOrEmpty(Value);
+    public bool IsHeader => !string.IsNullOrEmpty(Key) && string.IsNullOrEmpty(Value) && !IsSeparator;
     public bool IsRegularRow => !IsSeparator && !IsHeader;
 }

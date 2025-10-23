@@ -6,19 +6,21 @@ using SheetAtlas.Core.Domain.ValueObjects;
 using SheetAtlas.Infrastructure.External;
 using SheetAtlas.Infrastructure.External.Readers;
 using FluentAssertions;
-using Microsoft.Extensions.Logging;
 using Moq;
+using SheetAtlas.Logging.Services;
+using SheetAtlas.Core.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace SheetAtlas.Tests.Services
 {
     public class RowComparisonServiceTests
     {
-        private readonly Mock<ILogger<RowComparisonService>> _mockLogger;
+        private readonly Mock<ILogService> _mockLogger;
         private readonly RowComparisonService _service;
 
         public RowComparisonServiceTests()
         {
-            _mockLogger = new Mock<ILogger<RowComparisonService>>();
+            _mockLogger = new Mock<ILogService>();
             _service = new RowComparisonService(_mockLogger.Object);
         }
 
@@ -39,7 +41,7 @@ namespace SheetAtlas.Tests.Services
             _service.Invoking(s => s.ExtractRowFromSearchResult(searchResult))
                 .Should().Throw<ComparisonException>()
                 .Where(ex => ex.UserMessage.Contains("NonExistentSheet"))
-                .Where(ex => ex.UserMessage.Contains("non è presente"));
+                .Where(ex => ex.UserMessage.Contains("is not present"));
         }
 
         [Fact]
@@ -272,8 +274,8 @@ namespace SheetAtlas.Tests.Services
 
         private IExcelReaderService CreateRealExcelReaderService()
         {
-            var serviceLogger = new Mock<ILogger<ExcelReaderService>>();
-            var readerLogger = new Mock<ILogger<OpenXmlFileReader>>();
+            var serviceLogger = new Mock<ILogService>();
+            var readerLogger = new Mock<ILogService>();
             var cellParser = new CellReferenceParser();
             var cellValueReader = new CellValueReader();
             var mergedCellProcessor = new MergedCellProcessor(cellParser, cellValueReader);
@@ -282,7 +284,15 @@ namespace SheetAtlas.Tests.Services
             var openXmlReader = new OpenXmlFileReader(readerLogger.Object, cellParser, mergedCellProcessor, cellValueReader);
             var readers = new List<IFileFormatReader> { openXmlReader };
 
-            return new ExcelReaderService(readers, serviceLogger.Object);
+            // Create settings mock
+            var settings = new AppSettings
+            {
+                Performance = new PerformanceSettings { MaxConcurrentFileLoads = 5 }
+            };
+            var settingsMock = new Mock<IOptions<AppSettings>>();
+            settingsMock.Setup(s => s.Value).Returns(settings);
+
+            return new ExcelReaderService(readers, serviceLogger.Object, settingsMock.Object);
         }
 
         private string GetTestFilePath(string category, string filename)

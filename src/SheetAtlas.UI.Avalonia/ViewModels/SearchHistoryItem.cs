@@ -5,10 +5,12 @@ using SheetAtlas.UI.Avalonia.Commands;
 
 namespace SheetAtlas.UI.Avalonia.ViewModels;
 
-public class SearchHistoryItem : ViewModelBase
+public class SearchHistoryItem : ViewModelBase, IDisposable
 {
+    private bool _disposed = false;
     private bool _isExpanded = true;
     private ObservableCollection<FileResultGroup> _fileGroups = new();
+    private readonly List<SearchResultItem> _flattenedItems; // Flat cache for O(n) operations
 
     public string Query { get; }
     public int TotalResults { get; }
@@ -27,9 +29,8 @@ public class SearchHistoryItem : ViewModelBase
     }
 
     // Properties for per-search selection management
-    public int SelectedCount => FileGroups
-        .SelectMany(fg => fg.SheetGroups)
-        .SelectMany(sg => sg.Results)
+    // O(n) instead of O(n³) - uses flat cache
+    public int SelectedCount => _flattenedItems
         .Count(item => item.IsSelected && item.CanBeCompared);
 
     public string SelectionText => SelectedCount switch
@@ -61,39 +62,32 @@ public class SearchHistoryItem : ViewModelBase
 
         FileGroups = new ObservableCollection<FileResultGroup>(fileGroups);
 
-        // Setup selection events for all items in this search
+        // Flatten hierarchy ONCE during construction for O(n) operations
+        _flattenedItems = FileGroups
+            .SelectMany(fg => fg.SheetGroups)
+            .SelectMany(sg => sg.Results)
+            .ToList(); // Materialize once!
+
+        // Setup selection events: O(n) instead of O(n³)
         SetupSelectionEvents();
     }
 
+    // O(n) instead of O(n³) - uses flat cache
     private void ClearSelection()
     {
-        foreach (var fileGroup in FileGroups)
+        foreach (var item in _flattenedItems.Where(i => i.IsSelected))
         {
-            foreach (var sheetGroup in fileGroup.SheetGroups)
-            {
-                foreach (var item in sheetGroup.Results)
-                {
-                    if (item.IsSelected)
-                    {
-                        item.IsSelected = false;
-                    }
-                }
-            }
+            item.IsSelected = false;
         }
         NotifySelectionChanged();
     }
 
+    // O(n) instead of O(n³) - uses flat cache
     private void SetupSelectionEvents()
     {
-        foreach (var fileGroup in FileGroups)
+        foreach (var item in _flattenedItems)
         {
-            foreach (var sheetGroup in fileGroup.SheetGroups)
-            {
-                foreach (var item in sheetGroup.Results)
-                {
-                    item.SelectionChanged += OnItemSelectionChanged;
-                }
-            }
+            item.SelectionChanged += OnItemSelectionChanged;
         }
     }
 
@@ -107,5 +101,26 @@ public class SearchHistoryItem : ViewModelBase
         OnPropertyChanged(nameof(SelectedCount));
         OnPropertyChanged(nameof(SelectionText));
         SelectionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    // O(n) instead of O(n³) - uses flat cache
+    protected void Dispose(bool disposing)
+    {
+        if (_disposed) return;
+        if (disposing)
+        {
+            // Unsubscribe from selection changed events
+            foreach (var item in _flattenedItems)
+            {
+                item.SelectionChanged -= OnItemSelectionChanged;
+            }
+        }
+        _disposed = true;
     }
 }
