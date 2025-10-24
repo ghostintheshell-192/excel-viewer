@@ -357,10 +357,10 @@ jobs:
           # Determine if this is a prerelease
           if [[ "$VERSION" == v0.* ]]; then
             IS_PRERELEASE="true"
-            RELEASE_STATUS_TEXT="Alpha release - Linux and macOS installers available"
-            ALPHA_BANNER='            <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 16px; margin-bottom: 24px; text-align: center;">
-                <strong>⚠️ Alpha Software:</strong> This is a pre-release version (${VERSION}). Features are functional but may contain bugs. <a href="https://github.com/ghostintheshell-192/sheet-atlas/releases">View all releases →</a>
-            </div>'
+            RELEASE_STATUS_TEXT="Alpha release - Windows and Linux installers available"
+            ALPHA_BANNER="            <div style=\"background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 16px; margin-bottom: 24px; text-align: center;\">
+                <strong>⚠️ Alpha Software:</strong> This is a pre-release version (${VERSION}). Features are functional but may contain bugs. <a href=\"https://github.com/ghostintheshell-192/sheet-atlas/releases\">View all releases →</a>
+            </div>"
           else
             IS_PRERELEASE="false"
             RELEASE_STATUS_TEXT="Stable release - Production ready"
