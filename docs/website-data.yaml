@@ -1,0 +1,132 @@
+# SheetAtlas Website Data Configuration
+# This file defines factual data about the project that can be used in website, SEO, and marketing materials.
+# IMPORTANT: All data here must be VERIFIED and REAL. Never add placeholder or aspirational data.
+
+project:
+    name: "SheetAtlas"
+    tagline: "Search Excel Files & Compare Data"
+    description: "Search across multiple Excel files and compare matching rows. Free cross-platform tool for .xlsx, .xls, CSV with advanced search and row comparison."
+
+    # Project status
+    status: "alpha" # Options: alpha, beta, stable, deprecated
+    first_release_date: "2025-10-09" # ISO format YYYY-MM-DD
+
+    # Platforms
+    platforms:
+        - "Windows 10+"
+        - "Windows 11"
+        - "Linux"
+        # macOS not yet ready - uncomment when available:
+        # - "macOS"
+
+# Social Proof & Reviews
+reviews:
+    # Set to true only when we have REAL, verifiable reviews
+    has_reviews: false
+
+    # When has_reviews is true, fill these fields:
+    aggregate_rating: null # Example: 4.5
+    review_count: null # Example: 127
+    review_sources: [] # Example: ["GitHub Releases", "Product Hunt", "AlternativeTo"]
+
+    # Individual testimonials (always verify permission before adding)
+    testimonials: []
+    # Example format:
+    # - quote: "SheetAtlas saved me hours of manual work!"
+    #   author: "Jane Doe"
+    #   role: "Data Analyst"
+    #   verified: true
+
+# Usage Statistics
+metrics:
+    # Set values only when you have REAL, measurable data
+    total_downloads: null # Example: 5420
+    active_users: null # Example: 1200
+    github_stars: null # Auto-fetch from GitHub API if needed
+
+    # Update these only with verified numbers:
+    last_updated: null # ISO date when metrics were last verified
+
+# Partnerships & Integrations
+partnerships:
+    has_partnerships: false
+    partners: []
+    # Example format:
+    # - name: "Company Name"
+    #   type: "integration"  # Options: integration, sponsor, collaboration
+    #   verified: true
+
+# Awards & Recognition
+awards:
+    has_awards: false
+    list: []
+    # Example format:
+    # - title: "Best Data Tool 2025"
+    #   organization: "Tech Awards"
+    #   date: "2025-05-15"
+    #   url: "https://example.com/award"
+
+# Press & Media
+press:
+    has_coverage: false
+    articles: []
+    # Example format:
+    # - title: "New Excel Tool Simplifies Data Comparison"
+    #   publication: "Tech News"
+    #   date: "2025-03-20"
+    #   url: "https://example.com/article"
+
+# Support & Community
+community:
+    github_discussions: true
+    issue_tracker: true
+    email_support: false
+    discord_server: false
+    forum: false
+
+# Legal & Compliance
+legal:
+    license: "Proprietary" # Current license
+    data_processing: "100% local" # No cloud/server processing
+    privacy_policy_url: null
+    terms_of_service_url: null
+
+# SEO-specific data
+seo:
+    focus_keywords:
+        - "excel comparison tool"
+        - "compare excel files"
+        - "offline excel diff"
+        - "row comparison"
+        - "regex search excel"
+
+    # Canonical URLs
+    homepage: "https://ghostintheshell-192.github.io/sheet-atlas/"
+    repository: "https://github.com/ghostintheshell-192/sheet-atlas"
+
+    # Open Graph image (for social sharing)
+    og_image: "https://ghostintheshell-192.github.io/sheet-atlas/images/treeview-dark.png"
+
+# Feature highlights (verified features only)
+features:
+    core:
+        - "Search across multiple Excel files (.xlsx, .xls, CSV)"
+        - "Compare matching rows between different files"
+        - "Advanced search with regex support"
+        - "Multi-file loading"
+        - "100% offline processing - no cloud upload"
+
+    # Add upcoming features here ONLY when implementation starts
+    upcoming: []
+# Usage Notes for Claude Code:
+#
+# 1. NEVER add data to this file without explicit user confirmation
+# 2. When working on SEO/marketing materials, ALWAYS read this file first
+# 3. If a field is null or false, DO NOT include it in website/structured data
+# 4. Before adding any social proof data, ask user: "Is this verified and real?"
+# 5. This file should be updated only when REAL milestones are achieved
+#
+# Example scenarios:
+# - User says "we got 1000 downloads!" → Ask: "Should I update metrics.total_downloads to 1000?"
+# - Working on SEO → Read this file → Only use features/data that exist here
+# - Creating structured data → Check reviews.has_reviews before adding AggregateRating
