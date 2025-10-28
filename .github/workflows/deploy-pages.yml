@@ -68,6 +68,12 @@ jobs:
           echo "   VERSION_NUMBER: $VERSION_NUMBER"
           echo "   IS_PRERELEASE: $IS_PRERELEASE"
 
+      - name: Run website validation tests
+        run: |
+          echo "🧪 Running website validation tests..."
+          chmod +x docs/website/test-website.sh
+          ./docs/website/test-website.sh
+
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
 
