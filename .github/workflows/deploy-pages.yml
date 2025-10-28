@@ -31,6 +31,43 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Regenerate website from latest tag
+        run: |
+          # Get latest tag by version number (not by commit distance)
+          LATEST_TAG=$(git tag --sort=-version:refname | head -1 || echo "v0.1.0")
+          VERSION="$LATEST_TAG"
+          VERSION_NUMBER="${VERSION#v}"  # Remove 'v' prefix
+          RELEASE_DATE="$(date +%Y-%m-%d)"
+
+          echo "Regenerating website with version $VERSION"
+
+          # Determine if this is a prerelease
+          if [[ "$VERSION" == v0.* ]]; then
+            IS_PRERELEASE="true"
+            RELEASE_STATUS_TEXT="Alpha release - Windows and Linux installers available"
+            ALPHA_BANNER="            <div style=\"background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 16px; margin-bottom: 24px; text-align: center;\"><strong>⚠️ Alpha Software:</strong> This is a pre-release version (${VERSION}). Features are functional but may contain bugs. <a href=\"https://github.com/ghostintheshell-192/sheet-atlas/releases\">View all releases →</a></div>"
+          else
+            IS_PRERELEASE="false"
+            RELEASE_STATUS_TEXT="Stable release - Production ready"
+            ALPHA_BANNER=""
+          fi
+
+          # Export variables for envsubst
+          export VERSION
+          export VERSION_NUMBER
+          export RELEASE_DATE
+          export RELEASE_STATUS_TEXT
+          export ALPHA_BANNER
+
+          # Generate index.html and download.html from templates
+          envsubst < docs/website/index.html.template > docs/website/index.html
+          envsubst < docs/website/download.html.template > docs/website/download.html
+
+          echo "✅ Website regenerated successfully"
+          echo "   VERSION: $VERSION"
+          echo "   VERSION_NUMBER: $VERSION_NUMBER"
+          echo "   IS_PRERELEASE: $IS_PRERELEASE"
+
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
 
