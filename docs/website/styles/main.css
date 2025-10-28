@@ -270,6 +270,13 @@ ul ul, ol ol, ul ol, ol ul {
     gap: var(--space-md);
 }
 
+.nav-brand a {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    text-decoration: none;
+}
+
 .logo {
     height: 32px;
     width: 32px;
