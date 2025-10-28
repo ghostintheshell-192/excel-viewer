@@ -157,7 +157,6 @@ ${ALPHA_BANNER}
                 </div>
             </div>
             <div class="download-notes">
-${ALPHA_NOTES}
                 <p><strong>Other Linux distributions:</strong> Download the .tar.gz archive from the <a href="https://github.com/ghostintheshell-192/sheet-atlas/releases/tag/${VERSION}" target="_blank">releases page</a>.</p>
                 <p><a href="https://github.com/ghostintheshell-192/sheet-atlas/releases/tag/${VERSION}" target="_blank">View release notes and changelog →</a></p>
             </div>

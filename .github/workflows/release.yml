@@ -359,12 +359,10 @@ jobs:
             IS_PRERELEASE="true"
             RELEASE_STATUS_TEXT="Alpha release - Windows and Linux installers available"
             ALPHA_BANNER="            <div style=\"background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 16px; margin-bottom: 24px; text-align: center;\"><strong>⚠️ Alpha Software:</strong> This is a pre-release version (${VERSION}). Features are functional but may contain bugs. <a href=\"https://github.com/ghostintheshell-192/sheet-atlas/releases\">View all releases →</a></div>"
-            ALPHA_NOTES="                <p><strong>Alpha Status:</strong> SheetAtlas is in active development. Core features work well, but you may encounter bugs. Your feedback helps us improve!</p>"
           else
             IS_PRERELEASE="false"
             RELEASE_STATUS_TEXT="Stable release"
             ALPHA_BANNER=""
-            ALPHA_NOTES=""
           fi
 
           # Export variables for envsubst
@@ -373,7 +371,6 @@ jobs:
           export RELEASE_DATE
           export RELEASE_STATUS_TEXT
           export ALPHA_BANNER
-          export ALPHA_NOTES
 
           # Generate index.html and download.html from templates
           envsubst < docs/website/index.html.template > docs/website/index.html
