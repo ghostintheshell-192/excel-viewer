@@ -66,12 +66,7 @@
         "Advanced search with regex support",
         "Multi-file loading",
         "100% offline processing - no cloud upload"
-      ],
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "5",
-        "ratingCount": "1"
-      }
+      ]
     }
     </script>
 </head>
